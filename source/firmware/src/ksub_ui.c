@@ -163,7 +163,7 @@ static uint8_t page, vcur[NPAGE], cursor[sizeof VIEWS / sizeof VIEWS[0]], pre_cu
 static uint8_t key_note[27], latched[128], phys[128];
 static uint32_t prev_keys, toast_ms, set_ms, last_turn_ms, turn_start_ms, tap_ms[4];
 static uint8_t set_dirty, prev_dirty = 1;
-static char toast_txt[24];
+static char toast_txt[40];
 static int16_t prev_wave[224], prev_a[112], prev_b[112], prev_s[112];   /* the pictures of the sound */
 static uint8_t led_want[41];
 #define OCT ((int32_t)(int8_t)set.oct)
@@ -171,7 +171,7 @@ static uint8_t led_want[41];
 static void toast(const char *s)
 {
     uint32_t i;
-    for (i = 0; i < 23u && s[i]; i++) toast_txt[i] = s[i];
+    for (i = 0; i < 39u && s[i]; i++) toast_txt[i] = s[i];
     toast_txt[i] = 0;
     toast_ms = fm1_ms | 1u;
 }
@@ -1247,9 +1247,26 @@ static void pl_drop(uint32_t pat, int32_t step, int32_t trk, int32_t what)   /* 
     }
     pl_mark(); perf_touch();
 }
+/* AUTOMATION (0.9.59): REC held while it plays, a knob turned records its setting on SEQ BASS's step now; played back by
+ * the main loop at each step (the value held to the next automated step), the sound's own value back at STOP. REC held
+ * without a knob: the automation of the steps it passes is erased. In the same list: pat PL_AUTO | the SEQ BASS pattern,
+ * tp the setting (a patch parameter) */
+#define PL_AUTO 0x40u
+static uint8_t aut_saved[(NP + 7u) / 8u], aut_last = 0xFF, aut_erasing, aut_any;
+static int8_t aut_base[NP];
+static uint32_t aut_erased;
+static void aut_hold_base(uint32_t id) { if (!(aut_saved[id >> 3] >> (id & 7u) & 1u)) { aut_saved[id >> 3] |= (uint8_t)(1u << (id & 7u)); aut_base[id] = patch[id]; aut_any = 1; } }
+static void aut_restore(void)                   /* STOP: every automated setting back to the sound's own value */
+{
+    uint32_t id;
+    for (id = 0; id < NP; id++) if (aut_saved[id >> 3] >> (id & 7u) & 1u) patch[id] = aut_base[id];
+    memset(aut_saved, 0, sizeof aut_saved);
+    aut_last = 0xFF; aut_any = 0;
+    prev_dirty = 1;
+}
 static void lk_toast(uint32_t step, const char *what, const char *val)
 {
-    char t[40], *p = str_cat(t, "STEP ");
+    char t[56], *p = str_cat(t, "STEP ");
     p = fmt_u(p, step + 1u, 0); p = str_cat(p, " \xB7 "); p = str_cat(p, what); p = str_cat(p, " "); str_cat(p, val);
     toast(t);
 }
@@ -1474,6 +1491,7 @@ static void item_set(uint32_t id, int32_t v)
     if (item_patch(id)) {
         if (patch[id] != v) undo_mark(id);
         patch[id] = (int8_t)v;
+        if (aut_saved[id >> 3] >> (id & 7u) & 1u) aut_base[id] = (int8_t)v;   /* (an automated setting turned by hand: its own value now) */
         if (PD[id].fmt == FM_DEST && (v == D_DRAMT || v == D_DRMIX) && !patch[DR_ON]) { patch[DR_ON] = 1; toast("SATURATION ON"); }
         if (id < N_LVL || id == S_LVL || id == S_WAVE || id == S_OCT) prev_dirty = 1;
         return;
@@ -2426,6 +2444,7 @@ static uint32_t hold_time(uint32_t b)           /* how long until the held actio
     if (b == BTN_SAVE) return PRE_BROWSING ? 700u : 600u;
     if (b == BTN_SEL) return 400u;
     if (b == BTN_FX) return 600u;
+    if (b == BTN_REC && sq_play) return 0u;    /* (playing: REC held records the knobs, or erases) */
     if (b == BTN_HOME || b == BTN_REC) return 800u;
     if (b == BTN_GLO) return 900u;
     if (b == BTN_OCT_UP && win == 7u) return 0u;   /* (PERFORM: OCT+ held is the pads) */
@@ -2445,6 +2464,7 @@ static const char *hold_label(uint32_t b)
     if (b == BTN_SEL) return "COMPARE: THE SAVED SOUND";
     if (b == BTN_FX) return win == 6u ? "BACK" : "FX PADS: THE KEYS PLAY EFFECTS";
     if (b == BTN_HOME) return "A + B: THE TWO OSCILLATORS";
+    if (b == BTN_REC && sq_play) return "AUTOMATION: TURN A KNOB \xB7 NONE: ERASE";
     if (b == BTN_REC) return "PANIC: ALL NOTES OFF";
     if (b == BTN_GLO) return set.ui ? "BACK TO CLASSIC MODE" : "SWITCH TO SHIFT MODE";
     if (b == BTN_OCT_DOWN) return "UNDO  (OR TURN A KNOB: SHIFT)";
@@ -2459,6 +2479,49 @@ static const char *hold_label(uint32_t b)
 /* QUICK ASSIGN (as Pure SUB's drag and drop): an LFO (or the mod envelope) onto what this knob moves, the turn
  * sets how much. LFO held: the LFO of SYSTEM's LFO HELD (LFO 2 at first); with OCT- held too, the other one */
 static uint32_t qa_lfo2(void) { return (fm1_in.buttons >> BTN_OCT_DOWN & 1u) ? !set.qlfo : set.qlfo; }
+static void aut_turn(uint32_t e, int32_t d)     /* REC held, a knob: record what it sets on the step playing */
+{
+    const view_t *v = view();
+    uint32_t id, k = PL_AUTO | perf.cur % SQ_NPAT, s = sq_now_step(), r;
+    int32_t i, val, lo, hi;
+    char b[24], nm[24];
+    if (dk_view() && e >= ENC_KNOB1 && e <= ENC_KNOB4) { dk_lock_at(dk_now_step(), e - ENC_KNOB1, d); return; }   /* (DRUMS: the track's locks) */
+    id = e == ENC_ALGORITHM || e == ENC_SELECT ? (v->n ? v->it[cursor[vidx()]] : I_NONE) : vknob(v, e - ENC_KNOB1);
+    if (win) id = I_NONE;
+    else if (C3_ON) id = e == ENC_ALGORITHM || e == ENC_SELECT ? COL3[page].id[c3_cur >> 2][c3_cur & 3u] : COL3[page].id[c3_col()][e - ENC_KNOB1];
+    r = id == I_NONE ? I_NONE : rate_like(id);
+    if (r == I_NONE || !item_patch(r)) { toast("AUTOMATION: A SOUND SETTING ONLY"); return; }
+    item_range(r, &lo, &hi);
+    i = pl_find(k, s, r);
+    val = clampi((i >= 0 ? pl.l[i].v : patch[r]) + d * (hi - lo > 64 ? 2 : 1), lo, hi);
+    if (!pl_set(k, s, r, val)) return;
+    aut_hold_base(r);
+    patch[r] = (int8_t)val;                     /* (heard at once) */
+    prev_dirty = 1;
+    lk_text(r, val, b);
+    str_cat(str_cat(nm, "AUTO "), item_name(r));
+    lk_toast(s, nm, b);
+}
+static void aut_play(void)                      /* the main loop: a new SEQ BASS step, its automation into the sound; REC held alone erases */
+{
+    uint32_t q, n, k = perf.cur % SQ_NPAT, st = sq_show;
+    if (!sq_play) { if (aut_any) aut_restore(); aut_last = 0xFF; return; }
+    if (st == 0xFF || st == aut_last) return;
+    aut_last = (uint8_t)st;
+    if (aut_erasing) {                          /* (REC held, nothing turned: this step's automation goes) */
+        uint32_t before = pl.n;
+        pl_drop(PL_AUTO | k, (int32_t)st, -1, -1);
+        if (dk_view()) pl_drop(dk.cur % DK_NPAT, (int32_t)(dk_show == 0xFF ? 0u : dk_show), (int32_t)(dk_trk % NDK), -1);
+        aut_erased += before - pl.n;
+        toast("ERASING AUTOMATION...");
+        return;
+    }
+    n = pl.n <= PL_MAX ? pl.n : 0u;
+    for (q = 0; q < n; q++) {
+        const plk_t *e = &pl.l[q];
+        if (e->pat == (PL_AUTO | k) && e->step == st && e->tp < NP) { aut_hold_base(e->tp); patch[e->tp] = e->v; prev_dirty = 1; }
+    }
+}
 static void quick_assign(uint32_t src, uint32_t id, int32_t d)
 {
     int32_t dst = dest_of(id);
@@ -2608,9 +2671,16 @@ static void ui_input(void)
             else { randomize((uint32_t)page_of_btn(hb.b)); hb.next = 0; }
             hb.fired = 1;
         }
+        if (hb.b == BTN_REC && held && sq_play && !hb.used && !aut_erasing && fm1_ms - hb.at >= 400u) { aut_erasing = 1; aut_erased = 0; aut_last = 0xFF; toast("ERASING AUTOMATION..."); }   /* (REC held alone: erase as it passes) */
         if ((rel >> hb.b) & 1u || !held) {
             uint32_t bb = hb.b;
             hb.b = 0xFF;
+            if (aut_erasing) {                  /* (let go: how much went) */
+                char t[32], *p;
+                aut_erasing = 0; hb.used = 1;
+                if (aut_erased) { p = str_cat(t, "AUTOMATION ERASED \xB7 "); fmt_u(p, aut_erased, 0); toast(t); }
+                else toast("NO AUTOMATION THERE");
+            }
             if (bb == BTN_SAVE) ur_on = 0;
             if (cmp_on) compare(0);
             else if (!hb.used && !hb.fired && (bb > BTN_OCT_UP || fm1_ms - hb.at < 500u)) on_button(bb);   /* (OCT held long: no octave) */
@@ -2621,6 +2691,7 @@ static void ui_input(void)
         if (dimmed) { dim_set(0); continue; }
         if (cmp_on) continue;                   /* (comparing: nothing changes) */
         if (hb.b <= BTN_OCT_UP && b >= ENC_KNOB1 && b <= ENC_KNOB4) hb.used = 1;   /* (SHIFT: no octave on release) */
+        if (hb.b == BTN_REC && sq_play && b != ENC_PRESETS) { hb.used = 1; aut_erasing = 0; aut_turn(b, d); continue; }   /* AUTOMATION: recorded */
         if (hb.b != 0xFF && (hb.b == BTN_LFO || hb.b == BTN_ENV || (hb.b == BTN_OCT_DOWN && (fm1_in.buttons >> BTN_LFO & 1u))) && ((b >= ENC_KNOB1 && b <= ENC_KNOB4) || b == ENC_ALGORITHM)) {   /* (OCT- then LFO held: LFO 1 too) */
             const view_t *v = view();
             uint32_t id = b == ENC_ALGORITHM ? (v->n ? v->it[cursor[vidx()]] : I_NONE) : vknob(v, b - ENC_KNOB1);
@@ -2901,6 +2972,7 @@ static void app_step(void)
         g_frame_send(draw_all);
     }
     if (sq_rec && !sq_play && vidx() != V_SEQ && vidx() != V_DRUM) { sq_rec = 0; rec_hold.on = 0; }
+    aut_play();
     if (dk_hold && !dk_view()) dk_hold = 0;   /* (playing, REC goes on in every view: the knobs record locks) */
     if (perf_dirty && !sq_play && !ks_sounding && fm1_ms - perf_ms > 2000u) { perf_dirty = 0; if (perf_save()) toast("SEQ NOT SAVED"); }
     if (set_dirty && !ks_sounding && fm1_ms - set_ms > 2000u) {   /* (erasing stalls the sound: only when silent) */

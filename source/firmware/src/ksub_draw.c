@@ -244,7 +244,8 @@ static void vis_seq(int32_t x, int32_t y, int32_t w, int32_t h)   /* SEQ BASS: 1
     int32_t pg = sq_cur_step / 16, np = (len + 15) / 16;
     uint64_t lkd = 0;                           /* (the steps with a PARAMETER LOCK) */
     if (!g_vis(y, h)) return;
-    { uint32_t j, n = pl.n <= PL_MAX ? pl.n : 0u; for (j = 0; j < n; j++) if (pl.l[j].pat == (PL_BASS | k) && pl.l[j].step < 64u) lkd |= 1ull << pl.l[j].step; }
+    uint64_t aud = 0;                           /* (... with AUTOMATION) */
+    { uint32_t j, n = pl.n <= PL_MAX ? pl.n : 0u; for (j = 0; j < n; j++) if (pl.l[j].step < 64u) { if (pl.l[j].pat == (PL_BASS | k)) lkd |= 1ull << pl.l[j].step; else if (pl.l[j].pat == (PL_AUTO | k)) aud |= 1ull << pl.l[j].step; } }
     for (i = 0; i < 16; i++) {
         int32_t s = pg * 16 + i, bx = x0 + i * bw, f = *sq_fp(k, (uint32_t)s), nh;
         int on = sq_play && s == sq_show;
@@ -264,6 +265,7 @@ static void vis_seq(int32_t x, int32_t y, int32_t w, int32_t h)   /* SEQ BASS: 1
             }
         }
         g_rect(bx + 1, top + H + 2, bw - 2, 3, s == sq_cur_step ? (sq_rec ? K_ORANGE : K_WHITE) : (i & 3) ? K_BG : K_LINE);
+        if (aud >> s & 1u) g_rect(bx + 2, top + H - 2, bw - 4, 2, K_MOD);   /* (automated: a line at the foot) */
     }
     if (np > 1)                                 /* the pages, top right: this one white, the one playing lime */
         for (i = 0; i < np; i++)
@@ -2255,8 +2257,10 @@ static void draw_all(void)
         }
     }
     if (toast_ms && g_vis(196, 22)) {
-        g_box(30, 196, 180, 22, K_PANEL, K_LIME);
-        g_text_c(T_S, 120, 202, toast_txt, K_WHITE);
+        int32_t tw = g_text_w(T_S, toast_txt) + 24;   /* (a long one: wider, then smaller type) */
+        tw = tw < 180 ? 180 : tw > 228 ? 228 : tw;
+        g_box(120 - tw / 2, 196, tw, 22, K_PANEL, K_LIME);
+        g_text_c(g_fit(T_S, toast_txt, tw - 8), 120, 202, toast_txt, K_WHITE);
     }
 }
 

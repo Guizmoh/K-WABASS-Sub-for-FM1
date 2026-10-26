@@ -71,7 +71,7 @@ def build(L):
             ("SEL", T("PERFORM → MORPH X/Y → FX LIVE → MACROS → MORPH A/B", "PERFORM → MORPH X/Y → FX LIVE → MACROS → MORPH A/B"), T("hear the saved sound (compare)", "écouter le son enregistré (comparer)")),
             ("SAVE", T("save", "enregistrer"), T("+ OCT− UNDO / OCT+ REDO (16 steps); on presets: favourite", "+ OCT− UNDO / OCT+ REDO (16 pas) ; sur les presets : favori")),
             ("PLAY", T("SEQ start / stop", "SEQ marche / arrêt"), T("HOLD: the keys stay on", "HOLD : les touches restent tenues")),
-            ("REC", T("tap tempo · on SEQ: step record", "tap tempo · sur SEQ : enregistrement des pas"), T("<b>PANIC</b>", "<b>PANIC</b>")),
+            ("REC", T("tap tempo · on SEQ: step record", "tap tempo · sur SEQ : enregistrement des pas"), T("stopped: <b>PANIC</b> · playing: <b>AUTOMATION</b> (turn knobs), alone: erase", "à l’arrêt : <b>PANIC</b> · en lecture : <b>AUTOMATION</b> (tourner des potards), seul : effacer")),
             ("OCT− OCT+", T("octave", "octave"), T("UNDO / REDO · with a knob: SHIFT", "UNDO / REDO · avec un potard : SHIFT"))]
     chaps.append(("panel", t(T("2 · The buttons", "2 · Les boutons")),
                   f'<table><tr><th></th><th>{t(T("Press", "Appui"))}</th><th>{t(T("Hold (a bar fills)", "Maintien (une barre se remplit)"))}</th></tr>'
@@ -143,6 +143,7 @@ def build(L):
                         '<b>Presets</b>: 18 rhythms (TECHNO, HOUSE, DUB, DNB, JUNGLE, DUBSTEP, BREAKBEAT, UK GARAGE, ELECTRO, MINIMAL, HALFTIME, TRAP, ROLLING HATS, FOUR FLOOR, DUB TECHNO, ROCK, FUNK, JAZZ RIDE) in 16, 32 and 64 steps; MY PATTERN brings yours back. '
                         '<b>PLAYS</b>: bass + drums, drums only, bass only.</p>'
                         '<p><b>SEQ BASS</b>: per step a note, a NOTE LEN (1/8 step to 64 steps, or HOLD), a type (accent, slide), a chance and a condition; 30 basslines in 16, 32, 64 steps. <b>Parameter locks</b>: the rows P-LOCK (CUTOFF, RESO, FILT ENV, DRIVE, WOB RATE, A SHAPE, SMP START) and LOCK VALUE give the cursor\'s step its own value (OFF below the range); a cyan corner marks it. <b>REC while it plays</b>: turning one of these settings, in any view, locks it on the step playing, for the bass, and K1–K4 on the drums.</p>'
+                        '<p><b>Automation</b>: while it plays, <b>hold REC and turn the knobs</b> you want to automate (any sound setting, on any page): each one is recorded on the SEQ BASS step playing (\u201cSTEP 5 · AUTO CUTOFF 498 HZ\u201d) and played back at every round, held until the next automated step; STOP gives the sound its own values back. A violet line marks the automated steps on SEQ BASS. To erase: <b>hold REC again without touching anything</b> (\u201cERASING AUTOMATION…\u201d), the steps it passes are cleared; hold it a whole round to clear them all (\u201cAUTOMATION ERASED\u201d when you let go). A short tap of REC still does what it did.</p>'
                         '<p><b>Sync</b>: SYSTEM › MIDI › SYNC OUT = PO / VOLCA puts a pulse every eighth note on the left output while it plays, the sound in mono on the right: '
                         'a stereo-to-two-mono cable to a Pocket Operator (SY mode that follows) or a Volca\'s SYNC IN. MIDI clock in / out is in the same view.</p>',
                         '<p><b>PLAY</b> lance les deux séquenceurs (SEQ BASS et DRUMS) sur le tempo ; <b>REC</b> sur leurs vues enregistre : à l’arrêt pas à pas, en lecture en direct. '
@@ -161,6 +162,7 @@ def build(L):
                         '<b>Presets</b> : 18 rythmes (TECHNO, HOUSE, DUB, DNB, JUNGLE, DUBSTEP, BREAKBEAT, UK GARAGE, ELECTRO, MINIMAL, HALFTIME, TRAP, ROLLING HATS, FOUR FLOOR, DUB TECHNO, ROCK, FUNK, JAZZ RIDE) en 16, 32 et 64 pas ; MY PATTERN ramène le tien. '
                         '<b>PLAYS</b> : basse + batterie, batterie seule, basse seule.</p>'
                         '<p><b>SEQ BASS</b> : par pas une note, une NOTE LEN (1/8 de pas à 64 pas, ou HOLD), un type (accent, slide), une chance et une condition ; 30 lignes de basse en 16, 32, 64 pas. <b>Parameter locks</b> : les lignes P-LOCK (CUTOFF, RESO, FILT ENV, DRIVE, WOB RATE, A SHAPE, SMP START) et LOCK VALUE donnent au pas du curseur sa propre valeur (OFF sous la plage) ; un coin cyan le marque. <b>REC pendant la lecture</b> : tourner un de ces réglages, dans n’importe quelle vue, le verrouille sur le pas joué pour la basse, et K1–K4 sur la batterie.</p>'
+                        '<p><b>Automation</b> : pendant la lecture, <b>maintenir REC et tourner les potards</b> à automatiser (n’importe quel réglage du son, sur n’importe quelle page) : chacun s’enregistre sur le pas de SEQ BASS joué (\u00ab STEP 5 · AUTO CUTOFF 498 HZ \u00bb) et se rejoue à chaque tour, tenu jusqu’au pas automatisé suivant ; STOP rend au son ses propres valeurs. Une ligne violette marque les pas automatisés sur SEQ BASS. Pour effacer : <b>maintenir REC à nouveau sans rien toucher</b> (\u00ab ERASING AUTOMATION… \u00bb), les pas qu’il traverse sont effacés ; le tenir un tour entier efface tout (\u00ab AUTOMATION ERASED \u00bb au relâchement). Un appui court sur REC fait toujours la même chose qu’avant.</p>'
                         '<p><b>Synchro</b> : SYSTEM › MIDI › SYNC OUT = PO / VOLCA met une impulsion par croche sur la sortie gauche pendant la lecture, le son en mono à droite : '
                         'un câble stéréo vers deux mono jusqu’à un Pocket Operator (mode SY qui suit) ou le SYNC IN d’une Volca. L’horloge MIDI in / out est dans la même vue.</p>'))))
 
@@ -202,9 +204,9 @@ def build(L):
     chaps.append(("help", t(T("10 · Help", "10 · Aide")),
                   '<div class="card warn">' + t(T(
                       '<b>It switched off or restarted?</b> The reason shows at the next start (<code>LAST STOP</code>): WATCHDOG = overloaded, LOW VOLTAGE = power (battery, cable), CRASH + address = send it to me. '
-                      '<b>No sound?</b> Check MASTER. <b>Stuck notes?</b> REC held (PANIC). <b>Rescue:</b> OCT− held at power-on, the installer always works.',
+                      '<b>No sound?</b> Check MASTER. <b>Stuck notes?</b> REC held, stopped (PANIC), or OCT− + OCT+. <b>Rescue:</b> OCT− held at power-on, the installer always works.',
                       '<b>Il s’est éteint ou a redémarré ?</b> La cause s’affiche au démarrage suivant (<code>LAST STOP</code>) : WATCHDOG = surchargé, LOW VOLTAGE = alimentation (batterie, câble), CRASH + adresse = envoie-la-moi. '
-                      '<b>Pas de son ?</b> Vérifie MASTER. <b>Notes bloquées ?</b> REC maintenu (PANIC). <b>Secours :</b> OCT− maintenu à l’allumage, l’installateur marche toujours.')) + '</div>'))
+                      '<b>Pas de son ?</b> Vérifie MASTER. <b>Notes bloquées ?</b> REC maintenu à l’arrêt (PANIC), ou OCT− + OCT+. <b>Secours :</b> OCT− maintenu à l’allumage, l’installateur marche toujours.')) + '</div>'))
 
     o = [f'<!doctype html>\n<!-- SPDX-License-Identifier: GPL-3.0-only -- K-WASUB: the manual, generated by source/tools/make_manual.py -->\n'
          f'<html lang="{L}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">\n'
