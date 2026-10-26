@@ -11,7 +11,7 @@ def run(lines, tag):
     subprocess.run(["node", "tests/shots.mjs", f"build/{tag}.txt"], check=True, capture_output=True)
 def look(s, t, p):                              # the theme and the palette, from SYSTEM
     s.btn(GLO, 200); s.enc(0, -30, 100); s.enc(0, 3, 100); s.enc(1, -8, 100); s.enc(1, t, 100)
-    s.enc(0, 1, 100); s.enc(1, -12, 100); s.enc(1, p, 100); s.btn(HOME, 200)
+    s.enc(0, 1, 100); s.enc(1, -25, 100); s.enc(1, p, 100); s.btn(HOME, 200)
 class S:
     def __init__(s): s.l, s.t, s.names = [], 100, []
     def c(s, cmd, dt=120): s.l.append(f"{s.t} {cmd}"); s.t += dt
@@ -63,7 +63,7 @@ s.c("down 12", 700); s.shot("h-hold", 150); s.c("up 12", 100)
 finish(s, "m1")
 
 # 2. SHIFT (three columns: the menu, OCT- held in the middle, OCT+ held on the right)
-s = S(); s.btn(SEL, 400); look(s, 0, 0); s.hold(GLO, 1100); s.btn(HOME, 300)
+s = S(); s.t += 2800; s.btn(SEL, 400); look(s, 0, 0); s.hold(GLO, 1100); s.btn(HOME, 300)
 for page, nm in ((HOME, "s-home"), (EDIT, "s-osc"), (ENV, "s-env"), (SEQ, "s-filter"), (LFO, "s-lfo"), (FX, "s-fx")):
     s.btn(page, 300); s.shot(nm, 300)
 s.btn(EDIT, 300); s.c("down 0", 150); s.enc(3, 6, 100); s.shot("s-osc-mid", 250); s.c("up 0", 150)
@@ -72,32 +72,34 @@ s.c("down 0", 400); s.shot("s-hold-undo", 150); s.c("up 0", 100)
 finish(s, "m2")
 
 # 3. the themes: the same screen in every palette
-s = S(); s.btn(SEL, 400); s.btn(HOME, 200)
-combos = [(t, p) for t in range(6) for p in (0, 1)] + [(0, p) for p in range(2, 11)] + [(4, p) for p in (8, 9, 10, 2, 7)] + [(5, p) for p in (2, 8, 9, 7)]
-NM = {(0, 0): "neon", (0, 1): "amber", (1, 0): "studio", (1, 1): "ocean", (2, 0): "pure", (2, 1): "purered", (3, 0): "rack", (3, 1): "magma",
-      (0, 2): "synthwave", (0, 3): "mint", (0, 4): "blackwhite", (0, 5): "inverted", (0, 6): "red", (0, 7): "ice", (0, 8): "fluo", (0, 9): "pink", (0, 10): "gold",
-      (4, 0): "glow-green", (4, 1): "glow-toxic", (5, 0): "tech-volt", (5, 1): "tech-cyber", (5, 2): "tech-synthwave", (5, 8): "tech-fluo", (5, 9): "tech-pink", (5, 7): "tech-ice", (4, 8): "glow-fluo", (4, 9): "glow-pink", (4, 10): "glow-gold", (4, 2): "glow-synthwave", (4, 7): "glow-ice"}
-for t, p in combos:
+s = S(); s.t += 2800; s.btn(SEL, 400); s.btn(HOME, 200)
+combos = [(0, 0, "glow-green"), (0, 1, "glow-toxic"), (1, 0, "studio"), (1, 1, "ocean"), (2, 0, "pure"), (2, 1, "purered"), (3, 0, "rack"), (3, 1, "magma"),
+          (4, 0, "tech-volt"), (4, 1, "tech-cyber")]
+combos += [(1, p, n) for p, n in ((2, "synthwave"), (3, "mint"), (4, "blackwhite"), (5, "inverted"), (6, "red"), (7, "ice"), (8, "fluo"), (9, "pink"), (10, "gold"))]
+combos += [(0, 8, "glow-fluo"), (0, 9, "glow-pink"), (0, 10, "glow-gold"), (0, 2, "glow-synthwave"), (0, 7, "glow-ice")]
+combos += [(4, 2, "tech-synthwave"), (4, 8, "tech-fluo"), (4, 9, "tech-pink"), (4, 7, "tech-ice")]
+combos += [(1, 17, "rad-red"), (1, 13, "rad-synthwave"), (1, 21, "rad-gold"), (0, 11, "rad-glow-green"), (4, 12, "rad-tech-cyber"), (2, 20, "rad-pink"), (3, 18, "rad-ice")]
+for t, p, nm in combos:
     s.btn(GLO, 200); s.enc(0, -30, 100); s.enc(0, 3, 100); s.enc(1, -8, 100); s.enc(1, t, 100)
-    s.enc(0, 1, 100); s.enc(1, -12, 100); s.enc(1, p, 100)
-    s.btn(HOME, 200); s.btn(EDIT, 200); s.shot("t-" + NM[(t, p)], 1300)
+    s.enc(0, 1, 100); s.enc(1, -25, 100); s.enc(1, p, 100)
+    s.btn(HOME, 200); s.btn(EDIT, 200); s.shot("t-" + nm, 1300)
 finish(s, "m3")
 
 # 4. GLOW: the theme on several screens
-s = S(); s.btn(SEL, 400); look(s, 4, 0)
+s = S(); s.t += 2800; s.btn(SEL, 400); look(s, 0, 0)
 s.shot("g-home", 1300); s.btn(EDIT, 300); s.shot("g-osc", 300); s.btn(ENV, 300); s.shot("g-env", 300); s.btn(LFO, 300); s.shot("g-lfo", 300)
 s.btn(FX, 300); s.shot("g-fx", 300); s.btn(ARP, 300); s.shot("g-presets", 300); s.btn(SEQ, 300); s.shot("g-filter", 300)
 finish(s, "m4")
 
 # 5. TECH: the layout on its screens (the theme the 6th of the list)
-s = S(); s.btn(SEL, 400); look(s, 5, 0)
+s = S(); s.t += 2800; s.btn(SEL, 400); look(s, 4, 0)
 s.shot("k-home", 1300); s.btn(EDIT, 300); s.shot("k-osc", 300); s.btn(EDIT, 200); s.shot("k-oscb", 300); s.btn(ENV, 300); s.shot("k-env", 300)
 s.btn(LFO, 300); s.shot("k-lfo", 300); s.btn(FX, 300); s.shot("k-fx", 300); s.btn(FX, 200); s.btn(FX, 200); s.shot("k-fx3", 300)
 s.btn(SEQ, 300); s.shot("k-filter", 300); s.btn(ARP, 300); s.shot("k-presets", 300); s.btn(GLO, 300); s.shot("k-system", 300)
 finish(s, "m5")
 
 # 6. BRIGHTNESS: the same screen in the four steps
-s = S(); s.btn(SEL, 400); look(s, 0, 0); s.btn(GLO, 200); s.enc(0, -30, 100); s.enc(0, 7, 100)
+s = S(); s.t += 2800; s.btn(SEL, 400); look(s, 0, 0); s.btn(GLO, 200); s.enc(0, -30, 100); s.enc(0, 7, 100)
 for lv, nm in ((0, "eco"), (1, "normal"), (2, "bright"), (3, "max")):
     s.enc(1, -5, 100); s.enc(1, lv, 100); s.btn(HOME, 200); s.shot("b-" + nm, 1300); s.btn(GLO, 200)
 finish(s, "m6")

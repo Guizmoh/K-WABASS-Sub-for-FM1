@@ -27,7 +27,7 @@
 - **Sound**: multiband OTT, MONO BASS, a sub locked on OSC A, **RESAMPLE** (the output into OSC C, to replay, slow down, loop).
 - **Presets**: tags (sub, reese, growl, wobble, pluck, 808, drone), instant change.
 - **Two modes**: CLASSIC (lists) or SHIFT (3 columns, `OCT−` and `OCT+` as Shift); hold `GLO` to switch.
-- **Looks**: 6 themes (CLASSIC GLOW and TECH with gradients), 19 palettes, 4 brightness levels.
+- **Looks**: 5 themes (CLASSIC GLOW and TECH with gradients), 11 palettes + their RAD gradient versions, 4 brightness levels.
 - **Output**: DEEP BASS, limiter, AUTO LEVEL; if the FM-1 stops, `LAST STOP` says why.
 
 ## Install
@@ -42,8 +42,8 @@ You can go back to KAWA (`install/kawa-0.5.fwsc`) or to the stock firmware (M-UP
 
 ```sh
 cd source
-./build.sh --release 0.9.22          # -> build/k-wasub-0.9.22.fwsc
-APP_VER=0.9.22 bash web/make_emulator.sh      # emulator
+./build.sh --release 0.9.23          # -> build/k-wasub-0.9.23.fwsc
+APP_VER=0.9.23 bash web/make_emulator.sh      # emulator
 bash web/make_installer.sh                    # installer.html with the newest package
 bash tests/run_stress.sh                      # load tests (UBSan)
 python3 tests/manual_shots.py                 # the manual's screenshots (docs/img)

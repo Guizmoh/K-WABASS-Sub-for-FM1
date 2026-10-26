@@ -6,7 +6,7 @@
  *   PURE     after Pure SUB: a lime tab, a big visual, four rings for the four knobs, the row being edited below
  *   RACK     the pages on a rail at the left, big type, tall rows
  * Every visual is drawn with integers only (no FPU), from the patch and what the voices say (ksub_dsp.c). */
-enum { TH_CLASSIC, TH_STUDIO, TH_PURE, TH_RACK, TH_GLOW, TH_TECH, NTHEMES };
+enum { TH_GLOW, TH_STUDIO, TH_PURE, TH_RACK, TH_TECH, NTHEMES };
 enum { VZ_NONE, VZ_SCOPE, VZ_OSCA, VZ_OSCB, VZ_SUB, VZ_MIX, VZ_ENV0, VZ_ENV1, VZ_ENV2, VZ_FILT, VZ_LFO1, VZ_LFO2, VZ_STEP,
        VZ_SEQ, VZ_SMP, VZ_DRIVE, VZ_CRUSH, VZ_CHORUS, VZ_DELAY, VZ_REVERB, VZ_MASTER, VZ_COMP, VZ_PHASER, VZ_OTT, VZ_CPU };
 static const uint8_t VZ_OF[] = {VZ_SCOPE, VZ_SCOPE, VZ_OSCA, VZ_OSCB, VZ_SUB, VZ_MIX, VZ_SMP, VZ_ENV0, VZ_ENV1, VZ_ENV2, VZ_FILT, VZ_FILT,
@@ -605,7 +605,7 @@ static void row_g(int32_t x, int32_t y, int32_t w, int32_t h, const char *lab, c
     int32_t ty, room;
     const ks_font_t *fl = f, *fv;
     if (!g_vis(y, h)) return;
-    if (theme == TH_GLOW) {                     /* GLOW: the row chosen lit from the left, the others only a line */
+    if (theme == TH_GLOW || g_rad) {            /* GLOW (and the RAD palettes): the row chosen lit from the left, the others only a line */
         if (sel) { g_box(x, y, w, h, K_PANEL, K_LIME); g_hgrad(x + 1, y + 1, w - 2, h - 2, g_mix(K_PANEL, K_LIME, 120), K_PANEL); }
         else g_hgrad(x + 4, y + h - 1, w - 8, 1, g_mix(K_BG, K_LIME, 90), K_BG);
     } else g_box(x, y, w, h, sel ? K_LIMED : K_PANEL, sel ? K_LIME : K_LINE);
@@ -642,7 +642,7 @@ static void draw_vbox(int32_t x, int32_t y, int32_t w, int32_t h, uint32_t id, i
     if (!g_vis(y, h)) return;
     item_text(id, b);
     g_box(x, y, w, h, sel ? K_LIMED : K_PANEL, sel ? K_LIME : K_LINE);
-    if (theme == TH_GLOW) g_vgrad(x + 1, y + 1, w - 2, h - 2, g_mix(K_PANEL, K_LIME, sel ? 100 : 36), K_BG);   /* (GLOW: lit from the top) */
+    if (theme == TH_GLOW || g_rad) g_vgrad(x + 1, y + 1, w - 2, h - 2, g_mix(K_PANEL, K_LIME, sel ? 100 : 36), g_rad ? g_mix(K_BG, K_CYAN, 60) : K_BG);   /* (GLOW, RAD: lit from the top) */
     g_text(T_XS, x + 7, y + 6, lab ? lab : item_name(id), sel ? K_LIME : K_GREY);
     if (h >= 50) g_text(g_fit(T_B, b, w - 14), x + 7, y + 18, b, sel ? K_LIME : K_WHITE);
     else g_text(g_fit(T_M, b, w - 14), x + 7, y + 17, b, sel ? K_LIME : K_WHITE);
@@ -656,6 +656,7 @@ static void draw_cell(const view_t *v, int32_t x, int32_t y, int32_t w, int32_t 
     if (!g_vis(y, h)) return;
     item_text(id, b);
     g_box(x, y, w, h, sel ? K_LIMED : K_PANEL, sel ? K_LIME : K_LINE);
+    if (g_rad) g_vgrad(x + 1, y + 1, w - 2, h - 2, g_mix(K_PANEL, K_LIME, sel ? 100 : 40), g_mix(K_BG, K_CYAN, 60));
     if (k >= 0) {
         char kn[3] = {'K', (char)('1' + k), 0};
         g_rect(x + 5, y + 5, 5, 5, PAL_BW ? K_WHITE : KNOB_RGB[k]);
@@ -717,11 +718,11 @@ static void view_dots(int32_t xr, int32_t y)    /* the page's views: one dot eac
 /* the battery, top right: five segments (the percentage only in SYSTEM); returns its left edge */
 static int32_t batt_draw(int32_t xr, int32_t y, int pct)
 {
-    int32_t x = xr - 24, lit = (batt_pct + 19) / 20, i, l = x;
+    int32_t x = xr - 18, lit = (batt_pct + 19) / 20, i, l = x;
     uint16_t col = lit <= 1 ? K_ORANGE : K_LIME;
-    g_box(x, y, 22, 9, K_BG, K_GREY);
-    g_rect(x + 22, y + 3, 2, 3, K_GREY);
-    for (i = 0; i < 5; i++) g_rect(x + 2 + i * 4, y + 2, 3, 5, i < lit ? col : K_LINE);
+    g_box(x, y + 1, 17, 7, K_BG, K_GREY);
+    g_rect(x + 17, y + 3, 1, 3, K_GREY);
+    for (i = 0; i < 5; i++) g_rect(x + 2 + i * 3, y + 3, 2, 3, i < lit ? col : K_LINE);
     if (pct) {
         char b[8];
         str_cat(fmt_u(b, (uint32_t)batt_pct, 0), "%");
@@ -791,54 +792,6 @@ static void save_g(int32_t x, int32_t y0, int32_t w, int32_t ty)   /* the name b
     }
 }
 
-/* ---------------------------------------------------------------- CLASSIC */
-static void th_classic(const view_t *v, uint32_t vi)
-{
-    char t[32], sub[48], n[8], fb[64], *p;
-    const char *ti = view_title(vi, t, sub), *ff = foot_fixed(vi);
-    uint32_t vz = VZ_OF[vi], c = cursor[vi], i;
-    if (g_vis(0, 36)) {
-        int32_t bx = batt_draw(234, 5, v->lay == LY_SYS);
-        g_text(T_M, 8, 4, v->cat, K_LIME);
-        p = fmt_u(n, (uint32_t)page + 1u, 2);
-        if (page == PG_PLAY) str_cat(p, "/08");
-        g_text_r(T_XS, bx - 6, 7, n, K_GREY);
-        view_dots(bx - 6 - g_text_w(T_XS, n) - 6, 8);
-        g_rect(6, 19, 228, 1, K_LINE);
-    }
-    if (v->lay == LY_PLAY) {                    /* the patch, a scope, four macros */
-        g_text(T_L, 8, 25, ti, K_WHITE);
-        g_text(T_XS, 8, 49, sub, K_GREY);
-        p = t;
-        if (hold) p = str_cat(p, "HOLD \xB7 ");
-        p = fmt_u(p, ks_bpm10 / 10u, 0);
-        str_cat(p, " BPM");
-        g_text_r(T_XS, 232, 49, t, hold ? K_LIME : K_CYAN);
-        draw_visual(VZ_SCOPE, 4, 60, 232, 50, 0);
-        for (i = 0; i < 4u; i++)
-            draw_vbox(i & 1u ? 123 : 6, 116 + (int32_t)(i >> 1) * 52, 111, 47, v->it[i], i == c,
-                      v->it[i] == I_L1RATE ? "WOB RATE" : v->it[i] == L1_DEP ? "WOB DEPTH" : 0);
-    } else {
-        g_text(T_L, 8, 25, ti, K_WHITE);
-        g_text(T_XS, 8, 49, sub, v->lay == LY_LIST && page == PG_FX ? K_ORANGE : K_GREY);
-        if (v->lay == LY_PRESET) presets_g(vi - PAGE_V0[PG_PRE], 6, 62, 228, 26, 31, 5, T_S);
-        else if (v->lay == LY_SAVE) save_g(8, 64, 228, 37);
-        else if (v->lay == LY_BOX) {
-            draw_visual(vz, 6, 60, 228, 58, 1);
-            for (i = 0; i < 4u; i++) draw_vbox(i & 1u ? 123 : 6, 122 + (int32_t)(i >> 1) * 50, 111, 46, v->it[i], i == c, 0);
-        } else if (vz) {
-            draw_visual(vz, 6, 60, 228, 50, 1);
-            rows_g(v, 6, 114, 228, 23, 27, 4, T_S);
-        } else
-            rows_g(v, 6, 62, 228, 26, 31, 5, T_S);
-    }
-    if (g_vis(222, 12)) {
-        if (ff) str_cat(fb, ff); else foot_text(v, fb, 180);
-        g_text(T_XS, 8, 226, fb, K_GREY);
-        g_text_r(T_XS, 232, 226, v->tag, K_CYAN);
-    }
-}
-
 /* ---------------------------------------------------------------- GLOW: simple, gradients, one bright accent */
 static void glow_vis(uint32_t vz, int32_t x, int32_t y, int32_t w, int32_t h)
 {
@@ -905,6 +858,7 @@ static void th_tech(const view_t *v, uint32_t vi)
 {
     char t[32], sub[48], b[24], nm[24], fb[64], *p;
     const char *ti = view_title(vi, t, sub), *ff = foot_fixed(vi);
+    int32_t ph;
     uint32_t vz = VZ_OF[vi], c = cursor[vi], i;
     if (g_vis(0, 18)) {                         /* the bar: the name, the page, the views */
         int32_t bx = batt_draw(234, 4, v->lay == LY_SYS);
@@ -921,9 +875,10 @@ static void th_tech(const view_t *v, uint32_t vi)
         else rows_g(v, 4, 36, 232, 24, 28, 6, T_S);
         goto foot;
     }
-    tech_win(4, 18, 232, 126, 0, K_LIME, 0);    /* the picture, as large as the page lets it */
+    ph = vz && v->n > 4u ? 62 : 126;            /* the picture: small when the page has rows to show under the tiles */
+    tech_win(4, 18, 232, ph, 0, K_LIME, 0);
     if (vz) {
-        draw_visual(vz, 5, 19, 230, 124, 0);
+        draw_visual(vz, 5, 19, 230, ph - 2, 0);
         g_text(T_S, 10, 22, ti, K_WHITE);
         if (g_text_w(T_S, ti) + g_text_w(T_XS, sub) < 214) g_text(T_XS, 18 + g_text_w(T_S, ti), 25, sub, K_GREY);
     } else {                                    /* no picture: the title, and the row chosen, big */
@@ -938,7 +893,7 @@ static void th_tech(const view_t *v, uint32_t vi)
         }
     }
     for (i = 0; i < 4u; i++) {                  /* the four knobs: K1..K4 */
-        int32_t x = 4 + (int32_t)i * 59, y = 148;
+        int32_t x = 4 + (int32_t)i * 59, y = ph + 22;
         uint32_t id = vknob(v, i);
         int on = id != I_NONE && v->n && v->it[c] == id;
         if (id == I_NONE || !g_vis(y, 54)) continue;
@@ -950,7 +905,8 @@ static void th_tech(const view_t *v, uint32_t vi)
         g_text(g_fit(T_M, b, 48), x + 5, y + 19, b, on ? K_LIME : K_WHITE);
         g_vbar(x + 5, y + 44, 46, 4, item_frac(id), on ? K_LIME : K_CYAN);
     }
-    if (v->n > 4u && g_vis(206, 17)) {          /* the row SELECT is on, and its value (ALGO) */
+    if (vz && v->n > 4u) rows_g(v, 4, ph + 80, 232, 24, 26, 3, T_S);   /* (the small picture leaves room for the rows) */
+    else if (v->n > 4u && g_vis(206, 17)) {     /* the row SELECT is on, and its value (ALGO) */
         uint32_t id = v->it[c];
         tech_win(4, 206, 232, 17, 3, K_CYAN, 0);
         item_text(id, b);
@@ -1665,11 +1621,13 @@ static void draw_all(void)
     const view_t *v = view();
     uint32_t vi = vidx();
     g_rect(0, g_y0, 240, (int32_t)BAND_H, K_BG);
-    if (theme == TH_GLOW) {                     /* GLOW: the accent glowing in from the top, the second colour from the bottom */
+    if (g_rad) {                                /* RAD palettes: the accent poured in from the top into the second colour at the bottom, on every theme */
+        g_vgrad(0, 0, 240, 240, g_mix(K_BG, K_LIME, 110), g_mix(K_BG, K_CYAN, 110));
+    } else if (theme == TH_GLOW) {              /* GLOW: the accent glowing in from the top, the second colour from the bottom */
         g_vgrad(0, 0, 240, 96, g_mix(K_BG, K_LIME, 46), K_BG);
         g_vgrad(0, 196, 240, 44, K_BG, g_mix(K_BG, K_CYAN, 30));
     }
-    if (theme == TH_TECH) {                     /* TECH: a glow from the top (the accent), another from the bottom (the second colour) */
+    if (theme == TH_TECH && !g_rad) {           /* TECH: a glow from the top (the accent), another from the bottom (the second colour) */
         g_vgrad(0, 0, 240, 130, g_mix(K_BG, K_LIME, 40), K_BG);
         g_vgrad(0, 130, 240, 110, K_BG, g_mix(K_BG, K_CYAN, 44));
     }
@@ -1682,9 +1640,8 @@ static void draw_all(void)
     case TH_STUDIO: th_studio(v, vi); break;
     case TH_PURE: th_pure(v, vi); break;
     case TH_RACK: th_rack(v, vi); break;
-    case TH_GLOW: th_glow(v, vi); break;
     case TH_TECH: th_tech(v, vi); break;
-    default: th_classic(v, vi); break;
+    default: th_glow(v, vi); break;
     }
     if (dpop_ms && g_vis(22, 200)) {            /* the destination list: the ones before and after, the group of each */
         static const char *const GR[] = {"", "FILTER", "FILTER", "PITCH", "OSC A", "OSC A", "OSC B", "OSC B", "OSC A", "OSC B",

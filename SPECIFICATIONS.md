@@ -2,7 +2,7 @@
 
 [English](SPECIFICATIONS.md) · [Français](fr/CAHIER-DES-CHARGES.md)
 
-A modern bass synth for the M-VAVE FM-1 (JieLi AC79, two cores, no FPU). Last update: **0.9.22**.
+A modern bass synth for the M-VAVE FM-1 (JieLi AC79, two cores, no FPU). Last update: **0.9.23**.
 This document says where the project stands: what is done, what has to be checked, what is left, and ideas to go further.
 
 ## 1. Vision
@@ -55,7 +55,7 @@ This document says where the project stands: what is done, what has to be checke
 | Languages | Everything is in English by default; the home page, manual, README, specifications and notes also exist in French under `fr/`; the emulator and the installer switch with `?lang=fr` |
 
 ### Interface
-6 themes, 19 palettes (INVERTED grey, RED, ICE, FLUO, PINK, GOLD…), 4 fonts, LOUPE, **CONTRAST** HIGH / MAX, visuals everywhere (waves, envelopes with a dot, wavetable, FM operators, EQ…).
+5 themes, 11 palettes + RAD gradient versions (INVERTED grey, RED, ICE, FLUO, PINK, GOLD…), 4 fonts, LOUPE, **CONTRAST** HIGH / MAX, visuals everywhere (waves, envelopes with a dot, wavetable, FM operators, EQ…).
 
 ### Stability and tooling
 Load governor; measured audio budget for the effects (the watchdog no longer sees the audio block); fallback to one core; **LAST STOP** (watchdog, low voltage, crash + address); automatic load tests (UBSan, A and B); web emulator A and B; one-page installer; standalone build.

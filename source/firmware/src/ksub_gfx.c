@@ -46,9 +46,9 @@ static const uint16_t PALS[21][KC_N] = {
     {C3(2,5,6), C3(8,18,16), C3(22,50,44), C3(57,255,20), C3(8,56,20), C3(120,255,230), C3(240,255,250), C3(104,150,140), C3(16,38,34), C3(255,200,60), C3(57,255,20), C3(2,5,6), C3(120,255,230)},
     {C3(2,4,10), C3(8,14,30), C3(22,40,80), C3(0,225,255), C3(6,48,76), C3(255,70,200), C3(238,250,255), C3(104,136,170), C3(16,30,60), C3(255,190,60), C3(0,225,255), C3(2,4,10), C3(255,70,200)},
 };
-static const char *const PAL_NAME[6][2] = {{"NEON", "AMBER"}, {"STUDIO", "OCEAN"}, {"PURE", "PURE RED"}, {"RACK", "MAGMA"}, {"FLUO GREEN", "TOXIC"}, {"VOLT", "CYBER"}};
+static const char *const PAL_NAME[5][2] = {{"FLUO GREEN", "TOXIC"}, {"STUDIO", "OCEAN"}, {"PURE", "PURE RED"}, {"RACK", "MAGMA"}, {"VOLT", "CYBER"}};
 static uint16_t kc[KC_N];
-static uint8_t theme, theme_pal;
+static uint8_t theme, theme_pal, g_rad;        /* (g_rad: a RAD palette, the gradient version of theme_pal) */
 #define PAL_BW (theme_pal == 4u || theme_pal == 5u)   /* black and white, inverted: no colours of their own */
 static uint16_t g_mix(uint16_t a, uint16_t b, uint32_t t);
 static uint8_t g_con, g_bri = 3;                /* BRIGHTNESS: 0 ECO, 1 NORMAL, 2 BRIGHT, 3 MAX */
@@ -80,9 +80,10 @@ static uint16_t con_px(uint16_t c, uint16_t bg, uint16_t wh)
 static void theme_set(uint32_t t, uint32_t pal)
 {
     uint32_t i, k;
-    theme = (uint8_t)(t < 6u ? t : 0u);
-    theme_pal = (uint8_t)(pal < 11u ? pal : 0u);
-    k = theme_pal < 2u ? (theme < 4u ? theme * 2u : theme == 4u ? 15u : 19u) + theme_pal : theme_pal < 9u ? 6u + theme_pal : 8u + theme_pal;   /* (rows: 4 themes x 2, 7 for all, GLOW's 2, 2 more for all) */
+    theme = (uint8_t)(t < 5u ? t : 0u);
+    g_rad = (uint8_t)(pal >= 11u && pal < 22u);
+    theme_pal = (uint8_t)(pal < 11u ? pal : pal < 22u ? pal - 11u : 0u);
+    k = theme_pal < 2u ? (theme == 0u ? 15u : theme < 4u ? theme * 2u : 19u) + theme_pal : theme_pal < 9u ? 6u + theme_pal : 8u + theme_pal;   /* (rows: 4 themes x 2, 7 for all, GLOW's 2, 2 more for all) */
     for (i = 0; i < KC_N; i++) kc[i] = g_con ? con_px(PALS[k][i], PALS[k][KC_BG], PALS[k][KC_WHITE]) : PALS[k][i];
     if (g_con) {                                /* (the cards stay apart from the background) */
         kc[KC_PANEL] = g_mix(kc[KC_PANEL], PALS[k][KC_PANEL], 128u);
