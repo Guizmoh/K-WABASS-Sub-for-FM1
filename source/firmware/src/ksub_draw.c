@@ -14,6 +14,42 @@ static const uint8_t VZ_OF[] = {VZ_SCOPE, VZ_SCOPE, VZ_OSCA, VZ_OSCB, VZ_SUB, VZ
                                 VZ_CHORUS, VZ_PHASER, VZ_CRUSH, VZ_MASTER, VZ_NONE, VZ_NONE, VZ_NONE, VZ_NONE, VZ_CPU, VZ_NONE};
 typedef char vz_fits[sizeof VZ_OF == sizeof VIEWS / sizeof VIEWS[0] ? 1 : -1];
 static const char *const PAGE_SHORT[NPAGE] = {"PLAY", "BASS", "ENV", "FILT", "LFO", "FX", "PRE", "SYS"};
+/* LANGUAGE (SYSTEM): only the view titles (v->cat, top of every screen) are translated; parameter names and values
+ * stay in English, as on most hardware synths, and to keep every screen's layout untouched */
+static const char *const L_CAT[25][3] = {
+    {"CURRENT PATCH", "PATCH ACTUEL", "PARCHE ACTUAL"},
+    {"LIVE MIX", "MIX EN DIRECT", "MEZCLA EN VIVO"},
+    {"OSCILLATOR A", "OSCILLATEUR A", "OSCILADOR A"},
+    {"OSCILLATOR B", "OSCILLATEUR B", "OSCILADOR B"},
+    {"SUB + NOISE", "SUB + BRUIT", "SUB + RUIDO"},
+    {"COMBINE A + B", "COMBINER A + B", "COMBINAR A + B"},
+    {"OSCILLATOR C \xB7 SAMPLE", "OSCILLATEUR C \xB7 SAMPLE", "OSCILADOR C \xB7 SAMPLE"},
+    {"AMP ENVELOPE", "ENVELOPPE AMPLI", "ENVOLVENTE AMP"},
+    {"FILTER ENVELOPE", "ENVELOPPE FILTRE", "ENVOLVENTE FILTRO"},
+    {"MOD ENVELOPE", "ENVELOPPE MOD", "ENVOLVENTE MOD"},
+    {"FILTER / COLOUR", "FILTRE / COULEUR", "FILTRO / COLOR"},
+    {"FILTER MOD", "MOD DU FILTRE", "MOD DEL FILTRO"},
+    {"SEQ BASS", "SEQ BASS", "SEQ BASS"},
+    {"LFO 1 \xB7 WOBBLE", "LFO 1 \xB7 WOBBLE", "LFO 1 \xB7 WOBBLE"},
+    {"LFO 2 \xB7 MOTION", "LFO 2 \xB7 MOUVEMENT", "LFO 2 \xB7 MOVIMIENTO"},
+    {"STEP FX", "STEP FX", "STEP FX"},
+    {"MOD MATRIX", "MATRICE DE MOD", "MATRIZ DE MOD"},
+    {"FX RACK", "RACK FX", "RACK FX"},
+    {"EQ", "EQ", "EQ"},
+    {"PRESET BANK A", "BANQUE DE PRESETS A", "BANCO DE PRESETS A"},
+    {"PRESET BANK B", "BANQUE DE PRESETS B", "BANCO DE PRESETS B"},
+    {"SAVE PATCH", "ENREGISTRER LE PATCH", "GUARDAR EL PARCHE"},
+    {"ARPEGGIATOR", "ARPEGIATEUR", "ARPEGIADOR"},
+    {"GLOBAL SETUP", "REGLAGES GENERAUX", "AJUSTES GENERALES"},
+    {"MIDI", "MIDI", "MIDI"},
+};
+static const char *cat_tr(const char *cat)      /* v->cat in the user's language (SYSTEM > LANGUAGE); English if not found */
+{
+    uint32_t i;
+    if (!set.lang) return cat;
+    for (i = 0; i < 25u; i++) if (str_eq(cat, L_CAT[i][0])) return L_CAT[i][set.lang];
+    return cat;
+}
 static const uint16_t KNOB_RGB[4] = {RGB(255, 92, 92), RGB(255, 204, 64), RGB(92, 226, 116), RGB(84, 164, 255)};
 static int16_t live[224];
 
@@ -815,7 +851,7 @@ static void th_glow(const view_t *v, uint32_t vi)
     uint32_t vz = VZ_OF[vi], c = cursor[vi], i;
     if (g_vis(0, 36)) {
         int32_t bx = batt_draw(234, 5, v->lay == LY_SYS);
-        g_text(T_S, 8, 5, v->cat, K_LIME);
+        g_text(T_S, 8, 5, cat_tr(v->cat), K_LIME);
         p = fmt_u(n, (uint32_t)page + 1u, 2);
         g_text_r(T_XS, bx - 6, 7, n, K_GREY);
         view_dots(bx - 6 - g_text_w(T_XS, n) - 6, 8);
@@ -870,7 +906,7 @@ static void th_tech(const view_t *v, uint32_t vi)
     uint32_t vz = VZ_OF[vi], c = cursor[vi], i;
     if (g_vis(0, 18)) {                         /* the bar: the name, the page, the views */
         int32_t bx = batt_draw(234, 4, v->lay == LY_SYS);
-        g_text(T_XS, 6, 4, v->cat, K_LIME);
+        g_text(T_XS, 6, 4, cat_tr(v->cat), K_LIME);
         p = fmt_u(b, (uint32_t)page + 1u, 2);
         g_text_r(T_XS, bx - 6, 4, b, K_GREY);
         view_dots(bx - 6 - g_text_w(T_XS, b) - 6, 5);
@@ -955,7 +991,7 @@ static void th_studio(const view_t *v, uint32_t vi)
         }
     }
     if (g_vis(30, 32)) {
-        g_text(T_XS, 5, 31, v->cat, K_LIME);
+        g_text(T_XS, 5, 31, cat_tr(v->cat), K_LIME);
         view_dots(235, 32);
         g_text(T_B, 5, 41, ti, K_WHITE);
         g_text(T_XS, 5, 59, sub, K_MOD);
@@ -1002,9 +1038,9 @@ static void th_pure(const view_t *v, uint32_t vi)
     const char *ti = view_title(vi, t, sub);
     uint32_t vz = VZ_OF[vi], c = cursor[vi], i, nv = (uint32_t)(PAGE_V0[page + 1u] - PAGE_V0[page]);
     if (g_vis(0, 18)) {                         /* the section on a lime tab with a cut corner */
-        int32_t w = g_text_w(T_S, v->cat) + 18, y;
+        const char *cc = cat_tr(v->cat); int32_t w = g_text_w(T_S, cc) + 18, y;
         for (y = 0; y < 17; y++) if (g_vis(y, 1)) g_rect(0, y, w + (16 - y) / 2 + 4, 1, K_LIME);
-        g_text(T_S, 7, 4, v->cat, K_INK);
+        g_text(T_S, 7, 4, cc, K_INK);
         p = fmt_u(s, (uint32_t)page + 1u, 2);
         if (nv > 1u) { p = str_cat(p, " \xB7 "); p = fmt_u(p, vcur[page] + 1u, 0); p = str_cat(p, "/"); fmt_u(p, nv, 0); }
         g_text_r(T_XS, batt_draw(234, 4, v->lay == LY_SYS) - 6, 5, s, K_GREY);
@@ -1348,7 +1384,7 @@ static void th_rack(const view_t *v, uint32_t vi)
         }
     }
     if (g_vis(0, 50)) {
-        g_text(T_S, 37, 4, v->cat, K_LIME);
+        g_text(T_S, 37, 4, cat_tr(v->cat), K_LIME);
         view_dots(batt_draw(235, 5, v->lay == LY_SYS) - 6, 6);
         g_text(T_L, 37, 17, ti, K_WHITE);
         g_text(T_XS, 37, 40, sub, K_GREY);

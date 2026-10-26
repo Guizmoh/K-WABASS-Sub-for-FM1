@@ -2,7 +2,7 @@
 
 # K-WASUB · FM1 modern Bass firmware
 
-**English** : [README](../README.md) · **Français** : cette page
+**English** : [README](../README.md) · **Français** : cette page · **Español** : [README](../es/README.md)
 
 **Synthé de basses modernes pour le M-VAVE FM-1** : DnB, dub, dubstep, techno. Wobble en direct, reese, sub, 808, un EQ, un morph entre quatre sons, des effets sur les touches. Gratuit et libre (GPL-3.0). *Beta.*
 
@@ -14,6 +14,7 @@
 | 🏠 **Accueil** | [`index.html`](index.html) (si GitHub Pages est activé : <https://guizmoh.github.io/K-WASUB_Firmware_for_FM1/>) |
 | 🗺 **Cahier des charges** | [`CAHIER-DES-CHARGES.md`](CAHIER-DES-CHARGES.md) : fait, à faire, idées |
 | 📜 Notes techniques | [`NOTES-TECHNIQUES.md`](NOTES-TECHNIQUES.md) |
+| 🇪🇸 Espagnol | [`es/README.md`](../es/README.md) : le README en espagnol |
 
 ## Fonctions clés
 
@@ -29,6 +30,7 @@
 10. Un **EQ** visuel.
 11. Des **thèmes** complètement différents, pour s'adapter à ta façon de jouer.
 12. **Luminosité**, contraste, polices et taille.
+13. **Langue du firmware** (`SYSTEM › LANGUAGE`) : English, Français ou Español ; anglais par défaut.
 
 ## Installer
 
@@ -42,8 +44,8 @@ Retour à KAWA (`install/kawa-0.5.fwsc`) ou au firmware officiel (M-UPGRADE) pos
 
 ```sh
 cd source
-./build.sh --release 0.9.45          # -> build/k-wasub-0.9.45.fwsc
-APP_VER=0.9.45 bash web/make_emulator.sh      # émulateur
+./build.sh --release 0.9.46          # -> build/k-wasub-0.9.46.fwsc
+APP_VER=0.9.46 bash web/make_emulator.sh      # émulateur
 bash web/make_installer.sh                    # installer.html avec le dernier paquet
 bash tests/run_stress.sh                      # tests de charge (UBSan)
 python3 tests/manual_shots.py                 # captures du manuel (docs/img)

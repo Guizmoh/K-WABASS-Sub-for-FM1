@@ -2,7 +2,7 @@
 
 # K-WASUB · FM1 modern Bass firmware
 
-**English** · [Français](fr/README.md)
+**English** · [Français](fr/README.md) · [Español](es/README.md)
 
 **A modern bass synth for the M-VAVE FM-1**: DnB, dub, dubstep, techno. Live wobble, reese, sub, 808, an EQ, a morph between four sounds, effects on the keys. Free and open source (GPL-3.0). *Beta.*
 
@@ -15,6 +15,7 @@
 | 🗺 **Specifications** | [`SPECIFICATIONS.md`](SPECIFICATIONS.md): done, to do, ideas |
 | 📜 Technical notes | [`docs/TECHNICAL-NOTES.md`](docs/TECHNICAL-NOTES.md) |
 | 🇫🇷 French | [`fr/`](fr/): the home page, manual, specifications and notes in French |
+| 🇪🇸 Spanish | [`es/README.md`](es/README.md): the README in Spanish |
 
 ## Key features
 
@@ -30,6 +31,7 @@
 10. A visual **EQ**.
 11. Totally different **themes**, to fit the way you work.
 12. **Brightness**, contrast, fonts and size.
+13. **Firmware language** (`SYSTEM › LANGUAGE`): English, Français or Español; English by default.
 
 ## Install
 
@@ -43,8 +45,8 @@ You can go back to KAWA (`install/kawa-0.5.fwsc`) or to the stock firmware (M-UP
 
 ```sh
 cd source
-./build.sh --release 0.9.45          # -> build/k-wasub-0.9.45.fwsc
-APP_VER=0.9.45 bash web/make_emulator.sh      # emulator
+./build.sh --release 0.9.46          # -> build/k-wasub-0.9.46.fwsc
+APP_VER=0.9.46 bash web/make_emulator.sh      # emulator
 bash web/make_installer.sh                    # installer.html with the newest package
 bash tests/run_stress.sh                      # load tests (UBSan)
 python3 tests/manual_shots.py                 # the manual's screenshots (docs/img)
