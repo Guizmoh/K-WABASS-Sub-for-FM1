@@ -122,7 +122,7 @@ details.toc2{margin:10px 0 0;background:var(--panel);border:1px solid var(--rule
 <div class="grid"><figure><img src="docs/img/v-sat.png" alt=""><figcaption><b>Saturation</b>: SOFT, TUBE, HARD, FOLD</figcaption></figure>
 <figure><img src="docs/img/v-ott.png" alt=""><figcaption><b>MULTIBAND (OTT)</b>: 3 bands brought toward their level, upward and downward</figcaption></figure>
 <figure><img src="docs/img/v-comp.png" alt=""><figcaption><b>Compressor + PUMP</b>: the sidechain dip on the beat</figcaption></figure>
-<figure><img src="docs/img/v-eq.png" alt=""><figcaption><b>EQ</b>: 4 bands, 7 types</figcaption></figure>
+<figure><img src="docs/img/v-eq.png" alt=""><figcaption><b>EQ</b>: SELECT a band; K1 FREQ, K2 GAIN, K3 Q, K4 SHAPE</figcaption></figure>
 <figure><img src="docs/img/v-delay.png" alt=""><figcaption><b>Delay</b>: PING-PONG, TAPE, DIGITAL, DUB</figcaption></figure>
 <figure><img src="docs/img/v-reverb.png" alt=""><figcaption><b>Reverb</b>: ROOM, HALL, PLATE, SPRING</figcaption></figure>
 <figure><img src="docs/img/v-chorus.png" alt=""><figcaption><b>Chorus</b></figcaption></figure>
@@ -241,7 +241,7 @@ details.toc2{margin:10px 0 0;background:var(--panel);border:1px solid var(--rule
 <b>Limiter</b> (always on): nothing goes above the ceiling, even with the volume at full; the gain drops at once and comes back in ~50 ms.<br>
 <b>AUTO LEVEL</b> (ON by default): a slow normaliser that brings every sound toward the same average level (up in a few seconds, down in under a second, still in silence). The MASTER volume stays your final setting.</div>
 <h3>The effects</h3>
-<p>Saturation (4 types), compressor with PUMP, bitcrush, chorus, phaser, delay (4 types, locked to the tempo), reverb (4 types), glue, sub boost, 4-band EQ (<code>LSHF</code>, <code>BELL</code>, <code>NOTCH</code>, <code>HSHF</code>, high / low cut: <kbd>K1</kbd>–<kbd>K4</kbd> the frequency, <kbd>OCT−</kbd> held the gain, <kbd>OCT+</kbd> held the type, <kbd>ALGO</kbd> the width).</p>
+<p>Saturation (4 types), compressor with PUMP, bitcrush, chorus, phaser, delay (4 types, locked to the tempo), reverb (4 types), glue, sub boost, 4-band EQ (<code>LSHF</code>, <code>BELL</code>, <code>NOTCH</code>, <code>HSHF</code>, high / low cut): one band at a time, <kbd>SELECT</kbd> picks it (its tab lights up); <kbd>K1</kbd> FREQ, <kbd>K2</kbd> GAIN, <kbd>K3</kbd> Q (the width), <kbd>K4</kbd> SHAPE, <kbd>ALGO</kbd> the frequency too. Each knob says its job on the screen; on the curve the band chosen shows its frequency (dotted line), its width (the shaded part and the bracket) and its gain.</p>
 
 <h2 id="seq">10 · SEQ BASS, ARP, MIDI</h2>
 <div class="grid"><figure><img src="docs/img/v-seq.png" alt=""><figcaption><b>SEQ BASS</b>: 16 patterns of 16 steps (note, accent, glide), <kbd>PLAY</kbd> starts, the keys write in REC</figcaption></figure>

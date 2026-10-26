@@ -243,8 +243,8 @@ static void mc_defaults(void)
 }
 /* ---- the SEL windows: 1 FX LIVE, 2 MACROS (SEL again: the next, then back to the page) */
 
-/* ---- the EQ (FX held): K1..K4 the bands' frequencies, OCT- held their gains, OCT+ held their types, SELECT a band,
- * ALGO its width; on every sound, kept with SEQ BASS */
+/* ---- the EQ (the FX page's EQ view): four bands, one set at a time: SELECT the band, K1 FREQ, K2 GAIN, K3 Q, K4 SHAPE,
+ * ALGO the frequency too; on every sound, kept with SEQ BASS */
 static const char *const L_EQT[NEQT] = {"OFF", "LOW CUT", "LOW SHELF", "BELL", "NOTCH", "HIGH SHELF", "HIGH CUT"};
 static const char *const L_EQS[NEQT] = {"OFF", "LCUT", "LSHF", "BELL", "NTCH", "HSHF", "HCUT"};
 static uint8_t eq_cur, eq_dirty = 1;
@@ -1193,7 +1193,7 @@ static const char *item_name(uint32_t id)
     case G_MC_AMT: return "AMOUNT";
     case G_EQ_F: return "FREQUENCY";
     case G_EQ_G: return "GAIN";
-    case G_EQ_T: return "BAND TYPE";
+    case G_EQ_T: return "SHAPE";
     case G_EQ_Q: return "WIDTH (Q)";
     default: return "";
     }
@@ -1673,15 +1673,12 @@ static void on_enc(uint32_t e, int32_t d)
 {
     const view_t *v = view();
     uint32_t vi = vidx();
-    if (win == 3u && e != ENC_PRESETS) {        /* the EQ: K1..K4 frequencies (OCT- held: gains, OCT+ held: types) */
+    if (win == 3u && e != ENC_PRESETS) {        /* the EQ: the band chosen (SELECT); K1 FREQ, K2 GAIN, K3 Q, K4 SHAPE; ALGO its frequency */
+        static const uint8_t EK[4] = {G_EQ_F, G_EQ_G, G_EQ_Q, G_EQ_T};
         vpop_pre[0] = 0;
-        if (e == ENC_SELECT) eq_cur = (uint8_t)clampi(eq_cur + d, 0, 3);
-        else if (e == ENC_ALGORITHM) edit_item(G_EQ_Q, d);
-        else if (e >= ENC_KNOB1 && e <= ENC_KNOB4) {
-            uint32_t col = c3_col();
-            eq_cur = (uint8_t)(e - ENC_KNOB1);
-            edit_item(col == 1u ? G_EQ_G : col == 2u ? G_EQ_T : G_EQ_F, d);
-        }
+        if (e == ENC_SELECT) { eq_cur = (uint8_t)clampi(eq_cur + d, 0, 3); g_force = 1; }
+        else if (e == ENC_ALGORITHM) edit_item(G_EQ_F, d);
+        else if (e >= ENC_KNOB1 && e <= ENC_KNOB4) edit_item(EK[e - ENC_KNOB1], d);
         return;
     }
     if (win && e != ENC_PRESETS) {              /* the SEL windows: K1..K4 their four, SELECT a row, ALGO its value */
@@ -2231,7 +2228,7 @@ WASM_EXPORT("ksub_knob_label") const char *ksub_knob_label(uint32_t i)
     if (i >= 4u) return "";
     if (v->lay == LY_PRESET) return i == 0u ? "SCROLL" : i == 2u ? "LOAD" : "";
     if (v->lay == LY_SAVE) return i == 0u ? "SLOT" : i == 1u ? "POSITION" : i == 2u ? "LETTER" : "STYLE";
-    if (win == 3u) return c3_col() == 1u ? "GAIN" : c3_col() == 2u ? "TYPE" : "FREQ";
+    if (win == 3u) { static const char *const KE[4] = {"FREQ", "GAIN", "Q", "SHAPE"}; return KE[i]; }
     if (win == 6u) return "";
     if (win == 7u) return mc_name(i);
     if (win == 4u) { static const char *const KX[4] = {"X", "Y", "CORNER", "SOUND"}; return KX[i]; }

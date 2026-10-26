@@ -1521,73 +1521,133 @@ static void draw_win(void)
 }
 
 /* ---------------------------------------------------------------- the EQ (FX held): the curve on top, the 4 bands under it */
+/* the EQ: one band at a time, each knob one job (K1 FREQ, K2 GAIN, K3 Q, K4 SHAPE), SELECT the band, ALGO its frequency;
+ * on the picture the band chosen shows where it acts: a line at its frequency, its width (Q) as a bracket, its gain */
+static void eq_shape(uint32_t t, int32_t x, int32_t y, int32_t w, int32_t h, uint16_t c)   /* the band's shape, drawn */
+{
+    int32_t m = y + h / 2, a = x + w / 3, b = x + 2 * w / 3, top = y + 2, bot = y + h - 2;
+    switch (t) {
+    case EQ_LOCUT: g_line(x, bot, a, m, c); g_line(a, m, x + w, m, c); break;
+    case EQ_LOSH: g_line(x, top, a, top, c); g_line(a, top, b, m, c); g_line(b, m, x + w, m, c); break;
+    case EQ_BELL: g_line(x, m, a, m, c); g_line(a, m, x + w / 2, top, c); g_line(x + w / 2, top, b, m, c); g_line(b, m, x + w, m, c); break;
+    case EQ_NOTCH: g_line(x, m, a + 4, m, c); g_line(a + 4, m, x + w / 2, bot, c); g_line(x + w / 2, bot, b - 4, m, c); g_line(b - 4, m, x + w, m, c); break;
+    case EQ_HISH: g_line(x, m, a, m, c); g_line(a, m, b, top, c); g_line(b, top, x + w, top, c); break;
+    case EQ_HICUT: g_line(x, m, b, m, c); g_line(b, m, x + w, bot, c); break;
+    default: { int32_t k; for (k = 0; k < w; k += 6) g_rect(x + k, m, 3, 1, c); }
+    }
+}
 static void draw_eq(void)
 {
-    const int32_t gx = 6, gy = 16, gw = 228, gh = 104, mid = gy + gh / 2;
-    uint32_t k, col = c3_col();
-    int32_t x, py = 0;
-    char t[24], b[16];
-    if (g_vis(0, 15)) {
+    static const uint16_t BWO[8] = {320, 230, 174, 139, 101, 72, 48, 29};   /* a bell's width in octaves x 100, by Q */
+    const int32_t gx = 6, gy = 32, gw = 228, gh = 92, mid = gy + gh / 2;
+    const uint32_t c = eq_cur & 3u, f = perf.eq_f[c] % 48u, t = perf.eq_t[c] % NEQT;
+    const uint16_t kc4[4] = {PAL_BW ? K_WHITE : KNOB_RGB[0], PAL_BW ? K_WHITE : KNOB_RGB[1], PAL_BW ? K_WHITE : KNOB_RGB[2], PAL_BW ? K_WHITE : KNOB_RGB[3]};
+    uint32_t k;
+    int32_t x, py = 0, fx = gx + (int32_t)(f * (uint32_t)(gw - 1) / 47u);
+    char b[16];
+    if (g_vis(0, 30)) {                         /* the four bands as tabs: the one chosen lit (SELECT) */
         g_text(T_S, 6, 2, "EQ", K_LIME);
-        p_eqhead(t);
-        g_text_r(T_XS, 234, 4, t, K_GREY);
+        g_text_r(T_XS, 234, 4, "SELECT: BAND", K_GREY);
+        for (k = 0; k < 4u; k++) {
+            int32_t x0 = 4 + (int32_t)k * 58, on = k == c;
+            char n[3] = {(char)('1' + k), 0, 0};
+            g_box(x0, 15, 56, 14, on ? K_LIME : K_PANEL, on ? K_LIME : K_LINE);
+            g_text(T_XS, x0 + 4, 17, n, on ? K_INK : K_GREY);
+            g_text(T_XS, x0 + 14, 17, L_EQS[perf.eq_t[k] % NEQT], on ? K_INK : perf.eq_t[k] ? K_WHITE : K_GREY);
+        }
     }
     if (g_vis(gy, gh)) {
         static const uint16_t GRID[3] = {100, 1000, 10000};
         static const char *const GL[3] = {"100", "1k", "10k"};
         g_box(gx - 2, gy, gw + 4, gh, K_PANEL, K_LINE);
-        for (k = 0; k < 3u; k++) {              /* 100 Hz, 1 kHz, 10 kHz: log(f/20) / log(900) of the width */
+        for (k = 0; k < 3u; k++) {              /* 100 Hz, 1 kHz, 10 kHz */
             int32_t lx = gx + (int32_t)((uint32_t)(ilog2q8(GRID[k]) - ilog2q8(20)) * (uint32_t)(gw - 1) / (uint32_t)(ilog2q8(18000) - ilog2q8(20)));
             g_rect(lx, gy + 2, 1, gh - 4, K_LINE);
             g_text(T_XS, lx + 2, gy + gh - 10, GL[k], K_GREY);
         }
-        g_rect(gx, mid, gw, 1, K_LINE);         /* 0 dB, and +-12 */
+        g_rect(gx, mid, gw, 1, K_LINE);         /* 0 dB, +12, -12 */
         g_text(T_XS, gx + 2, gy + 3, "+12", K_GREY);
         g_text(T_XS, gx + 2, gy + gh - 20, "-12", K_GREY);
+        if (t) {                                /* the band chosen: its width (Q) shaded, its frequency a line */
+            int32_t half = (int32_t)BWO[perf.eq_q[c] & 7u] * (gw - 1) / 981 / 2, l = clampi(fx - half, gx, gx + gw - 1), r = clampi(fx + half, gx, gx + gw - 1);
+            g_rect(l, gy + 1, r - l + 1, gh - 2, g_mix(K_PANEL, kc4[2], 34));
+            g_rect(l, gy + 13, 1, 6, kc4[2]); g_rect(r, gy + 13, 1, 6, kc4[2]); g_rect(l, gy + 16, r - l + 1, 1, kc4[2]);   /* (the width: a bracket under the frequency) */
+            for (x = gy + 2; x < gy + gh - 2; x += 4) g_rect(fx, x, 1, 2, kc4[0]);
+        }
         for (x = 0; x < gw; x++) {              /* the curve, filled to 0 dB */
             uint32_t fi = (uint32_t)x * 111u * 256u / (uint32_t)(gw - 1), i0 = fi >> 8, i1 = i0 < 111u ? i0 + 1u : 111u;
             int32_t db = eq_curve[i0] + (((eq_curve[i1] - eq_curve[i0]) * (int32_t)(fi & 255u)) >> 8);
-            int32_t y = mid - db * (gh / 2 - 6) / (16 * 14);
-            y = clampi(y, gy + 2, gy + gh - 3);
+            int32_t y = clampi(mid - db * (gh / 2 - 6) / (16 * 14), gy + 2, gy + gh - 3);
             if (y != mid) g_rect(gx + x, y < mid ? y : mid, 1, y < mid ? mid - y : y - mid, g_mix(K_PANEL, K_WAVE, 60));
             if (x) g_line(gx + x - 1, py, gx + x, y, K_WAVE);
             py = y;
         }
-        for (k = 0; k < 4u; k++) {              /* the bands: a dot each, in their knob's colour */
-            uint32_t f = perf.eq_f[k] % 48u, ci = f * 111u / 47u;
-            int32_t bx = gx + (int32_t)(f * (uint32_t)(gw - 1) / 47u), by = clampi(mid - eq_curve[ci] * (gh / 2 - 6) / (16 * 14), gy + 6, gy + gh - 7);
-            uint16_t c = PAL_BW ? K_WHITE : KNOB_RGB[k];
+        for (k = 0; k < 4u; k++) {              /* the bands: a dot each; the one chosen big, with its numbers */
+            uint32_t fk = perf.eq_f[k] % 48u, ci = fk * 111u / 47u;
+            int32_t bx = gx + (int32_t)(fk * (uint32_t)(gw - 1) / 47u), by = clampi(mid - eq_curve[ci] * (gh / 2 - 6) / (16 * 14), gy + 6, gy + gh - 7);
             char n[2] = {(char)('1' + k), 0};
-            if (!perf.eq_t[k]) c = K_LINE;
-            if (k == eq_cur) g_box(bx - 6, by - 6, 13, 13, K_PANEL, K_WHITE);
-            g_rect(bx - 3, by - 3, 7, 7, c);
-            g_text_c(T_XS, bx, by - 15 < gy + 2 ? by + 6 : by - 15, n, c);
+            if (k == c) continue;
+            g_rect(bx - 2, by - 2, 5, 5, perf.eq_t[k] ? K_GREY : K_LINE);
+            g_text_c(T_XS, bx, by - 13 < gy + 2 ? by + 5 : by - 13, n, K_GREY);
+        }
+        {
+            uint32_t ci = f * 111u / 47u;
+            int32_t by = clampi(mid - eq_curve[ci] * (gh / 2 - 6) / (16 * 14), gy + 7, gy + gh - 8), tx;
+            uint32_t sv = eq_cur;
+            g_box(fx - 5, by - 5, 11, 11, K_LIME, K_WHITE);
+            eq_cur = (uint8_t)c;
+            item_text(G_EQ_F, b);
+            tx = clampi(fx - g_text_w(T_XS, b) / 2, gx + 24, gx + gw - 2 - g_text_w(T_XS, b));
+            g_text(T_XS, tx, gy + 3, b, kc4[0]);
+            if (t == EQ_LOSH || t == EQ_BELL || t == EQ_HISH) {
+                item_text(G_EQ_G, b);
+                g_text(T_XS, fx + 9 + g_text_w(T_XS, b) > gx + gw ? fx - 9 - g_text_w(T_XS, b) : fx + 9, by - 4, b, kc4[1]);
+            }
+            eq_cur = (uint8_t)sv;
         }
     }
-    for (k = 0; k < 4u; k++) {                  /* the 4 bands: type (OCT+), frequency (the knob), gain (OCT-), width */
-        int32_t x0 = 4 + (int32_t)k * 58, y0 = 124;
-        uint32_t sv = eq_cur;
-        uint16_t c = PAL_BW ? K_WHITE : KNOB_RGB[k];
-        if (!g_vis(y0, 92)) continue;
-        g_box(x0, y0, 56, 92, k == eq_cur ? K_LIMED : K_PANEL, k == eq_cur ? K_WHITE : K_LINE);
-        g_rect(x0 + 4, y0 + 5, 5, 5, c);
-        t[0] = 'K'; t[1] = (char)('1' + k); t[2] = 0;
-        g_text(T_XS, x0 + 12, y0 + 4, t, K_GREY);
-        eq_cur = (uint8_t)k;                    /* (the items read the band eq_cur) */
-        item_text(G_EQ_T, b);
-        g_text(T_XS, x0 + 4, y0 + 18, L_EQS[perf.eq_t[k] % NEQT], col == 2u ? K_LIME : K_GREY);
-        item_text(G_EQ_F, b);
-        g_text(g_fit(T_M, b, 50), x0 + 4, y0 + 32, b, col == 0u ? K_LIME : K_WHITE);
-        item_text(G_EQ_G, b);
-        g_text(g_fit(T_S, b, 50), x0 + 4, y0 + 52, b, col == 1u ? K_LIME : K_WHITE);
-        item_text(G_EQ_Q, b);
-        g_text(T_XS, x0 + 4, y0 + 70, b, K_GREY);
-        eq_cur = (uint8_t)sv;
-        g_vbar(x0 + 4, y0 + 84, 48, 4, (uint32_t)(perf.eq_g[k] + 12) * 256u / 24u, col == 1u ? K_LIME : K_CYAN);
+    {                                           /* the four knobs of the band chosen, each with its job written on it */
+        static const char *const KN[4] = {"FREQ", "GAIN", "Q", "SHAPE"};
+        static const uint8_t ID[4] = {G_EQ_F, G_EQ_G, G_EQ_Q, G_EQ_T};
+        for (k = 0; k < 4u; k++) {
+            int32_t x0 = 4 + (int32_t)k * 58, y0 = 128, v;
+            char kn[3] = {'K', (char)('1' + k), 0};
+            uint32_t sv = eq_cur;
+            if (!g_vis(y0, 88)) continue;
+            g_box(x0, y0, 56, 88, K_PANEL, kc4[k]);
+            g_rect(x0 + 4, y0 + 5, 5, 5, kc4[k]);
+            g_text(T_XS, x0 + 12, y0 + 4, kn, kc4[k]);
+            g_text(g_fit(T_XS, KN[k], 30), x0 + 25, y0 + 4, KN[k], K_WHITE);
+            eq_cur = (uint8_t)c;
+            v = item_get(ID[k]);
+            if (k == 3u) {
+                eq_shape(t, x0 + 6, y0 + 22, 44, 30, K_LIME);
+                g_text_c(g_fit(T_XS, L_EQT[t], 50), x0 + 28, y0 + 60, L_EQT[t], K_WHITE);
+            } else {
+                item_text(ID[k], b);
+                if (k == 2u) {                  /* (Q: the width drawn, narrow to wide) */
+                    int32_t hw = 4 + (int32_t)BWO[v & 7] * 18 / 320, cx = x0 + 28;
+                    g_line(x0 + 6, y0 + 50, cx - hw, y0 + 50, K_LIME); g_line(cx - hw, y0 + 50, cx, y0 + 24, K_LIME);
+                    g_line(cx, y0 + 24, cx + hw, y0 + 50, K_LIME); g_line(cx + hw, y0 + 50, x0 + 50, y0 + 50, K_LIME);
+                    g_text_c(T_S, cx, y0 + 56, b + 2, K_WHITE);
+                } else if (k == 1u && !(t == EQ_LOSH || t == EQ_BELL || t == EQ_HISH)) {
+                    g_text(g_fit(T_M, b, 48), x0 + 4, y0 + 28, b, K_GREY);
+                    g_text(T_XS, x0 + 4, y0 + 54, t ? "NO GAIN" : "TURN: A", K_GREY);
+                    g_text(T_XS, x0 + 4, y0 + 64, t ? "ON A CUT" : "BELL", K_GREY);
+                } else g_text(g_fit(T_M, b, 48), x0 + 4, y0 + 28, b, K_WHITE);
+            }
+            eq_cur = (uint8_t)sv;
+            if (k == 1u) {                      /* (the gain: from the middle) */
+                int32_t w = (int32_t)perf.eq_g[c] * 23 / 12;
+                g_rect(x0 + 4, y0 + 78, 48, 4, K_TRACK);
+                g_rect(w >= 0 ? x0 + 28 : x0 + 28 + w, y0 + 78, w >= 0 ? w + 1 : -w, 4, kc4[1]);
+                g_rect(x0 + 28, y0 + 76, 1, 8, K_WHITE);
+            } else if (k == 0u) g_vbar(x0 + 4, y0 + 78, 48, 4, f * 256u / 47u, kc4[0]);
+            else if (k == 2u) g_vbar(x0 + 4, y0 + 78, 48, 4, (uint32_t)(perf.eq_q[c] & 7u) * 256u / 7u, kc4[2]);
+            else g_vbar(x0 + 4, y0 + 78, 48, 4, t * 256u / (NEQT - 1u), kc4[3]);
+        }
     }
-    if (g_vis(220, 20)) {
-        g_text_c(T_XS, 120, 226, col == 1u ? "OCT- HELD: THE GAINS" : col == 2u ? "OCT+ HELD: THE TYPES" : "K FREQ  OCT- GAIN  OCT+ TYPE  FX: NEXT", col ? K_LIME : K_GREY);
-    }
+    if (g_vis(220, 20)) g_text_c(T_XS, 120, 226, "SELECT: BAND  \xB7  ALGO: FREQ  \xB7  FX: NEXT", K_GREY);
 }
 
 /* the start's question: CLASSIC or SHIFT, what each is */
