@@ -15,18 +15,20 @@
 | 🗺 **Cahier des charges** | [`CAHIER-DES-CHARGES.md`](CAHIER-DES-CHARGES.md) : fait, à faire, idées |
 | 📜 Notes techniques | [`NOTES-TECHNIQUES.md`](NOTES-TECHNIQUES.md) |
 
-## Ce que ça fait
+## Fonctions clés
 
-- **Jouer** : les 27 touches jouent la basse, `K1`–`K4` règlent les quatre réglages importants de chaque page.
-- **Wobble** : `LFO` maintenu + un potard branche le LFO 2 sur ce que règle le potard ; appuie sur `OCT−` pendant que `LFO` est maintenu pour brancher le LFO 1 à la place (le choix par défaut se règle dans `SYSTEM › LFO HELD = LFO`).
-- **FX PADS** : `FX` maintenu, les touches blanches changent la vitesse du wobble (4, 8, 16, 24, 32, 48), les noires jouent stutters, tape stop, DJ filter, saturation, phaser…
-- **MORPH** : `SEL` ×2 = carré X/Y (au départ, le même son en 4 variantes), ×5 = fondu A/B sur le tempo.
-- **Deux modes** : CLASSIC (listes) ou SHIFT (3 colonnes, `OCT−` et `OCT+` comme Shift) ; `GLO` maintenu pour basculer.
-- **PERFORM** (`SEL`) : 4 macros nommées, le morph et les pads sur un seul écran.
-- **Son** : OTT multibande, MONO BASS, sub verrouillé sur OSC A, **RESAMPLE** (la sortie dans OSC C, à rejouer, ralentir, boucler).
-- **Presets** : tags (sub, reese, growl, wobble, pluck, 808, drone), changement immédiat.
-- **Données** ([data.html](../data.html?lang=fr), Chrome / Edge, USB) : sauvegarde et rechargement de tes sons (`.kwsub`), export WAV d'un enregistrement RESAMPLE, envoi d'un sample à toi vers OSC C.
-- **Sortie** : DEEP BASS, limiteur, AUTO LEVEL ; si le FM-1 s'arrête, `LAST STOP` dit pourquoi.
+1. **4 moteurs efficaces** pour des basses modernes, ou **8 moteurs** pour basses, pads et leads (`SYSTEM › ENGINES`).
+2. **LFO learn** : `LFO` maintenu + n'importe quel potard, le LFO 2 se branche sur ce réglage en un geste.
+3. Mode **CLASSIC** ou **SHIFT** (`OCT−` / `OCT+`) pour aller plus vite, au choix dans les options.
+4. **Fenêtres SEL** : PERFORM, MORPH, FX LIVE, MACROS.
+5. **Morph A/B** : fondu entre deux sons en direct.
+6. Une **page LFO** en direct pour retravailler tes basses wobble en jouant.
+7. **SEQ BASS**, **ARP**, **MIDI**.
+8. Le son : moteurs, filtres, effets, master, et **FX PADS**.
+9. Visuels d'oscillateur animés, en direct.
+10. Un **EQ** visuel.
+11. Des **thèmes** complètement différents, pour s'adapter à ta façon de jouer.
+12. **Luminosité**, contraste, polices et taille.
 
 ## Installer
 

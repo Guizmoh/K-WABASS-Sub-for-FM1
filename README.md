@@ -16,20 +16,20 @@
 | 📜 Technical notes | [`docs/TECHNICAL-NOTES.md`](docs/TECHNICAL-NOTES.md) |
 | 🇫🇷 French | [`fr/`](fr/): the home page, manual, specifications and notes in French |
 
-## What it does
+## Key features
 
-- **Play**: the 27 keys play the bass, `K1`–`K4` set the four settings that matter on each page.
-- **Wobble**: hold `LFO` and turn a knob to wire LFO 2 to whatever that knob sets ; press `OCT−` while `LFO` is held to wire LFO 1 instead (the default is set in `SYSTEM › LFO HELD = LFO`).
-- **FX PADS**: hold `FX`; white keys change the wobble speed (4, 8, 16, 24, 32, 48), black keys play stutters, tape stop, DJ filter, saturation, phaser…
-- **MORPH**: `SEL` ×2 = X/Y square (at first, the same sound in 4 variations), ×5 = A/B fade on the beat.
-- **PERFORM** (`SEL`): 4 named macros, the morph and the pads on one screen.
-- **Engines**: one firmware; `SYSTEM › ENGINES` picks ESSENTIAL (4 engines, the default) or ALL (8).
-- **Sound**: multiband OTT, MONO BASS, a sub locked on OSC A, **RESAMPLE** (the output into OSC C, to replay, slow down, loop).
-- **Presets**: tags (sub, reese, growl, wobble, pluck, 808, drone), instant change.
-- **Two modes**: CLASSIC (lists) or SHIFT (3 columns, `OCT−` and `OCT+` as Shift); hold `GLO` to switch.
-- **Looks**: 7 themes (CLASSIC GLOW, TECH and RIBBON with gradients), 13 palettes + their RAD gradient versions, 4 brightness levels.
-- **Data** ([data.html](data.html), Chrome / Edge, USB): back up and restore your sounds (`.kwsub`), export a RESAMPLE recording as WAV, send a sample of yours to OSC C.
-- **Output**: DEEP BASS, limiter, AUTO LEVEL; if the FM-1 stops, `LAST STOP` says why.
+1. **4 efficient engines** for modern basses, or **8 engines** for bass, pads & leads (`SYSTEM › ENGINES`).
+2. **LFO learn**: hold `LFO` and turn any knob, LFO 2 is assigned to that setting in one gesture.
+3. **CLASSIC** or **SHIFT** mode (`OCT−` / `OCT+`) for a faster workflow, chosen in the options.
+4. **SEL windows**: PERFORM, MORPH, FX LIVE, MACROS.
+5. **A/B morph**: blend two sounds live.
+6. A live **LFO page** to reshape your wobble basses while you play.
+7. **SEQ BASS**, **ARP**, **MIDI**.
+8. The sound: engines, filters, effects, master, and **FX PADS**.
+9. Animated oscillator visuals, live.
+10. A visual **EQ**.
+11. Totally different **themes**, to fit the way you work.
+12. **Brightness**, contrast, fonts and size.
 
 ## Install
 
