@@ -19,7 +19,7 @@
 ## What it does
 
 - **Play**: the 27 keys play the bass, `K1`–`K4` set the four settings that matter on each page.
-- **Wobble**: hold `LFO` and turn a knob to wire the LFO to whatever that knob sets.
+- **Wobble**: hold `LFO` and turn a knob to wire LFO 2 to whatever that knob sets (LFO 1 if you prefer: `SYSTEM › LFO HELD = LFO`).
 - **FX PADS**: hold `FX`; white keys change the wobble speed (4, 8, 16, 24, 32, 48), black keys play stutters, tape stop, DJ filter, saturation, phaser…
 - **MORPH**: `SEL` ×2 = X/Y square (at first, the same sound in 4 variations), ×5 = A/B fade on the beat.
 - **PERFORM** (`SEL`): 4 named macros, the morph and the pads on one screen.
@@ -41,8 +41,8 @@ You can go back to KAWA (`install/kawa-0.5.fwsc`) or to the stock firmware (M-UP
 
 ```sh
 cd source
-./build.sh --release 0.9.15          # -> build/k-wasub-0.9.15.fwsc, version A, 4 engines (KSUB_DEFS=-DKS_FOUR=0 and X.Y.Z-b for version B, 8 engines)
-APP_VER=0.9.15 bash web/make_emulator.sh      # emulator (KS_FOUR=0 for B)
+./build.sh --release 0.9.16          # -> build/k-wasub-0.9.16.fwsc, version A, 4 engines (KSUB_DEFS=-DKS_FOUR=0 and X.Y.Z-b for version B, 8 engines)
+APP_VER=0.9.16 bash web/make_emulator.sh      # emulator (KS_FOUR=0 for B)
 bash web/make_installer.sh                    # installer.html with the newest package
 bash tests/run_stress.sh                      # load tests (UBSan)
 python3 tests/manual_shots.py                 # the manual's screenshots (docs/img)

@@ -2,7 +2,7 @@
 
 [English](SPECIFICATIONS.md) · [Français](fr/CAHIER-DES-CHARGES.md)
 
-A modern bass synth for the M-VAVE FM-1 (JieLi AC79, two cores, no FPU). Last update: **0.9.15**.
+A modern bass synth for the M-VAVE FM-1 (JieLi AC79, two cores, no FPU). Last update: **0.9.16**.
 This document says where the project stands: what is done, what has to be checked, what is left, and ideas to go further.
 
 ## 1. Vision

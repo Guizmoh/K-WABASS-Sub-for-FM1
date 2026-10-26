@@ -76,7 +76,7 @@ NM = {(0, 0): "neon", (0, 1): "amber", (1, 0): "studio", (1, 1): "ocean", (2, 0)
       (4, 0): "glow-green", (4, 1): "glow-toxic", (5, 0): "tech-volt", (5, 1): "tech-cyber", (5, 2): "tech-synthwave", (5, 8): "tech-fluo", (5, 9): "tech-pink", (5, 7): "tech-ice", (4, 8): "glow-fluo", (4, 9): "glow-pink", (4, 10): "glow-gold", (4, 2): "glow-synthwave", (4, 7): "glow-ice"}
 for t, p in combos:
     s.btn(GLO, 200); s.enc(0, -30, 100); s.enc(0, 3, 100); s.enc(1, -8, 100); s.enc(1, t, 100)
-    s.enc(0, 2, 100); s.enc(1, -12, 100); s.enc(1, p, 100)
+    s.enc(0, 3, 100); s.enc(1, -12, 100); s.enc(1, p, 100)
     s.btn(HOME, 200); s.btn(EDIT, 200); s.shot("t-" + NM[(t, p)], 1300)
 finish(s, "m3")
 
@@ -94,7 +94,7 @@ s.btn(SEQ, 300); s.shot("k-filter", 300); s.btn(ARP, 300); s.shot("k-presets", 3
 finish(s, "m5")
 
 # 6. BRIGHTNESS: the same screen in the four steps
-s = S(); s.btn(SEL, 400); s.btn(GLO, 200); s.enc(0, -30, 100); s.enc(0, 6, 100)
+s = S(); s.btn(SEL, 400); s.btn(GLO, 200); s.enc(0, -30, 100); s.enc(0, 7, 100)
 for lv, nm in ((0, "eco"), (1, "normal"), (2, "bright"), (3, "max")):
     s.enc(1, -5, 100); s.enc(1, lv, 100); s.btn(HOME, 200); s.shot("b-" + nm, 1300); s.btn(GLO, 200)
 finish(s, "m6")
