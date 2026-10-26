@@ -48,6 +48,7 @@ footer{margin-top:50px;border-top:1px solid var(--rule);padding-top:18px;color:v
 .fab:hover{filter:brightness(1.1);color:#1b0e02}
 .dbar{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;justify-content:center;background:linear-gradient(90deg,#3a2208,#241a0e 60%,#3a2208);border:1px solid #7a4a18;border-radius:14px;padding:12px 16px;margin:14px 0;color:#ffe2bf;font-size:.98rem;text-align:center}
 .dbar a{background:#f08c3c;color:#1b0e02;font-weight:800;text-decoration:none;border-radius:10px;padding:8px 16px}
+.news{list-style:none;padding:0;margin:12px 0 0;display:grid;gap:6px}.news li{display:grid;grid-template-columns:62px 1fr;gap:4px 12px;align-items:start;padding:8px 12px;background:var(--panel);border:1px solid var(--rule);border-radius:10px;font-size:.92rem;line-height:1.45}.news .v{font:700 .85rem var(--mono);color:var(--lime);padding-top:1px}.news ul{margin:0;padding-left:16px}.news ul li{display:list-item;padding:0;border:0;background:none;font-size:inherit}.news.old li{padding:5px 12px;font-size:.86rem;color:var(--mut)}.news.old .v{color:var(--mut)}details.olds{margin-top:8px}details.olds summary{cursor:pointer;color:var(--cyan);font-size:.92rem;padding:6px 2px}@media(max-width:520px){.news li{grid-template-columns:1fr}}
 </style></head><body><main>
 <nav class="bar"><span class="logo">K-WA<b>SUB</b></span><span class="sp"></span><a href="#try">Try it</a><a href="#install">Install</a><a href="manual.html">Manual</a><a href="data.html"><b>Data</b></a><a href="#news">What's new</a><a href="#don">Support</a><a href="https://github.com/Guizmoh/K-WASUB_Firmware_for_FM1">GitHub</a><span class="lang"><b>EN</b> · <a href="fr/index.html" hreflang="fr">FR</a></span></nav>
 
@@ -89,32 +90,38 @@ footer{margin-top:50px;border-top:1px solid var(--rule);padding-top:18px;color:v
 <p style="margin-top:12px"><a href="manual.html">See every screen in the manual →</a></p></section>
 
 <section class="sec" id="news"><h2>Latest updates</h2>
-<table><tr><th>Version</th><th>What's new</th></tr>
-<tr><td><b>0.9.35</b></td><td>More room: the fonts and the start picture packed (75 KB freed), nothing changes on the screen</td></tr>
-<tr><td><b>0.9.34</b></td><td>New theme <b>RIBBON</b>: the views side by side, each a tall window full of pictures that scrolls down · <b>RIBBON CLASSIC</b>: the same look with the classic rows · <b>5 new fonts</b> (OUTFIT, INSTRUMENT, TEKTUR, JETBRAINS, BIG SHOULDERS)</td></tr>
-<tr><td><b>0.9.33</b></td><td>The start screen stays locked until a button or key is pressed · <b>AUTOSAVE</b> (on): the sound being made is kept every minute and comes back at the next start</td></tr>
-<tr><td><b>0.9.32</b></td><td><b>Sleep</b>: 2 minutes untouched, the screen goes dim until the next touch · turning <b>FONT</b> shows the fonts above and below, each in itself</td></tr>
-<tr><td><b>0.9.31</b></td><td>New palettes for every theme: <b>SKY</b> (light, office-like: square windows in relief with shadows, shades of blue, the readable HYPER font) and <b>BLAZE</b> (black, greys, fluo orange, white text) · <b>LOUPE</b> on by default · FLUO GREEN RAD (CLASSIC GLOW) and SYNTHWAVE RAD recoloured, with a yellow / yellow-to-red oscillator line</td></tr>
-<tr><td><b>0.9.30</b></td><td>Quick assign: hold <b>LFO</b>, then hold <b>OCT−</b> too: the knobs put <b>LFO 1</b> on (LFO alone: LFO 2)</td></tr>
-<tr><td><b>0.9.29</b></td><td><b>EQ</b> redone: one band at a time (SELECT), each knob one job written on screen (K1 FREQ, K2 GAIN, K3 Q, K4 SHAPE); the curve shows where the band acts, its width and its gain</td></tr>
-<tr><td><b>0.9.28</b></td><td><a href="data.html"><b>Data</b></a> page complete: backup / restore of your sounds, <b>WAV export</b> of a RESAMPLE recording, and <b>send a sample</b> of yours (WAV, MP3…) to OSC C</td></tr>
-<tr><td><b>0.9.27</b></td><td><a href="data.html"><b>Data</b></a> page: <b>export as WAV</b> the portion of sound recorded with RESAMPLE</td></tr>
-<tr><td><b>0.9.26</b></td><td>New <a href="data.html"><b>Data</b></a> page: <b>backup</b> your sound design (32 user slots, SEQ, ARP, macros, CC map, EQ, MORPH) to a .kwsub file and restore it later, over USB (Chrome / Edge)</td></tr>
-<tr><td><b>0.9.25</b></td><td>The <b>CONTRAST</b> setting is gone: the screen is always on <b>MAX (DEEP BLACK)</b>, the only look that shows right on the FM-1</td></tr>
-<tr><td><b>0.9.24</b></td><td><b>Screen fix</b>: BRIGHTNESS no longer sends commands to the panel (they ate the letters and hid the grey cards on the FM-1) · MAX shows the colours as drawn · the text always keeps a minimum gap from its background (grey and white palettes)</td></tr>
-<tr><td><b>0.9.23</b></td><td><b>CLASSIC GLOW</b> replaces CLASSIC (5 themes) · default look STUDIO + RED · new <b>RAD</b> gradient palettes at the end of the list, for every theme · smaller battery icon · TECH: a much smaller picture, rows under the tiles</td></tr>
-<tr><td><b>0.9.22</b></td><td>No more K-WASUB title on the pages (room for the picture and the help) · <b>battery</b> icon (5 segments) top right, the percentage in SYSTEM · smaller page dots</td></tr>
-<tr><td><b>0.9.21</b></td><td>Only one firmware, everywhere (the B leftovers are gone) · voice mode and glide are the last rows of the oscillator list in every theme, STUDIO included</td></tr>
-<tr><td><b>0.9.20</b></td><td>New <b>start screen</b>: the K-WASUB picture · the voice mode (MONO / LEGATO / POLY) and the glide at the bottom of each oscillator view</td></tr>
-<tr><td>0.9.19</td><td><b>One firmware</b>: <code>SYSTEM › ENGINES</code> picks ESSENTIAL (4 engines, the default) or ALL (8). The separate version B is gone.</td></tr>
-<tr><td>0.9.18</td><td>Default look: <b>STUDIO</b> theme with the <b>GOLD</b> palette (new installs and resets) · <b>INVERTED</b>: black text · <b>PALETTE</b> now sits right under THEME in the options</td></tr>
-<tr><td>0.9.17</td><td>The <b>CLASSIC or SHIFT question</b> is back at the very first start (and once after updating): choose the classic lists or the SHIFT mode with OCT− / OCT+. Also: hold LFO + a knob assigns LFO 2 (or LFO 1, in the options); GLIDE under THEME in the options.</td></tr>
-<tr><td><b>0.9.14</b></td><td><b>Versions swapped</b>: A is now the 4-engine version (efficient engines for modern basses), B the 8-engine one (deeper sound design: pads, synth and FX). Download links and names follow.</td></tr>
-<tr><td>0.9.13</td><td>New <b>TECH</b> theme: the picture (oscillator, envelope, filter…) fills almost the whole page, four tiles, gradients running in different directions (VOLT and CYBER palettes) · GLOW becomes <b>CLASSIC GLOW</b> · <b>BRIGHTNESS</b> ECO / NORMAL / BRIGHT / <b>MAX</b></td></tr>
-<tr><td>0.9.12</td><td><b>GLOW</b> theme: simple, gradients, fluo green (FLUO GREEN and TOXIC palettes) · new <b>PINK</b> and <b>GOLD</b> palettes for every theme</td></tr>
-<tr><td>0.9.11</td><td><b>PERFORM</b> (4 named macros, morph, pads on one screen) · <b>MULTIBAND / OTT</b> · <b>MONO BASS</b> and <b>SUB LOCK</b> · <b>RESAMPLE</b> into OSC C · preset <b>tags</b> (sub, reese, growl…) · MORPH X/Y: the same sound in the 4 corners (as is, cutoff ¼ res ¾, wobble 1/8, wobble 1/16) · presets load without a question · each page opens on its first view · pages ordered by importance · K1–K4 hints everywhere · CLASSIC/SHIFT asked on the first start only · <b>FLUO</b> palette</td></tr>
-<tr><td>0.9.10</td><td><b>FX PADS</b> · long presses everywhere (OCT− UNDO, OCT+ REDO, HOME PANIC, GLO CLASSIC/SHIFT) · EQ in the FX page · deeper bass, limiter, auto level · start screen with the FM-1 seen from the front · the software is called K-WASUB</td></tr>
-<tr><td>0.9.9-9 → -7</td><td>MORPH X/Y (with gradient) and A/B · CONTRAST HIGH/MAX · LAST STOP (why it stopped) · audio budget for the effects (stability)</td></tr></table>
+<!-- news: newest first; the first four in full -->
+<ol class="news">
+<li><span class="v">0.9.36</span><ul><li><b>MONO</b> and <b>HYPER</b> fonts in capitals only (units read HZ, MS, DB with them)</li><li>13 KB more room: about 99 KB free</li></ul></li>
+<li><span class="v">0.9.35</span><ul><li>More room: the fonts and the start picture packed (75 KB freed), nothing changes on the screen</li></ul></li>
+<li><span class="v">0.9.34</span><ul><li>New theme <b>RIBBON</b>: the views side by side, each a tall window full of pictures that scrolls down</li><li><b>RIBBON CLASSIC</b>: the same look with the classic rows</li><li><b>5 new fonts</b> (OUTFIT, INSTRUMENT, TEKTUR, JETBRAINS, BIG SHOULDERS)</li></ul></li>
+<li><span class="v">0.9.33</span><ul><li>The start screen stays locked until a button or key is pressed</li><li><b>AUTOSAVE</b> (on): the sound being made is kept every minute and comes back at the next start</li></ul></li>
+</ol>
+<details class="olds"><summary>Older versions (22)</summary>
+<ol class="news old">
+<li><span class="v">0.9.32</span><div><b>Sleep</b>: 2 minutes untouched, the screen goes dim until the next touch · turning <b>FONT</b> shows the fonts above and below, each in itself</div></li>
+<li><span class="v">0.9.31</span><div>New palettes for every theme: <b>SKY</b> (light, office-like: square windows in relief with shadows, shades of blue, the readable HYPER font) and <b>BLAZE</b> (black, greys, fluo orange, white text) · <b>LOUPE</b> on by default · FLUO GREEN RAD (CLASSIC GLOW) and SYNTHWAVE RAD recoloured, with a yellow / yellow-to-red oscillator line</div></li>
+<li><span class="v">0.9.30</span><div>Quick assign: hold <b>LFO</b>, then hold <b>OCT−</b> too: the knobs put <b>LFO 1</b> on (LFO alone: LFO 2)</div></li>
+<li><span class="v">0.9.29</span><div><b>EQ</b> redone: one band at a time (SELECT), each knob one job written on screen (K1 FREQ, K2 GAIN, K3 Q, K4 SHAPE); the curve shows where the band acts, its width and its gain</div></li>
+<li><span class="v">0.9.28</span><div><a href="data.html"><b>Data</b></a> page complete: backup / restore of your sounds, <b>WAV export</b> of a RESAMPLE recording, and <b>send a sample</b> of yours (WAV, MP3…) to OSC C</div></li>
+<li><span class="v">0.9.27</span><div><a href="data.html"><b>Data</b></a> page: <b>export as WAV</b> the portion of sound recorded with RESAMPLE</div></li>
+<li><span class="v">0.9.26</span><div>New <a href="data.html"><b>Data</b></a> page: <b>backup</b> your sound design (32 user slots, SEQ, ARP, macros, CC map, EQ, MORPH) to a .kwsub file and restore it later, over USB (Chrome / Edge)</div></li>
+<li><span class="v">0.9.25</span><div>The <b>CONTRAST</b> setting is gone: the screen is always on <b>MAX (DEEP BLACK)</b>, the only look that shows right on the FM-1</div></li>
+<li><span class="v">0.9.24</span><div><b>Screen fix</b>: BRIGHTNESS no longer sends commands to the panel (they ate the letters and hid the grey cards on the FM-1) · MAX shows the colours as drawn · the text always keeps a minimum gap from its background (grey and white palettes)</div></li>
+<li><span class="v">0.9.23</span><div><b>CLASSIC GLOW</b> replaces CLASSIC (5 themes) · default look STUDIO + RED · new <b>RAD</b> gradient palettes at the end of the list, for every theme · smaller battery icon · TECH: a much smaller picture, rows under the tiles</div></li>
+<li><span class="v">0.9.22</span><div>No more K-WASUB title on the pages (room for the picture and the help) · <b>battery</b> icon (5 segments) top right, the percentage in SYSTEM · smaller page dots</div></li>
+<li><span class="v">0.9.21</span><div>Only one firmware, everywhere (the B leftovers are gone) · voice mode and glide are the last rows of the oscillator list in every theme, STUDIO included</div></li>
+<li><span class="v">0.9.20</span><div>New <b>start screen</b>: the K-WASUB picture · the voice mode (MONO / LEGATO / POLY) and the glide at the bottom of each oscillator view</div></li>
+<li><span class="v">0.9.19</span><div><b>One firmware</b>: <code>SYSTEM › ENGINES</code> picks ESSENTIAL (4 engines, the default) or ALL (8). The separate version B is gone.</div></li>
+<li><span class="v">0.9.18</span><div>Default look: <b>STUDIO</b> theme with the <b>GOLD</b> palette (new installs and resets) · <b>INVERTED</b>: black text · <b>PALETTE</b> now sits right under THEME in the options</div></li>
+<li><span class="v">0.9.17</span><div>The <b>CLASSIC or SHIFT question</b> is back at the very first start (and once after updating): choose the classic lists or the SHIFT mode with OCT− / OCT+. Also: hold LFO + a knob assigns LFO 2 (or LFO 1, in the options); GLIDE under THEME in the options.</div></li>
+<li><span class="v">0.9.14</span><div><b>Versions swapped</b>: A is now the 4-engine version (efficient engines for modern basses), B the 8-engine one (deeper sound design: pads, synth and FX). Download links and names follow.</div></li>
+<li><span class="v">0.9.13</span><div>New <b>TECH</b> theme: the picture (oscillator, envelope, filter…) fills almost the whole page, four tiles, gradients running in different directions (VOLT and CYBER palettes) · GLOW becomes <b>CLASSIC GLOW</b> · <b>BRIGHTNESS</b> ECO / NORMAL / BRIGHT / <b>MAX</b></div></li>
+<li><span class="v">0.9.12</span><div><b>GLOW</b> theme: simple, gradients, fluo green (FLUO GREEN and TOXIC palettes) · new <b>PINK</b> and <b>GOLD</b> palettes for every theme</div></li>
+<li><span class="v">0.9.11</span><div><b>PERFORM</b> (4 named macros, morph, pads on one screen) · <b>MULTIBAND / OTT</b> · <b>MONO BASS</b> and <b>SUB LOCK</b> · <b>RESAMPLE</b> into OSC C · preset <b>tags</b> (sub, reese, growl…) · MORPH X/Y: the same sound in the 4 corners (as is, cutoff ¼ res ¾, wobble 1/8, wobble 1/16) · presets load without a question · each page opens on its first view · pages ordered by importance · K1–K4 hints everywhere · CLASSIC/SHIFT asked on the first start only · <b>FLUO</b> palette</div></li>
+<li><span class="v">0.9.10</span><div><b>FX PADS</b> · long presses everywhere (OCT− UNDO, OCT+ REDO, HOME PANIC, GLO CLASSIC/SHIFT) · EQ in the FX page · deeper bass, limiter, auto level · start screen with the FM-1 seen from the front · the software is called K-WASUB</div></li>
+<li><span class="v">0.9.9-9 → -7</span><div>MORPH X/Y (with gradient) and A/B · CONTRAST HIGH/MAX · LAST STOP (why it stopped) · audio budget for the effects (stability)</div></li>
+</ol></details>
 <p><a href="SPECIFICATIONS.md">Specifications: what is done, what is left, ideas →</a> · <a href="https://github.com/Guizmoh/K-WASUB_Firmware_for_FM1/commits/main">Full history</a></p></section>
 
 <section class="sec" id="don"><div class="card donate"><h2>Support K-WASUB</h2>

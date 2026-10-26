@@ -43,8 +43,8 @@ You can go back to KAWA (`install/kawa-0.5.fwsc`) or to the stock firmware (M-UP
 
 ```sh
 cd source
-./build.sh --release 0.9.35          # -> build/k-wasub-0.9.35.fwsc
-APP_VER=0.9.35 bash web/make_emulator.sh      # emulator
+./build.sh --release 0.9.36          # -> build/k-wasub-0.9.36.fwsc
+APP_VER=0.9.36 bash web/make_emulator.sh      # emulator
 bash web/make_installer.sh                    # installer.html with the newest package
 bash tests/run_stress.sh                      # load tests (UBSan)
 python3 tests/manual_shots.py                 # the manual's screenshots (docs/img)

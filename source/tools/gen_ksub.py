@@ -149,8 +149,8 @@ def gen_tables():
 
 # ---------------------------------------------------------------- fonts
 FONTS = [("F", "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", [("XS", 8, 126), ("S", 9, 126), ("M", 11, 126), ("B", 16, 126), ("L", 21, 95)]),
-         ("G", str(ROOT / "assets/fonts/IBMPlexMono-SemiBold.ttf"), [("XS", 9, 126), ("S", 10, 126), ("M", 12, 126), ("B", 16, 126), ("L", 20, 95)]),
-         ("H", str(ROOT / "assets/fonts/AtkinsonHyperlegibleMono.ttf"), [("XS", 9, 126), ("S", 10, 126), ("M", 12, 126), ("B", 16, 126), ("L", 20, 95)]),
+         ("G", str(ROOT / "assets/fonts/IBMPlexMono-SemiBold.ttf"), [("XS", 9, 95), ("S", 10, 95), ("M", 12, 95), ("B", 16, 95), ("L", 20, 95)]),
+         ("H", str(ROOT / "assets/fonts/AtkinsonHyperlegibleMono.ttf"), [("XS", 9, 95), ("S", 10, 95), ("M", 12, 95), ("B", 16, 95), ("L", 20, 95)]),
          ("P", str(ROOT / "assets/fonts/PressStart2P-Regular.ttf"), [("XS", 8, 126), ("S", 8, 126), ("M", 8, 126)]),   # (B and L: S drawn twice as big)
          # five more (0.9.34, SIL OFL), the small sizes only, capitals only (the big titles stay DejaVu Sans Bold)
          ("O", str(ROOT / "assets/fonts/Outfit-Bold.ttf"), [("XS", 9, 95), ("S", 10, 95), ("M", 12, 95)]),
@@ -160,8 +160,8 @@ FONTS = [("F", "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", [("XS", 8
          ("Q", str(ROOT / "assets/fonts/BigShoulders-Bold.ttf"), [("XS", 10, 95), ("S", 11, 95), ("M", 13, 95)]),
          # LOUPE (SYSTEM): the rows' and values' sizes, as big as the rows and boxes take (PIXEL has none: 8 or 16)
          ("FZ", "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", [("S", 11, 126), ("M", 13, 126)]),
-         ("GZ", str(ROOT / "assets/fonts/IBMPlexMono-SemiBold.ttf"), [("S", 12, 126), ("M", 14, 126)]),
-         ("HZ", str(ROOT / "assets/fonts/AtkinsonHyperlegibleMono.ttf"), [("S", 12, 126), ("M", 14, 126)])]
+         ("GZ", str(ROOT / "assets/fonts/IBMPlexMono-SemiBold.ttf"), [("S", 12, 95), ("M", 14, 95)]),
+         ("HZ", str(ROOT / "assets/fonts/AtkinsonHyperlegibleMono.ttf"), [("S", 12, 95), ("M", 14, 95)])]
 
 
 def gen_fonts():
