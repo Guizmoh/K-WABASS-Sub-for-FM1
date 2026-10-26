@@ -143,7 +143,8 @@ static struct {
     uint8_t qlfo;                               /* QUICK ASSIGN (LFO held + a knob): 0 LFO 1, 1 LFO 2 */
     uint8_t eng8;                               /* ENGINES: 0 ESSENTIAL (the first four: ANALOG SUPER WAVE FM), 1 ALL (eight) */
     uint8_t asave;                              /* AUTOSAVE: the sound being made kept every minute (back at the next start) */
-} set = {6, 0, 0, 0xFF, 1400, 0, 0, 1, 0, 0, 0, 0, 0, {0}, 1, 0, 0, 1, 0, 1, 1, 0, 1, 1, 1, 0, 3, 1, 0, 1};
+    uint8_t pquant;                             /* FX PADS: the keys wait for the next 0 OFF, 1 BAR, 1/2, 1/4, 1/8, 1/16, 1/24, 1/32, 1/64 */
+} set = {6, 0, 0, 0xFF, 1400, 0, 0, 1, 0, 0, 0, 0, 0, {0}, 1, 0, 0, 1, 0, 1, 1, 0, 1, 1, 1, 0, 3, 1, 0, 1, 0};
 static char pname[14];
 static uint8_t page, vcur[NPAGE], cursor[sizeof VIEWS / sizeof VIEWS[0]], pre_cur[2], save_slot, save_pos, hold;
 static uint8_t key_note[27], latched[128], phys[128];
@@ -935,7 +936,36 @@ static void pad_key(uint32_t k, int down)
             return;
         }
 }
-static void pad_release_all(void) { pad_mask = 0; pad_hot = 0; pad_apply(); }
+/* FX PADS QUANTIZE (ALGO in the pads): a key waits for the next division of the beat (the LFOs' clock, ks_beats) */
+static const char *const L_PQ[9] = {"OFF", "1 BAR", "1/2", "1/4", "1/8", "1/16", "1/24", "1/32", "1/64"};
+static const uint32_t PQ_DIV[9] = {0, 4u << 24, 2u << 24, 1u << 24, 1u << 23, 1u << 22, (1u << 24) / 6u, 1u << 21, 1u << 20};
+#define NPQ 8u
+static struct { uint8_t k, down; uint32_t at, wait; } pq[NPQ];   /* the keys waiting: their beat when pressed, how long to wait */
+static uint32_t pq_n;
+static uint32_t pq_since(uint32_t at) { return (ks_beats + BEATS_WRAP - at) % BEATS_WRAP; }
+static void pad_quant(uint32_t k, int down)
+{
+    uint32_t div = PQ_DIV[set.pquant % 9u], b = ks_beats, wait, i;
+    if (!div || pq_n >= NPQ) { pad_key(k, down); return; }
+    wait = div - b % div;
+    for (i = 0; i < pq_n; i++)                  /* (a key let go before its press played: it lasts one division at least) */
+        if (pq[i].k == k && pq[i].down) { uint32_t left = pq[i].wait - pq_since(pq[i].at); if (wait < left + div) wait = left + div; }
+    pq[pq_n].k = (uint8_t)k; pq[pq_n].down = (uint8_t)down; pq[pq_n].at = b; pq[pq_n].wait = wait;
+    pq_n++;
+    if (down) pad_hot |= 1u << k;               /* (lit at once: it is coming) */
+}
+static void pad_quant_tick(void)
+{
+    uint32_t i = 0, j;
+    while (i < pq_n) {
+        if (pq_since(pq[i].at) >= pq[i].wait) {
+            pad_key(pq[i].k, pq[i].down);
+            for (j = i + 1u; j < pq_n; j++) pq[j - 1u] = pq[j];
+            pq_n--;
+        } else i++;
+    }
+}
+static void pad_release_all(void) { pq_n = 0; pad_mask = 0; pad_hot = 0; pad_apply(); }
 
 /* ---- items: a parameter of the patch, or one of the globals */
 static int item_patch(uint32_t id) { return id < NP; }
@@ -1704,7 +1734,13 @@ static void on_enc(uint32_t e, int32_t d)
     }
     if (win && e != ENC_PRESETS) {              /* the SEL windows: K1..K4 their four, SELECT a row, ALGO its value */
         vpop_pre[0] = 0;
-        if (win == 6u) return;                  /* (FX PADS: the knobs do nothing) */
+        if (win == 6u) {                        /* FX PADS: K1 CUTOFF, K2 RESONANCE, K3 FILTER TYPE, K4 MORPH A/B; ALGO the QUANTIZE */
+            static const uint8_t PK[3] = {F_CUT, F_RES, F_TYPE};
+            if (e == ENC_ALGORITHM) { set.pquant = (uint8_t)clampi(set.pquant + d, 0, 8); set_dirty = 1; set_ms = fm1_ms; }
+            else if (e >= ENC_KNOB1 && e <= ENC_KNOB3) edit_item(PK[e - ENC_KNOB1], d);
+            else if (e == ENC_KNOB4) mx_knob(0, d);
+            return;
+        }
         if (win == 7u) {                        /* PERFORM: K1..K4 the macros, SELECT / ALGO the morph's X / Y */
             if (e >= ENC_KNOB1 && e <= ENC_KNOB4) edit_item(G_MC1 + (e - ENC_KNOB1), d);
             else mx_knob(e == ENC_SELECT ? 0u : 1u, d);
@@ -2029,8 +2065,8 @@ static void ui_input(void)
         uint32_t m = 1u << k;
         if (win == 6u || (win == 7u && (fm1_in.buttons >> BTN_OCT_UP & 1u))) {   /* FX PADS (PERFORM: OCT+ held): a key is a pad */
             if (hb.b == BTN_OCT_UP) hb.used = 1;
-            if ((ne & m) || ((now & m) && !(prev_keys & m))) pad_key(k, 1);
-            else if (!(now & m) && (prev_keys & m)) pad_key(k, 0);
+            if ((ne & m) || ((now & m) && !(prev_keys & m))) { if (win == 6u) pad_quant(k, 1); else pad_key(k, 1); }
+            else if (!(now & m) && (prev_keys & m)) { if (win == 6u) pad_quant(k, 0); else pad_key(k, 0); }
             continue;
         }
         if ((ne & m) || ((now & m) && !(prev_keys & m))) {
@@ -2167,9 +2203,9 @@ static void app_init(void)
     uint32_t i;
     int ok;
     {                                           /* (a save from before a field was added: the fields it has, the rest as is) */
-        const uint32_t LEN[11] = {sizeof set, (uint32_t)((uint8_t *)&set.asave - (uint8_t *)&set), (uint32_t)((uint8_t *)&set.eng8 - (uint8_t *)&set), (uint32_t)((uint8_t *)&set.qlfo - (uint8_t *)&set), (uint32_t)((uint8_t *)&set.bri - (uint8_t *)&set), (uint32_t)((uint8_t *)&set.norm - (uint8_t *)&set), (uint32_t)((uint8_t *)&set.contrast - (uint8_t *)&set), (uint32_t)((uint8_t *)&set.mstart - (uint8_t *)&set), (uint32_t)((uint8_t *)&set.zoom - (uint8_t *)&set),
+        const uint32_t LEN[12] = {sizeof set, (uint32_t)((uint8_t *)&set.pquant - (uint8_t *)&set), (uint32_t)((uint8_t *)&set.asave - (uint8_t *)&set), (uint32_t)((uint8_t *)&set.eng8 - (uint8_t *)&set), (uint32_t)((uint8_t *)&set.qlfo - (uint8_t *)&set), (uint32_t)((uint8_t *)&set.bri - (uint8_t *)&set), (uint32_t)((uint8_t *)&set.norm - (uint8_t *)&set), (uint32_t)((uint8_t *)&set.contrast - (uint8_t *)&set), (uint32_t)((uint8_t *)&set.mstart - (uint8_t *)&set), (uint32_t)((uint8_t *)&set.zoom - (uint8_t *)&set),
                                  (uint32_t)((uint8_t *)&set.ui - (uint8_t *)&set), (uint32_t)((uint8_t *)&set.accel - (uint8_t *)&set)};
-        for (ok = 0, i = 0; i < 11u && !ok; i++) ok = !settings_load(&set, LEN[i]) && set.ver == 6u;
+        for (ok = 0, i = 0; i < 12u && !ok; i++) ok = !settings_load(&set, LEN[i]) && set.ver == 6u;
     }
     first_run = !ok || set.askv < 2u;           /* (the very first start, or a save from before 0.9.17: the question once) */
     if (!ok) {
@@ -2273,6 +2309,7 @@ static void app_step(void)
     }
     link_service();
     autosave_tick();
+    pad_quant_tick();
     if (!dimmed && fm1_ms - idle_ms > 120000u) dim_set(1);
 #if KS_DUAL
     if (c1_failed) {                            /* core 1 stalled (no sound, frozen LFOs): one core, kept */
@@ -2306,7 +2343,7 @@ WASM_EXPORT("ksub_knob_label") const char *ksub_knob_label(uint32_t i)
     if (v->lay == LY_PRESET) return i == 0u ? "SCROLL" : i == 2u ? "LOAD" : "";
     if (v->lay == LY_SAVE) return i == 0u ? "SLOT" : i == 1u ? "POSITION" : i == 2u ? "LETTER" : "STYLE";
     if (win == 3u) { static const char *const KE[4] = {"FREQ", "GAIN", "Q", "SHAPE"}; return KE[i]; }
-    if (win == 6u) return "";
+    if (win == 6u) { static const char *const KP[4] = {"CUTOFF", "RESO", "TYPE", "A/B"}; return KP[i]; }
     if (win == 7u) return mc_name(i);
     if (win == 4u) { static const char *const KX[4] = {"X", "Y", "CORNER", "SOUND"}; return KX[i]; }
     if (win == 5u) { static const char *const KA[4] = {"MORPH", "B", "PARTS", "TIME"}; return KA[i]; }

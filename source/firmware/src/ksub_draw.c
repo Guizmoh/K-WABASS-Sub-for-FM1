@@ -1633,8 +1633,16 @@ static void draw_pads(void)
     if (g_vis(0, 40)) {
         g_text(T_XS, 6, 3, "FX PADS", K_LIME);
         g_text_r(T_XS, 234, 3, "FX OR A PAGE BUTTON: BACK", K_GREY);
+        char t[64], b[16], *p;
         g_text(T_B, 6, 13, "KEYS = EFFECTS", K_WHITE);
-        g_text(T_XS, 6, 31, "WHITE: WOBBLE \xB7 BLACK: EFFECTS \xB7 HOLD A NOTE (PLAY HELD)", K_GREY);
+        p = str_cat(t, "Q ");                   /* the quantize (ALGO): the keys wait for it */
+        str_cat(p, L_PQ[set.pquant % 9u]);
+        g_text_r(T_M, 234, 15, t, set.pquant ? K_LIME : K_GREY);
+        p = str_cat(t, "K1 "); item_text(F_CUT, b); p = str_cat(p, b);   /* the four knobs and their values */
+        p = str_cat(p, " \xB7 K2 "); item_text(F_RES, b); p = str_cat(p, b);
+        p = str_cat(p, " \xB7 K3 "); item_text(F_TYPE, b); p = str_cat(p, b);
+        p = str_cat(p, " \xB7 K4 A/B "); p = fmt_u(p, (uint32_t)ab_amt * 100u / 127u, 0); str_cat(p, "%");
+        g_text(g_fit(T_XS, t, 228), 6, 31, t, K_CYAN);
     }
     for (k = 0; k < 8u; k++) if (patch[L1_SYNC] && patch[L1_DIV] == (int8_t)PW_DIV[k]) cur_rate = k;
     for (k = 0; k < 4u; k++) {

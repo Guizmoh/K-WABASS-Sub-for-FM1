@@ -49,8 +49,8 @@ OSC C plays 8-bit mu-law sounds from flash (`KS_SMP`, 10 sounds at 22.05 kHz and
 
 ```sh
 cd source
-./build.sh --release 0.9.44                 # build/k-wasub-0.9.44.fwsc   (X.Y, X.Y.Z or X.Y.Z-suffix; identity FM-1_97Y)
-APP_VER=0.9.44 bash web/make_emulator.sh    # ../emulator/index.html  
+./build.sh --release 0.9.45                 # build/k-wasub-0.9.45.fwsc   (X.Y, X.Y.Z or X.Y.Z-suffix; identity FM-1_97Y)
+APP_VER=0.9.45 bash web/make_emulator.sh    # ../emulator/index.html  
 bash web/make_installer.sh                  # ../installer.html with the newest install/k-wasub-*.fwsc
 sh web/make_data.sh                         # ../data.html (backup, WAV export, samples) with web/kwlink.js
 node tests/link.mjs                         # the Data link against the emulator
