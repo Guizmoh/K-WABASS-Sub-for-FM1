@@ -23,6 +23,8 @@ enum { BTN_OCT_DOWN = 0, BTN_OCT_UP = 1, BTN_FX = 2, BTN_SEL = 3, BTN_ENV = 4, B
 enum { ENC_SELECT = 0, ENC_ALGORITHM = 1, ENC_KNOB1 = 2, ENC_KNOB2 = 3, ENC_KNOB3 = 4, ENC_KNOB4 = 5, ENC_PRESETS = 6 };
 #define KEY_LED(k) (14u + (k))
 
+static volatile int batt_pct = 100;         /* the battery, 0..100 (the screen's icon); the emulator stays full */
+
 #if defined(KAWA_WASM)
 #include "../../web/wasm_host.c"               /* in a browser: the FM-1 as WebAssembly (web/wasm_host.c) */
 #elif defined(DINGHY_HOST)
@@ -303,6 +305,17 @@ static void platform_poll(void)
     }
     if (fm1_ms >= 30000u && bootguard.pending)
         bootguard_clear(&bootguard);            /* 30 s up: this firmware boots */
+    {                                           /* the battery, once a second: PB1's divider, 3.3 V empty .. 4.2 V full (assumed: 1/2 divider) */
+        static uint32_t t_bat;
+        static int32_t bat_avg = -1;
+        if (fm1_ms - t_bat >= 1000u && (a = fm1_adc_read(FM1_ADC_BATT)) >= 0) {
+            int32_t pc = (a - 512) * 100 / 139;
+            t_bat = fm1_ms;
+            bat_avg = bat_avg < 0 ? pc * 8 : bat_avg + pc - bat_avg / 8;
+            pc = bat_avg / 8;
+            batt_pct = pc < 0 ? 0 : pc > 100 ? 100 : pc;
+        }
+    }
     if ((a = fm1_adc_read(FM1_ADC_MASTER)) >= 0) {
         uint32_t k10;
         knob_avg += (a * 16 - knob_avg) / 8;

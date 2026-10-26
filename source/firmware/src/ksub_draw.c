@@ -711,8 +711,24 @@ static const char *foot_fixed(uint32_t vi)
 static void view_dots(int32_t xr, int32_t y)    /* the page's views: one dot each, the one shown lit */
 {
     uint32_t nv = (uint32_t)(PAGE_V0[page + 1u] - PAGE_V0[page]), i;
-    int32_t x = xr - (int32_t)nv * 8;
-    for (i = 0; nv > 1u && i < nv; i++) g_rect(x + (int32_t)i * 8, y, 5, 5, i == vcur[page] ? K_LIME : K_LINE);
+    int32_t x = xr - (int32_t)nv * 5;
+    for (i = 0; nv > 1u && i < nv; i++) g_rect(x + (int32_t)i * 5, y + 1, 3, 3, i == vcur[page] ? K_LIME : K_LINE);
+}
+/* the battery, top right: five segments (the percentage only in SYSTEM); returns its left edge */
+static int32_t batt_draw(int32_t xr, int32_t y, int pct)
+{
+    int32_t x = xr - 24, lit = (batt_pct + 19) / 20, i, l = x;
+    uint16_t col = lit <= 1 ? K_ORANGE : K_LIME;
+    g_box(x, y, 22, 9, K_BG, K_GREY);
+    g_rect(x + 22, y + 3, 2, 3, K_GREY);
+    for (i = 0; i < 5; i++) g_rect(x + 2 + i * 4, y + 2, 3, 5, i < lit ? col : K_LINE);
+    if (pct) {
+        char b[8];
+        str_cat(fmt_u(b, (uint32_t)batt_pct, 0), "%");
+        g_text_r(T_XS, x - 3, y, b, K_WHITE);
+        l = x - 3 - g_text_w(T_XS, b);
+    }
+    return l;
 }
 
 /* ---------------------------------------------------------------- the lists that every theme shares */
@@ -782,39 +798,39 @@ static void th_classic(const view_t *v, uint32_t vi)
     const char *ti = view_title(vi, t, sub), *ff = foot_fixed(vi);
     uint32_t vz = VZ_OF[vi], c = cursor[vi], i;
     if (g_vis(0, 36)) {
-        g_text(T_M, 8, 5, "K-WASUB", K_LIME);
+        int32_t bx = batt_draw(234, 5, v->lay == LY_SYS);
+        g_text(T_M, 8, 4, v->cat, K_LIME);
         p = fmt_u(n, (uint32_t)page + 1u, 2);
         if (page == PG_PLAY) str_cat(p, "/08");
-        g_text_r(T_XS, 232, 7, n, K_GREY);
-        view_dots(232 - g_text_w(T_XS, n) - 6, 8);
+        g_text_r(T_XS, bx - 6, 7, n, K_GREY);
+        view_dots(bx - 6 - g_text_w(T_XS, n) - 6, 8);
         g_rect(6, 19, 228, 1, K_LINE);
-        g_text(T_S, 8, 24, v->cat, K_LIME);
     }
     if (v->lay == LY_PLAY) {                    /* the patch, a scope, four macros */
-        g_text(T_L, 8, 37, ti, K_WHITE);
-        g_text(T_XS, 8, 61, sub, K_GREY);
+        g_text(T_L, 8, 25, ti, K_WHITE);
+        g_text(T_XS, 8, 49, sub, K_GREY);
         p = t;
         if (hold) p = str_cat(p, "HOLD \xB7 ");
         p = fmt_u(p, ks_bpm10 / 10u, 0);
         str_cat(p, " BPM");
-        g_text_r(T_XS, 232, 26, t, hold ? K_LIME : K_CYAN);
-        draw_visual(VZ_SCOPE, 4, 72, 232, 38, 0);
+        g_text_r(T_XS, 232, 49, t, hold ? K_LIME : K_CYAN);
+        draw_visual(VZ_SCOPE, 4, 60, 232, 50, 0);
         for (i = 0; i < 4u; i++)
             draw_vbox(i & 1u ? 123 : 6, 116 + (int32_t)(i >> 1) * 52, 111, 47, v->it[i], i == c,
                       v->it[i] == I_L1RATE ? "WOB RATE" : v->it[i] == L1_DEP ? "WOB DEPTH" : 0);
     } else {
-        g_text(T_L, 8, 37, ti, K_WHITE);
-        g_text(T_XS, 8, 61, sub, v->lay == LY_LIST && page == PG_FX ? K_ORANGE : K_GREY);
-        if (v->lay == LY_PRESET) presets_g(vi - PAGE_V0[PG_PRE], 6, 74, 228, 24, 29, 5, T_S);
-        else if (v->lay == LY_SAVE) save_g(8, 74, 228, 37);
+        g_text(T_L, 8, 25, ti, K_WHITE);
+        g_text(T_XS, 8, 49, sub, v->lay == LY_LIST && page == PG_FX ? K_ORANGE : K_GREY);
+        if (v->lay == LY_PRESET) presets_g(vi - PAGE_V0[PG_PRE], 6, 62, 228, 26, 31, 5, T_S);
+        else if (v->lay == LY_SAVE) save_g(8, 64, 228, 37);
         else if (v->lay == LY_BOX) {
-            draw_visual(vz, 6, 72, 228, 46, 1);
+            draw_visual(vz, 6, 60, 228, 58, 1);
             for (i = 0; i < 4u; i++) draw_vbox(i & 1u ? 123 : 6, 122 + (int32_t)(i >> 1) * 50, 111, 46, v->it[i], i == c, 0);
         } else if (vz) {
-            draw_visual(vz, 6, 72, 228, 38, 1);
+            draw_visual(vz, 6, 60, 228, 50, 1);
             rows_g(v, 6, 114, 228, 23, 27, 4, T_S);
         } else
-            rows_g(v, 6, 74, 228, 24, 29, 5, T_S);
+            rows_g(v, 6, 62, 228, 26, 31, 5, T_S);
     }
     if (g_vis(222, 12)) {
         if (ff) str_cat(fb, ff); else foot_text(v, fb, 180);
@@ -837,35 +853,35 @@ static void th_glow(const view_t *v, uint32_t vi)
     const char *ti = view_title(vi, t, sub), *ff = foot_fixed(vi);
     uint32_t vz = VZ_OF[vi], c = cursor[vi], i;
     if (g_vis(0, 36)) {
-        g_text(T_S, 8, 5, "K-WASUB", K_LIME);
+        int32_t bx = batt_draw(234, 5, v->lay == LY_SYS);
+        g_text(T_S, 8, 5, v->cat, K_LIME);
         p = fmt_u(n, (uint32_t)page + 1u, 2);
-        g_text_r(T_XS, 232, 7, n, K_GREY);
-        view_dots(232 - g_text_w(T_XS, n) - 6, 8);
+        g_text_r(T_XS, bx - 6, 7, n, K_GREY);
+        view_dots(bx - 6 - g_text_w(T_XS, n) - 6, 8);
         g_hgrad(6, 20, 228, 2, K_LIME, K_BG);
-        g_text(T_XS, 8, 26, v->cat, K_CYAN);
     }
-    g_text(T_L, 8, 35, ti, K_WHITE);
-    g_text(T_XS, 8, 60, sub, v->lay == LY_LIST && page == PG_FX ? K_ORANGE : K_GREY);
+    g_text(T_L, 8, 25, ti, K_WHITE);
+    g_text(T_XS, 8, 49, sub, v->lay == LY_LIST && page == PG_FX ? K_ORANGE : K_GREY);
     if (v->lay == LY_PLAY) {
         p = t;
         if (hold) p = str_cat(p, "HOLD \xB7 ");
         p = fmt_u(p, ks_bpm10 / 10u, 0);
         str_cat(p, " BPM");
-        g_text_r(T_XS, 232, 26, t, hold ? K_LIME : K_CYAN);
-        glow_vis(VZ_SCOPE, 6, 72, 228, 40);
+        g_text_r(T_XS, 232, 49, t, hold ? K_LIME : K_CYAN);
+        glow_vis(VZ_SCOPE, 6, 60, 228, 52);
         for (i = 0; i < 4u; i++)
             draw_vbox(i & 1u ? 123 : 6, 116 + (int32_t)(i >> 1) * 52, 111, 47, v->it[i], i == c,
                       v->it[i] == I_L1RATE ? "WOB RATE" : v->it[i] == L1_DEP ? "WOB DEPTH" : 0);
-    } else if (v->lay == LY_PRESET) presets_g(vi - PAGE_V0[PG_PRE], 6, 74, 228, 24, 29, 5, T_S);
-    else if (v->lay == LY_SAVE) save_g(8, 74, 228, 37);
+    } else if (v->lay == LY_PRESET) presets_g(vi - PAGE_V0[PG_PRE], 6, 62, 228, 26, 31, 5, T_S);
+    else if (v->lay == LY_SAVE) save_g(8, 64, 228, 37);
     else if (v->lay == LY_BOX) {
-        glow_vis(vz, 6, 72, 228, 46);
+        glow_vis(vz, 6, 60, 228, 58);
         for (i = 0; i < 4u; i++) draw_vbox(i & 1u ? 123 : 6, 122 + (int32_t)(i >> 1) * 50, 111, 46, v->it[i], i == c, 0);
     } else if (vz) {
-        glow_vis(vz, 6, 72, 228, 38);
+        glow_vis(vz, 6, 60, 228, 50);
         rows_g(v, 6, 114, 228, 23, 26, 4, T_S);
     } else
-        rows_g(v, 6, 74, 228, 24, 28, 5, T_S);
+        rows_g(v, 6, 62, 228, 26, 30, 5, T_S);
     if (g_vis(218, 20)) {
         g_hgrad(6, 220, 228, 1, K_BG, g_mix(K_BG, K_LIME, 160));
         if (ff) str_cat(fb, ff); else foot_text(v, fb, 180);
@@ -891,11 +907,11 @@ static void th_tech(const view_t *v, uint32_t vi)
     const char *ti = view_title(vi, t, sub), *ff = foot_fixed(vi);
     uint32_t vz = VZ_OF[vi], c = cursor[vi], i;
     if (g_vis(0, 18)) {                         /* the bar: the name, the page, the views */
-        g_text(T_XS, 6, 4, "K-WASUB", K_LIME);
-        g_text(T_XS, 62, 4, v->cat, K_GREY);
+        int32_t bx = batt_draw(234, 4, v->lay == LY_SYS);
+        g_text(T_XS, 6, 4, v->cat, K_LIME);
         p = fmt_u(b, (uint32_t)page + 1u, 2);
-        g_text_r(T_XS, 234, 4, b, K_GREY);
-        view_dots(234 - g_text_w(T_XS, b) - 6, 5);
+        g_text_r(T_XS, bx - 6, 4, b, K_GREY);
+        view_dots(bx - 6 - g_text_w(T_XS, b) - 6, 5);
     }
     if (v->lay == LY_PRESET || v->lay == LY_SAVE || v->lay == LY_SYS) {   /* the lists take the whole page */
         g_text(T_S, 6, 17, ti, K_WHITE);
@@ -966,7 +982,7 @@ static void th_studio(const view_t *v, uint32_t vi)
         p = str_cat(p, "  C0 ");
         p = fmt_u(p, ks_load[0], 0);
         str_cat(p, "%");
-        g_text_r(T_XS, 235, 4, s, K_GREY);
+        g_text_r(T_XS, batt_draw(235, 3, v->lay == LY_SYS) - 6, 4, s, K_GREY);
         for (i = 0; i < NPAGE; i++) {
             int32_t x = 1 + (int32_t)i * 30;
             if (i == page) g_box(x, 17, 28, 11, K_LIME, K_LIME);
@@ -1027,7 +1043,7 @@ static void th_pure(const view_t *v, uint32_t vi)
         g_text(T_S, 7, 4, v->cat, K_INK);
         p = fmt_u(s, (uint32_t)page + 1u, 2);
         if (nv > 1u) { p = str_cat(p, " \xB7 "); p = fmt_u(p, vcur[page] + 1u, 0); p = str_cat(p, "/"); fmt_u(p, nv, 0); }
-        g_text_r(T_XS, 234, 5, s, K_GREY);
+        g_text_r(T_XS, batt_draw(234, 4, v->lay == LY_SYS) - 6, 5, s, K_GREY);
     }
     if (v->lay == LY_PRESET || v->lay == LY_SAVE || v->lay == LY_SYS || !vz) {   /* lists: rows under the title */
         g_text(T_B, 8, 22, ti, K_WHITE);
@@ -1097,7 +1113,7 @@ static void th_rack(const view_t *v, uint32_t vi)
     }
     if (g_vis(0, 50)) {
         g_text(T_S, 37, 4, v->cat, K_LIME);
-        view_dots(235, 6);
+        view_dots(batt_draw(235, 5, v->lay == LY_SYS) - 6, 6);
         g_text(T_L, 37, 17, ti, K_WHITE);
         g_text(T_XS, 37, 40, sub, K_GREY);
     }
@@ -1625,7 +1641,6 @@ static void draw_ask(void)
         {"CLASSIC", "PAGES OF LISTS, LIKE A SYNTH", "SELECT: ROW  ALGO: ITS VALUE", "K1-K4: THE FIRST 4 ROWS"},
         {"SHIFT", "12 SETTINGS A PAGE, 3 COLUMNS", "KNOBS: LEFT  HOLD OCT-: MIDDLE", "HOLD OCT+: RIGHT  TAP: OCTAVE"}};
     uint32_t k;
-    g_text_c(T_M, 120, 4, "K-WASUB", K_LIME);
     if (rst_bad) { char t[40]; str_cat(str_cat(t, "LAST STOP: "), rst_why); g_text_c(T_XS, 120, 22, t, K_ORANGE); }
     else g_text_c(T_XS, 120, 22, "HOW DO YOU WANT TO PLAY?", K_GREY);
     for (k = 0; k < 2u; k++) {
