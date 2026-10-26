@@ -2075,9 +2075,13 @@ static void draw_all(void)
         for (x = 0; x < 16; x++) lut[x] = g_mix(0x0000u, 0xFFFFu, (uint32_t)x * 17u);
         g_rect(0, g_y0, 240, (int32_t)BAND_H, 0x0000u);               /* (black, whatever the palette) */
         for (y = g_y0; y < y1 && y < (int32_t)KS_LOGO_N; y++) {
-            const uint8_t *row = KS_LOGO + (uint32_t)y * (KS_LOGO_N / 2u);
+            const uint8_t *row = KS_LOGO + KS_LOGO_ROW[y];   /* (the black packed: 0x00 then how many black bytes) */
             uint16_t *d = &g_buf[(uint32_t)(y - g_y0) * 240u + 12u];
-            for (x = 0; x < (int32_t)KS_LOGO_N / 2; x++) { d[2 * x] = lut[row[x] >> 4]; d[2 * x + 1] = lut[row[x] & 15u]; }
+            for (x = 0; x < (int32_t)KS_LOGO_N / 2;) {
+                uint32_t v = *row++, n = 1;
+                if (!v) n = *row++;
+                for (; n && x < (int32_t)KS_LOGO_N / 2; n--, x++) { d[2 * x] = lut[v >> 4]; d[2 * x + 1] = lut[v & 15u]; }
+            }
         }
         p = str_cat(b, pname);
         p = str_cat(p, " \xB7 ");

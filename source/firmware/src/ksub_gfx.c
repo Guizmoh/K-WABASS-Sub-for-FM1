@@ -272,30 +272,33 @@ static int32_t g_text(const ks_font_t *f, int32_t x, int32_t y, const char *s, u
 {
     int vis = g_vis(y, f->h);
     for (; *s; s++) {
-        uint32_t ch = (uint8_t)*s, w, bpr, gx, gy;
+        uint32_t ch = (uint8_t)*s, w, bpr, gy;
         const uint8_t *d;
         if (ch == 0xB7) ch = f->last;           /* the middle dot */
         if (ch >= 'a' && ch <= 'z' && f->last < 'a') ch -= 32u;
         if (ch < f->first || ch > f->last) ch = '?';
         w = f->adv[ch - f->first];
-        if (vis) {
+        if (vis) {                              /* (the glyph's bytes unpacked as they come: 0x00 then how many empty bytes) */
+            uint32_t sc = f->sc, run = 0, bx, k, hs = f->h / sc;
             bpr = (w + 1u) / 2u;
             d = f->data + f->off[ch - f->first];
-            for (gy = 0; gy < f->h; gy++) {
-                int32_t py = y + (int32_t)gy - g_y0;
-                uint16_t *row;
-                if ((uint32_t)py >= BAND_H || y + (int32_t)gy < g_cy0 || y + (int32_t)gy >= g_cy1) continue;
-                row = &g_buf[(uint32_t)py * 240u];
-                for (gx = 0; gx < w; gx++) {
-                    uint32_t v = d[gy * bpr + gx / 2u];
-                    int32_t px = x + (int32_t)gx;
-                    v = (gx & 1u) ? (v & 15u) : (v >> 4);
-                    if (v && px >= g_cx0 && px < g_cx1) row[px] = v >= 15u ? c : g_mix(row[px], c, v * 17u);
-                    if (v && g_bold && px + 1 >= g_cx0 && px + 1 < g_cx1) row[px + 1] = v >= 15u ? c : g_mix(row[px + 1], c, v * 17u);
+            for (gy = 0; gy < hs; gy++) for (bx = 0; bx < bpr; bx++) {
+                uint32_t b;
+                if (run) { run--; b = 0; }
+                else if ((b = *d++) == 0u) run = *d++ - 1u;
+                if (!b) continue;
+                for (k = 0; k < 2u * sc * sc; k++) {   /* (each pixel sc x sc) */
+                    uint32_t gx2 = 2u * bx + k / (sc * sc), v = (gx2 & 1u) ? (b & 15u) : (b >> 4);
+                    int32_t px = x + (int32_t)(gx2 * sc + (k % sc)), yy = y + (int32_t)(gy * sc + (k / sc) % sc), py = yy - g_y0;
+                    uint16_t *row;
+                    if (!v || gx2 >= w || (uint32_t)py >= BAND_H || yy < g_cy0 || yy >= g_cy1) continue;
+                    row = &g_buf[(uint32_t)py * 240u];
+                    if (px >= g_cx0 && px < g_cx1) row[px] = v >= 15u ? c : g_mix(row[px], c, v * 17u);
+                    if (g_bold && px + 1 >= g_cx0 && px + 1 < g_cx1) row[px + 1] = v >= 15u ? c : g_mix(row[px + 1], c, v * 17u);
                 }
             }
         }
-        x += (int32_t)w;
+        x += (int32_t)(w * f->sc);
     }
     return x;
 }
@@ -307,7 +310,7 @@ static int32_t g_text_w(const ks_font_t *f, const char *s)
         if (ch == 0xB7) ch = f->last;
         if (ch >= 'a' && ch <= 'z' && f->last < 'a') ch -= 32u;
         if (ch < f->first || ch > f->last) ch = '?';
-        w += f->adv[ch - f->first];
+        w += f->adv[ch - f->first] * f->sc;
     }
     return w;
 }
