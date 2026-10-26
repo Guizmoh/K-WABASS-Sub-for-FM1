@@ -2,7 +2,7 @@
 
 [English](SPECIFICATIONS.md) · [Français](fr/CAHIER-DES-CHARGES.md)
 
-A modern bass synth for the M-VAVE FM-1 (JieLi AC79, two cores, no FPU). Last update: **0.9.13**.
+A modern bass synth for the M-VAVE FM-1 (JieLi AC79, two cores, no FPU). Last update: **0.9.14**.
 This document says where the project stands: what is done, what has to be checked, what is left, and ideas to go further.
 
 ## 1. Vision
@@ -16,7 +16,7 @@ This document says where the project stands: what is done, what has to be checke
 ### Sound
 | Area | Detail | Version |
 |---|---|---|
-| Engines | 8 engines per oscillator (analog, super/reese, wavetable, FM, phase dist, wavefolder, sync, vocal); version B with 4 engines | ≤ 0.9 |
+| Engines | Version A: 4 efficient engines for modern basses (analog, reese, wavetable, FM); version B: 8 engines (adds phase dist, wavefolder, sync, vocal) for deeper sound design | ≤ 0.9 |
 | Oscillators | A + B (ADD, RING, X-MOD, SYNC), sub, noise, **OSC C sample** (10 sounds, 5 textures, loop / once, speed) | 0.9.9-4 |
 | Filter | 7 characters (LP24, LP12, BAND, HIGH, NOTCH, VOWEL, COMB), drive, mod by envelope, keyboard, velocity | ≤ 0.9 |
 | Modulation | 3 envelopes, 2 LFOs locked to the tempo (round grid option), STEP FX (16 patterns), 4-slot matrix, 4 MACROS × 4 targets | ≤ 0.9 |
@@ -185,3 +185,7 @@ Ranked by **value for a bass** and **cost on the FM-1** (CPU, RAM, a screen with
 6. **Flash**: group the writes, limit erase cycles (settings 2 s after the last change, done), circular crash log.
 7. **Tests**: compared screenshots to spot broken screens (like the ARP title), load test extended to FX PADS / MORPH / limiter, a 30-minute burn-in on the device.
 8. **Measurement**: show in SYSTEM the maximum load over the last 10 seconds (not only the instant one) so you can tune without guessing.
+
+## 10. Versions
+
+- **0.9.14**: versions swapped. **A** (the main one, `install/`, `emulator/index.html`) has **4 efficient engines** for modern basses (ANALOG, REESE, WAVE, FM); **B** (`install/version-b/`, `emulator/b.html`) has **8 engines** (adds PHASE DIST, WAVEFOLDER, HARD SYNC, VOCAL) for deeper sound design (pads, synth and FX). The build flag is `KS_FOUR` (1 by default = A).

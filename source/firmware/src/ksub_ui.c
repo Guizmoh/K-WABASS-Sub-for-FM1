@@ -131,7 +131,7 @@ static struct {
     uint8_t contrast;                           /* CONTRAST: 0 NORMAL, 1 HIGH (black and white), 2 MAX (+ the panel's darker gamma) */
     uint8_t norm, deep, askv;                   /* AUTO LEVEL on, DEEP BASS (0 off, 1 deep, 2 max); askv: the start question was switched off once (0.10) */
     uint8_t bri;                                /* BRIGHTNESS: 0 ECO, 1 NORMAL, 2 BRIGHT, 3 MAX */
-} set = {6, 0, 0, 0xFF, 1400, 0, 0, 1, 0, 0, 0, 0, 0, {0}, 1, 0, KS_B, 1, 0, 1, 1, 0, 1, 1, 1, 0, 3};
+} set = {6, 0, 0, 0xFF, 1400, 0, 0, 1, 0, 0, 0, 0, 0, {0}, 1, 0, 0, 1, 0, 1, 1, 0, 1, 1, 1, 0, 3};
 static char pname[14];
 static uint8_t page, vcur[NPAGE], cursor[sizeof VIEWS / sizeof VIEWS[0]], pre_cur[2], save_slot, save_pos, hold;
 static uint8_t key_note[27], latched[128], phys[128];
@@ -2094,7 +2094,7 @@ static void app_init(void)
     if (!ok) {
         set.theme = set.pal = set.font = set.grid = set.browse = 0;
         memset(set.fav, 0, sizeof set.fav);
-        set.ver = 6; set.midich = 0; set.clock = 0; set.oct = 0xFF; set.bpm10 = 1400; set.bank = 0; set.idx = 0; set.cores = 1; set.accel = 1; set.c3col = 0; set.ui = KS_B; set.ask = 0; set.zoom = 0; set.mstart = 1; set.mprog = 1; set.mclk = 0; set.contrast = 1; set.norm = 1; set.deep = 1; set.askv = 1; set.bri = 3;
+        set.ver = 6; set.midich = 0; set.clock = 0; set.oct = 0xFF; set.bpm10 = 1400; set.bank = 0; set.idx = 0; set.cores = 1; set.accel = 1; set.c3col = 0; set.ui = 0; set.ask = 0; set.zoom = 0; set.mstart = 1; set.mprog = 1; set.mclk = 0; set.contrast = 1; set.norm = 1; set.deep = 1; set.askv = 1; set.bri = 3;
     }
     set.bri = set.bri < 4u ? set.bri : 3u;
     g_bri = set.bri;

@@ -2,14 +2,14 @@
 # SPDX-License-Identifier: GPL-3.0-only
 # K-WASUB in a browser: the firmware compiled to WebAssembly (clang, wasm32, no libc), put into the page.
 #   web/make_emulator.sh            -> build/web/ksub.wasm, ../emulator/index.html (one file, works offline)
-#   KS_B=1 web/make_emulator.sh     version B (four engines) -> build/web/ksub-b.wasm, ../emulator/b.html
+#   KS_FOUR=0 web/make_emulator.sh  version B (eight engines) -> build/web/ksub-b.wasm, ../emulator/b.html
 # Needs clang with the wasm32 target and wasm-ld (lld); nothing else.
 set -e
 cd "$(dirname "$0")/.."
 mkdir -p build/web ../emulator
-SFX=""; [ "${KS_B:-0}" = 1 ] && SFX="-b"
+SFX=""; [ "${KS_FOUR:-1}" = 0 ] && SFX="-b"     # A: four engines (index.html); B: eight engines (b.html)
 clang --target=wasm32 -O2 -nostdlib -ffreestanding -fno-builtin -Wall -Wextra -Wno-unused-parameter -Wno-unused-function \
-    -Wno-sign-compare -DKAWA_WASM -DKS_B=${KS_B:-0} -DAPP_VER="\"${APP_VER:-0.2}${SFX}\"" -Ifirmware/src -Ifirmware/gen \
+    -Wno-sign-compare -DKAWA_WASM -DKS_FOUR=${KS_FOUR:-1} -DAPP_VER="\"${APP_VER:-0.2}${SFX}\"" -Ifirmware/src -Ifirmware/gen \
     -Wl,--no-entry -Wl,--export-dynamic -Wl,--initial-memory=4194304 -Wl,-z,stack-size=262144 \
     -o build/web/ksub$SFX.wasm firmware/src/ksub.c
 KSUB_VER="${APP_VER:-0.2}${SFX:+-B}" SFX="$SFX" python3 - <<'PY'

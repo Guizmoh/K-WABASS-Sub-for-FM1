@@ -60,14 +60,14 @@ footer{margin-top:50px;border-top:1px solid var(--rule);padding-top:18px;color:v
 <div class="cards">
 <div class="card"><h3>Play a living bass</h3><p>The 27 keys play the bass, <b>K1–K4</b> set the four settings that matter on each page. Hold LFO and turn a knob: the wobble is wired to whatever that knob sets.</p></div>
 <div class="card"><h3>Effects on the keys</h3><p><b>FX PADS</b>: white keys set the wobble speed (4, 8, 16, 24, 32, 48), black keys play stutters, tape stop, DJ filter, saturation, phaser…</p></div>
-<div class="card"><h3>A real bass sound</h3><p>2 oscillators with 8 engines each (reese, FM, wavetable…), a sub locked on A, a sample layer and <b>resample</b>, 7 filters, <b>multiband OTT</b>, mono bass, compressor with pump, 4-band EQ, limiter and automatic level.</p></div>
+<div class="card"><h3>A real bass sound</h3><p>2 oscillators with 4 engines (A) or 8 (B) each (reese, FM, wavetable…), a sub locked on A, a sample layer and <b>resample</b>, 7 filters, <b>multiband OTT</b>, mono bass, compressor with pump, 4-band EQ, limiter and automatic level.</p></div>
 <div class="card"><h3>Morph between sounds</h3><p><b>MORPH X/Y</b>: four sounds in the corners of a square, a dot that blends them (an LFO can walk it). <b>MORPH A/B</b>: a fade on the beat.</p></div>
 <div class="card"><h3>Simple or fast</h3><p><b>CLASSIC</b> mode (lists) or <b>SHIFT</b> mode (3 columns, OCT− and OCT+ as Shift keys). 6 themes (GLOW and TECH with gradients), 19 palettes, 4 brightness levels.</p></div>
 <div class="card"><h3>Safe and open</h3><p>Free, open source (GPL-3.0), can be reinstalled or removed over USB, with a rescue mode. If the FM-1 stops, the screen tells you why.</p></div></div></section>
 
 <section class="sec" id="try"><h2>Try it in the browser</h2>
 <p class="lead">The same firmware, compiled for your browser: no FM-1 needed. Click the screen, then play with the computer keyboard, the mouse on the buttons, the wheel on the knobs. Sound starts at the first press.</p>
-<div class="emu"><div class="tabs"><button id="ta" aria-pressed="true">Version A · 8 engines</button><button id="tb" aria-pressed="false">Version B · 4 engines</button><span><a id="open" href="emulator/index.html">open full screen ↗</a></span></div>
+<div class="emu"><div class="tabs"><button id="ta" aria-pressed="true">Version A · 4 engines</button><button id="tb" aria-pressed="false">Version B · 8 engines</button><span><a id="open" href="emulator/index.html">open full screen ↗</a></span></div>
 <div class="frame"><iframe id="fr" title="K-WASUB emulator" loading="lazy" allow="autoplay"></iframe>
 <div class="go" id="go"><div><p style="font-size:1.1rem;margin:0 0 12px">Start the emulator right here, nothing to install</p><button class="btn p" id="start">▶ Start the emulator</button><p style="color:var(--mut);font-size:.88rem;margin-top:12px">It is under 1 MB and works offline too (open <code>emulator/index.html</code> from your folder).</p></div></div></div></div></section>
 
@@ -90,7 +90,8 @@ footer{margin-top:50px;border-top:1px solid var(--rule);padding-top:18px;color:v
 
 <section class="sec" id="news"><h2>Latest updates</h2>
 <table><tr><th>Version</th><th>What's new</th></tr>
-<tr><td><b>0.9.13</b></td><td>New <b>TECH</b> theme: the picture (oscillator, envelope, filter…) fills almost the whole page, four tiles, gradients running in different directions (VOLT and CYBER palettes) · GLOW becomes <b>CLASSIC GLOW</b> · <b>BRIGHTNESS</b> ECO / NORMAL / BRIGHT / <b>MAX</b></td></tr>
+<tr><td><b>0.9.14</b></td><td><b>Versions swapped</b>: A is now the 4-engine version (efficient engines for modern basses), B the 8-engine one (deeper sound design: pads, synth and FX). Download links and names follow.</td></tr>
+<tr><td>0.9.13</td><td>New <b>TECH</b> theme: the picture (oscillator, envelope, filter…) fills almost the whole page, four tiles, gradients running in different directions (VOLT and CYBER palettes) · GLOW becomes <b>CLASSIC GLOW</b> · <b>BRIGHTNESS</b> ECO / NORMAL / BRIGHT / <b>MAX</b></td></tr>
 <tr><td>0.9.12</td><td><b>GLOW</b> theme: simple, gradients, fluo green (FLUO GREEN and TOXIC palettes) · new <b>PINK</b> and <b>GOLD</b> palettes for every theme</td></tr>
 <tr><td>0.9.11</td><td><b>PERFORM</b> (4 named macros, morph, pads on one screen) · <b>MULTIBAND / OTT</b> · <b>MONO BASS</b> and <b>SUB LOCK</b> · <b>RESAMPLE</b> into OSC C · preset <b>tags</b> (sub, reese, growl…) · MORPH X/Y: the same sound in the 4 corners (as is, cutoff ¼ res ¾, wobble 1/8, wobble 1/16) · presets load without a question · each page opens on its first view · pages ordered by importance · K1–K4 hints everywhere · CLASSIC/SHIFT asked on the first start only · <b>FLUO</b> palette</td></tr>
 <tr><td>0.9.10</td><td><b>FX PADS</b> · long presses everywhere (OCT− UNDO, OCT+ REDO, HOME PANIC, GLO CLASSIC/SHIFT) · EQ in the FX page · deeper bass, limiter, auto level · start screen with the FM-1 seen from the front · the software is called K-WASUB</td></tr>
@@ -105,7 +106,7 @@ footer{margin-top:50px;border-top:1px solid var(--rule);padding-top:18px;color:v
 <section class="sec"><h2>FAQ</h2>
 <details><summary>Do I lose KAWA or the stock firmware?</summary><p>No. Installation works like KAWA's, with the same loader: you can reinstall KAWA (<code>kawa-0.5.fwsc</code>) or the stock firmware (M-UPGRADE) whenever you like.</p></details>
 <details><summary>No sound on the FM-1?</summary><p>In SYSTEM, look at <code>AUDIO CORES</code> (try SINGLE) and the MASTER volume. If the FM-1 switched off, read <code>LAST STOP</code> at start-up and note what it says.</p></details>
-<details><summary>Version A or B?</summary><p>A: 8 engines per oscillator. B: 4 engines (ANALOG, REESE, WAVE, FM), for a simpler interface. Everything else is the same.</p></details>
+<details><summary>Version A or B?</summary><p>A: 4 efficient engines for modern basses (ANALOG, REESE, WAVE, FM). B: 8 engines for deeper sound design (pads, synth and FX sounds). Everything else is the same.</p></details>
 <details><summary>What does “beta” mean?</summary><p>The firmware is tested in the emulator and by automatic tests, but not yet on every FM-1. Tell me what you see (GitHub, Issues tab).</p></details></section>
 
 <footer>K-WASUB · GPL-3.0 · born from <a href="https://github.com/Guizmoh/Kawa-Tracker-Fm1">KAWA</a> (Omnipotard / Leo Kuroshita, Hügelton Instruments), whose FM-1 platform it reuses. Not affiliated with M-VAVE. <a href="https://github.com/Guizmoh/K-WASUB_Firmware_for_FM1">Source code</a> · <a href="LICENSE">License</a></footer>

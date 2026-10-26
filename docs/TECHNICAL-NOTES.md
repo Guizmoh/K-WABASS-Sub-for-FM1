@@ -45,11 +45,11 @@ OSC C plays 8-bit mu-law sounds from flash (`KS_SMP`, 10 sounds at 22.05 kHz and
 
 ```sh
 cd source
-./build.sh --release 0.9.13                 # build/k-wasub-0.9.13.fwsc   (X.Y, X.Y.Z or X.Y.Z-suffix; identity FM-1_97Y)
-KSUB_DEFS=-DKS_B=1 ./build.sh --release 0.9.13-b      # version B (4 engines)
-APP_VER=0.9.13 bash web/make_emulator.sh    # ../emulator/index.html   (KS_B=1 for ../emulator/b.html)
+./build.sh --release 0.9.14                 # build/k-wasub-0.9.14.fwsc   (X.Y, X.Y.Z or X.Y.Z-suffix; identity FM-1_97Y)
+KSUB_DEFS=-DKS_FOUR=0 ./build.sh --release 0.9.14-b  # version B (8 engines)
+APP_VER=0.9.14 bash web/make_emulator.sh    # ../emulator/index.html   (KS_FOUR=0 for ../emulator/b.html)
 bash web/make_installer.sh                  # ../installer.html with the newest install/k-wasub-*.fwsc
-bash tests/run_stress.sh                    # 13 000 parameter runs under UBSan (KS_B=1 for version B)
+bash tests/run_stress.sh                    # 13 000 parameter runs under UBSan (KS_FOUR=0 for version B)
 python3 tests/manual_shots.py               # every screen of the manual -> docs/img
 ```
 Toolchain and SDK: see [`source/BUILDING.md`](../source/BUILDING.md). The build checks the memory map, that no register address appears outside `hal/`, and that the package fits the loader's limits.

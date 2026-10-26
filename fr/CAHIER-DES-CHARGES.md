@@ -2,7 +2,7 @@
 
 [English](../SPECIFICATIONS.md) · **Français**
 
-Synthé de basses modernes pour le M-VAVE FM-1 (JieLi AC79, deux cœurs, sans FPU). Dernière mise à jour : **0.9.13**.
+Synthé de basses modernes pour le M-VAVE FM-1 (JieLi AC79, deux cœurs, sans FPU). Dernière mise à jour : **0.9.14**.
 Ce document dit où en est le projet : ce qui est fait, ce qui est à vérifier, ce qui reste, et des idées pour aller plus loin.
 
 ## 1. Vision
@@ -16,7 +16,7 @@ Ce document dit où en est le projet : ce qui est fait, ce qui est à vérifier,
 ### Son
 | Domaine | Détail | Version |
 |---|---|---|
-| Moteurs | 8 moteurs par oscillateur (analog, super/reese, wavetable, FM, phase dist, wavefolder, sync, vocal) ; version B à 4 moteurs | ≤ 0.9 |
+| Moteurs | Version A : 4 moteurs efficaces pour les basses modernes (analog, reese, wavetable, FM) ; version B : 8 moteurs (ajoute phase dist, wavefolder, sync, vocal) pour un sound design plus poussé | ≤ 0.9 |
 | Oscillateurs | A + B (ADD, RING, X-MOD, SYNC), sub, bruit, **OSC C sample** (10 sons, 5 textures, boucle / une fois, vitesse) | 0.9.9-4 |
 | Filtre | 7 caractères (LP24, LP12, BAND, HIGH, NOTCH, VOWEL, COMB), drive, mod par enveloppe, clavier, vélocité | ≤ 0.9 |
 | Modulation | 3 enveloppes, 2 LFO calés sur le tempo (grille ronde en option), STEP FX (16 motifs), matrice 4 slots, 4 MACROS × 4 cibles | ≤ 0.9 |

@@ -8,7 +8,7 @@ OUT = Path("../docs/img"); OUT.mkdir(parents=True, exist_ok=True)
 T = [0]
 def run(lines, tag):
     Path(f"build/{tag}.txt").write_text("\n".join(lines) + "\nend\n")
-    subprocess.run(["node", "tests/shots.mjs", f"build/{tag}.txt"], check=True, capture_output=True)
+    subprocess.run(["node", "tests/shots.mjs", f"build/{tag}.txt"], check=True, capture_output=True, env={**os.environ, "WASM": "build/web/ksub-b.wasm"})   # (the 8-engine build shows everything)
 class S:
     def __init__(s): s.l, s.t, s.names = [], 100, []
     def c(s, cmd, dt=120): s.l.append(f"{s.t} {cmd}"); s.t += dt
