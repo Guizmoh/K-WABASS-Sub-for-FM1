@@ -6,7 +6,7 @@
  *   PURE     after Pure SUB: a lime tab, a big visual, four rings for the four knobs, the row being edited below
  *   RACK     the pages on a rail at the left, big type, tall rows
  * Every visual is drawn with integers only (no FPU), from the patch and what the voices say (ksub_dsp.c). */
-enum { TH_GLOW, TH_STUDIO, TH_PURE, TH_RACK, TH_TECH, NTHEMES };
+enum { TH_GLOW, TH_STUDIO, TH_PURE, TH_RACK, TH_TECH, TH_RIBBON, TH_RIBBONC, NTHEMES };
 enum { VZ_NONE, VZ_SCOPE, VZ_OSCA, VZ_OSCB, VZ_SUB, VZ_MIX, VZ_ENV0, VZ_ENV1, VZ_ENV2, VZ_FILT, VZ_LFO1, VZ_LFO2, VZ_STEP,
        VZ_SEQ, VZ_SMP, VZ_DRIVE, VZ_CRUSH, VZ_CHORUS, VZ_DELAY, VZ_REVERB, VZ_MASTER, VZ_COMP, VZ_PHASER, VZ_OTT, VZ_CPU };
 static const uint8_t VZ_OF[] = {VZ_SCOPE, VZ_SCOPE, VZ_OSCA, VZ_OSCB, VZ_SUB, VZ_MIX, VZ_SMP, VZ_ENV0, VZ_ENV1, VZ_ENV2, VZ_FILT, VZ_FILT,
@@ -1054,6 +1054,255 @@ static void th_pure(const view_t *v, uint32_t vi)
     }
 }
 
+/* ---------------------------------------------------------------- RIBBON: the views side by side (left / right), each a tall window
+ * that scrolls down with SELECT, full of pictures; RIBBON CLASSIC: the same look, the classic rows inside */
+static const uint8_t RB_IN[8] = {5, 3, 2, 1, 1, 0, 0, 0};   /* a corner of radius 8: the inset of each row */
+static void rb_rrect(int32_t x, int32_t y, int32_t w, int32_t h, int32_t r, uint16_t c0, uint16_t c1)   /* rounded, top c0 to bottom c1 */
+{
+    int32_t j;
+    if (!g_vis(y, h)) return;
+    for (j = 0; j < h; j++) {
+        int32_t in = 0, yy = y + j;
+        if (!g_vis(yy, 1)) continue;
+        if (j < r) in = RB_IN[j * 8 / r] * r / 8;
+        else if (j >= h - r) in = RB_IN[(h - 1 - j) * 8 / r] * r / 8;
+        g_rect(x + in, yy, w - 2 * in, 1, c0 == c1 ? c0 : g_mix(c0, c1, (uint32_t)(j * 256 / h)));
+    }
+}
+static void rb_frame(int32_t x, int32_t y, int32_t w, int32_t h, int32_t r, uint16_t edge, uint16_t c0, uint16_t c1)
+{
+    rb_rrect(x, y, w, h, r, edge, edge);
+    rb_rrect(x + 1, y + 1, w - 2, h - 2, r - 1, c0, c1);
+}
+static void rb_arc(int32_t cx, int32_t cy, int32_t r, uint32_t frac, uint16_t c)   /* 270 degrees, 4 px, no needle */
+{
+    uint32_t i, n = 72, k;
+    if (!g_vis(cy - r - 1, 2 * r + 3)) return;
+    for (i = 0; i <= n; i++) {
+        uint32_t a = 0x60000000u + i * (0xC0000000u / n);
+        uint16_t col = i * 256u <= frac * n && frac ? c : K_TRACK;
+        for (k = 0; k < 4u; k++) {
+            int32_t rr = r - (int32_t)k;
+            g_px(cx + ((sin32(a + 0x40000000u) * rr) >> 15), cy + ((sin32(a) * rr) >> 15), col);
+        }
+    }
+}
+static void rb_tri(int32_t x, int32_t y, int dir, uint16_t c)   /* a small arrow: dir -1 left, 1 right, 2 down */
+{
+    int32_t i;
+    for (i = 0; i < 4; i++) {
+        if (dir == 2) g_rect(x - 3 + i, y + i, 7 - 2 * i, 1, c);
+        else g_rect(dir < 0 ? x + i : x + 3 - i, y - i, 1, 2 * i + 1, c);
+    }
+}
+static void rb_name(uint32_t vi, char *b)       /* a view's short name, for the ribbon */
+{
+    static const char *const FR[] = {"CURRENT PATCH", "LIVE MIX", "OSCILLATOR A", "OSCILLATOR B", "OSCILLATOR C \xB7 SAMPLE", "SUB + NOISE",
+                                     "COMBINE A + B", "AMP ENVELOPE", "FILTER ENVELOPE", "MOD ENVELOPE", "FILTER / COLOUR", "FILTER MOD",
+                                     "SEQ BASS", "LFO 1 \xB7 WOBBLE", "LFO 2 \xB7 MOTION", "STEP FX", "MOD MATRIX", "PRESET BANK A",
+                                     "PRESET BANK B", "SAVE PATCH", "ARPEGGIATOR", "GLOBAL SETUP"};
+    static const char *const TO[] = {"PLAY", "MIX", "OSC A", "OSC B", "SAMPLE", "SUB", "A + B", "AMP", "F.ENV", "M.ENV", "FILTER", "F.MOD",
+                                     "SEQ", "LFO 1", "LFO 2", "STEP", "MATRIX", "BANK A", "BANK B", "SAVE", "ARP", "SYSTEM"};
+    const char *c = VIEWS[vi].cat;
+    uint32_t i;
+    char t[32], sub[48];
+    if (str_eq(c, "FX RACK")) {                /* (the effects by their short names) */
+        static const char *const FXL[] = {"SATURATION", "MULTIBAND", "COMPRESSOR", "BITCRUSH", "REVERB"}, *const FXS[] = {"SAT", "OTT", "COMP", "CRUSH", "VERB"};
+        const char *ti = view_title(vi, t, sub);
+        for (i = 0; i < 5u; i++) if (str_eq(ti, FXL[i])) { str_cat(b, FXS[i]); return; }
+        str_cat(b, ti);
+        return;
+    }
+    for (i = 0; i < sizeof FR / sizeof FR[0]; i++) if (str_eq(c, FR[i])) { str_cat(b, TO[i]); return; }
+    str_cat(b, c);
+}
+static uint32_t rb_vi, rb_ms;
+static int8_t rb_dir;
+static int32_t rb_content(const view_t *v, uint32_t vi, int32_t x, int32_t y0, int32_t w, int draw, int32_t *sel_y)   /* RIBBON: the tall page; its height */
+{
+    static const uint16_t *const RC[4] = {&kc[KC_LIME], &kc[KC_CYAN], &kc[KC_ORANGE], &kc[KC_MOD]};
+    uint32_t vz = VZ_OF[vi], c = cursor[vi], i, n = v->n;
+    int32_t y = y0;
+    char b[24], lab[48];
+    *sel_y = 0;
+    if (vz) {                                   /* the picture */
+        if (draw && g_vis(y + 4, 58)) {
+            int32_t k;
+            rb_rrect(x + 4, y + 4, w - 8, 58, 6, g_mix(K_BG, K_PANEL, 90), g_mix(K_BG, K_PANEL, 90));
+            for (k = 1; k < 4; k++) g_rect(x + 4 + (w - 8) * k / 4, y + 6, 1, 54, g_mix(K_BG, K_LINE, 110));
+            draw_visual(vz, x + 6, y + 6, w - 12, 54, 0);
+        }
+        y += 66;
+    }
+    if (n) {                                    /* the first four: dials, each in its colour */
+        uint32_t m = n < 4u ? n : 4u;
+        for (i = 0; i < m; i++) {
+            int32_t cx = x + (w * (2 * (int32_t)i + 1)) / 8, cy = y + 18, sel = c == i;
+            uint32_t id = v->it[i];
+            if (sel) *sel_y = y - y0;
+            if (!draw || !g_vis(cy - 16, 44)) continue;
+            rb_arc(cx, cy, 14, item_frac(id), *RC[i]);
+            item_text(id, b);
+            if (g_text_w(T_XS, b) <= 24) g_text_c(T_XS, cx, cy - 4, b, K_WHITE);   /* (the value in the dial, or under it when longer) */
+            else g_text_c(g_fit(T_XS, b, w / 4 - 2), cx, cy + 26, b, K_WHITE);
+            g_text_c(g_fit(T_XS, item_sname(id), w / 4 - 2), cx, cy + 16, item_sname(id), sel ? *RC[i] : K_GREY);
+            if (sel) g_rect(cx - 8, cy + 36, 17, 2, *RC[i]);
+        }
+        y += 60;
+    }
+    if (vz == VZ_OSCA || vz == VZ_OSCB) {       /* the harmonics of the wave shown */
+        if (draw && g_vis(y, 56)) {
+            const int16_t *wv = vz == VZ_OSCA ? prev_a : prev_b;
+            int32_t mag[16], mx = 1, k, j;
+            for (k = 0; k < 16; k++) {
+                int32_t re = 0, im = 0;
+                for (j = 0; j < 112; j++) {
+                    uint32_t ph = (uint32_t)((uint64_t)(k + 1) * (uint32_t)j * 0x100000000ull / 112u);
+                    re += (wv[j] * sin32(ph + 0x40000000u)) >> 15;
+                    im += (wv[j] * sin32(ph)) >> 15;
+                }
+                mag[k] = (re < 0 ? -re : re) + (im < 0 ? -im : im);
+                if (mag[k] > mx) mx = mag[k];
+            }
+            g_text(T_XS, x + 8, y, "HARMONICS", K_GREY);
+            for (k = 0; k < 16; k++) {
+                int32_t hh = 2 + mag[k] * 36 / mx;
+                g_rect(x + 8 + k * ((w - 16) / 16), y + 48 - hh, (w - 16) / 16 - 3, hh, g_mix(K_LIME, K_CYAN, (uint32_t)(k * 17)));
+            }
+        }
+        y += 58;
+    }
+    for (i = 4; i < n;) {                       /* the rest: choices as pills, the glide as its curve, values in boxes of three */
+        uint32_t id = v->it[i];
+        int32_t lo, hi;
+        item_range(id, &lo, &hi);
+        if (item_patch(id) && PD[id].fmt == FM_LIST && hi - lo <= 2) {
+            int32_t m = hi - lo + 1, pw = (w - 16 - (m - 1) * 6) / m, k, cur = item_get(id);
+            if (c == i) *sel_y = y - y0;
+            if (draw && g_vis(y, 32)) {
+                { char *q = str_cat(str_cat(lab, item_name(id)), " \xB7 "); for (k = 0; k < m; k++) q = str_cat(k ? str_cat(q, " / ") : q, PD[id].list[lo + k]); }
+                g_text(g_fit(T_XS, lab, w - 16), x + 8, y, lab, c == i ? K_LIME : K_GREY);
+                for (k = 0; k < m; k++) {
+                    int on = cur == lo + k, px = x + 8 + k * (pw + 6);
+                    rb_frame(px, y + 11, pw, 17, 8, on ? K_LIME : c == i ? K_GREY : K_LINE, on ? K_LIME : g_mix(K_BG, K_PANEL, 90), on ? K_LIME : g_mix(K_BG, K_PANEL, 90));
+                    g_text_c(g_fit(T_XS, PD[id].list[lo + k], pw - 4), px + pw / 2, y + 15, PD[id].list[lo + k], on ? K_INK : K_GREY);
+                }
+            }
+            y += 34; i++;
+        } else if (id == V_GLIDE) {
+            if (c == i) *sel_y = y - y0;
+            if (draw && g_vis(y, 42)) {
+                int32_t k, lv = 0, tau = 2 + (int32_t)item_frac(id) / 5, py = y + 38;
+                item_text(id, b);
+                str_cat(str_cat(lab, "GLIDE  "), b);
+                g_text(T_XS, x + 8, y, lab, c == i ? K_LIME : K_GREY);
+                for (k = 0; k < w - 20; k++) {
+                    int32_t yy;
+                    lv += (256 - lv) / tau + 1;
+                    if (lv > 256) lv = 256;
+                    yy = y + 38 - 24 * lv / 256;
+                    if (k) g_line(x + 8 + k - 1, py, x + 8 + k, yy, K_CYAN);
+                    py = yy;
+                }
+            }
+            y += 44; i++;
+        } else {                                /* up to three values in boxes (a long value: a whole row) */
+            uint32_t g = 0, k;
+            int32_t bw = (w - 16 - 12) / 3;
+            for (g = 0; g < 3u && i + g < n; g++) {
+                uint32_t id2 = v->it[i + g];
+                int32_t l2, h2;
+                item_range(id2, &l2, &h2);
+                item_text(id2, b);
+                if (id2 == V_GLIDE || (item_patch(id2) && PD[id2].fmt == FM_LIST && h2 - l2 <= 2) || g_text_w(T_S, b) > bw - 4) break;
+            }
+            if (!g) {                           /* a long one: a row */
+                if (c == i) *sel_y = y - y0;
+                if (draw && g_vis(y, 22)) { item_text(id, b); row_g(x + 8, y, w - 16, 20, item_name(id), b, c == i, K_CYAN, T_XS); }
+                y += 24; i++;
+                continue;
+            }
+            { char *q = lab; for (k = 0; k < g; k++) { if (k) q = str_cat(q, " / "); q = str_cat(q, item_sname(v->it[i + k])); } }
+            for (k = 0; k < g; k++) if (c == i + k) *sel_y = y - y0;
+            if (draw && g_vis(y, 44)) {
+                g_text(g_fit(T_XS, lab, w - 16), x + 8, y, lab, K_GREY);
+                for (k = 0; k < g; k++) {
+                    int32_t bx = x + 8 + (int32_t)k * (bw + 6), sel = c == i + k;
+                    item_text(v->it[i + k], b);
+                    rb_frame(bx, y + 11, bw, 30, 5, sel ? K_LIME : K_LINE, g_mix(K_BG, K_PANEL, 110), g_mix(K_BG, K_PANEL, 70));
+                    g_text_c(g_fit(T_S, b, bw - 4), bx + bw / 2, y + 15, b, sel ? K_LIME : K_WHITE);
+                    g_text_c(g_fit(T_XS, item_sname(v->it[i + k]), bw - 4), bx + bw / 2, y + 29, item_sname(v->it[i + k]), K_GREY);
+                }
+            }
+            y += 46; i += g;
+        }
+    }
+    return y - y0 + 6;
+}
+static void th_ribbon(const view_t *v, uint32_t vi, int classic)
+{
+    const int32_t wy = 26, wh = 206, ww = 190;
+    int32_t wx = 25, k, off = 0, tall, sel_y, scroll = 0, cy0 = wy + 28, cy1 = wy + wh - 2;
+    char t[32], sub[48], b[24];
+    const char *ti = view_title(vi, t, sub);
+    uint32_t nv = sizeof VIEWS / sizeof VIEWS[0], stack = !classic && (v->lay == LY_PLAY || v->lay == LY_LIST || v->lay == LY_BOX || v->lay == LY_LFO || v->lay == LY_STEP);
+    if (vi != rb_vi) { rb_dir = vi > rb_vi ? 1 : -1; rb_ms = fm1_ms; rb_vi = vi; }
+    if (fm1_ms - rb_ms < 180u) off = rb_dir * (int32_t)(180u - (fm1_ms - rb_ms)) * 200 / 180;
+    if (g_vis(0, 19)) {                         /* the ribbon: the views around, the one shown lit */
+        for (k = -3; k <= 3; k++) {
+            int32_t j = (int32_t)vi + k, cx = 120 + k * 50 + off / 4;
+            if (j < 0 || j >= (int32_t)nv || VIEWS[j].lay == LY_EQ) continue;
+            b[0] = 0; rb_name((uint32_t)j, b);
+            if (!k) rb_rrect(cx - 24, 3, 48, 13, 6, K_LIME, K_LIME);
+            g_text_c(g_fit(T_XS, b, 46), cx, 5, b, k ? K_GREY : K_INK);
+        }
+        g_rect(0, 18, 240, 1, K_LINE);
+    }
+    for (k = -1; k <= 1; k += 2) {              /* the neighbours peek in at the sides */
+        int32_t nx = k < 0 ? -176 : 226, nj = (int32_t)vi + k;
+        uint16_t acc = k < 0 ? K_ORANGE : K_CYAN;
+        if (nj < 0 || nj >= (int32_t)nv) continue;
+        rb_frame(nx + off, wy, ww, wh, 8, g_mix(K_BG, acc, 70), g_mix(K_BG, K_PANEL, 110), g_mix(K_BG, K_PANEL, 70));
+        rb_rrect(nx + off + 1, wy + 1, ww - 2, 24, 7, g_mix(K_BG, acc, 60), g_mix(K_BG, K_PANEL, 110));
+        rb_tri(k < 0 ? 4 : 232, 129, k, g_mix(K_BG, K_LIME, 200));
+    }
+    wx += off;
+    rb_rrect(wx + 4, wy + 6, ww, wh, 8, g_mix(K_BG, 0x0000u, 140), g_mix(K_BG, 0x0000u, 200));   /* the shadow */
+    rb_frame(wx, wy, ww, wh, 8, g_mix(K_LINE, K_LIME, 120), g_mix(K_PANEL, K_LIME, 26), K_PANEL);
+    rb_rrect(wx + 1, wy + 1, ww - 2, 26, 7, g_mix(K_PANEL, K_LIME, 90), K_PANEL);   /* its head: the title, what it is */
+    g_clip(wx + 2, wy + 1, wx + ww - 2, wy + 27);
+    g_text(g_fit(T_M, ti, ww - 16), wx + 8, wy + 4, ti, K_WHITE);
+    g_text(g_fit(T_XS, sub, ww - 16), wx + 8, wy + 17, sub, K_LIME);
+    g_clip(wx + 2 > 0 ? wx + 2 : 0, cy0, wx + ww - 2 < 240 ? wx + ww - 2 : 240, cy1);
+    if (stack) {                                /* RIBBON: the tall page, scrolled to the row chosen */
+        tall = rb_content(v, vi, wx, cy0, ww - 4, 0, &sel_y);
+        scroll = clampi(sel_y + 64 - (cy1 - cy0), 0, tall > cy1 - cy0 ? tall - (cy1 - cy0) : 0);   /* (the row chosen kept in sight, with what follows it) */
+        rb_content(v, vi, wx, cy0 - scroll, ww - 4, 1, &sel_y);
+        if (tall > cy1 - cy0) {                 /* its bar, a fade at the bottom and an arrow: there is more */
+            int32_t bh = (cy1 - cy0) * (cy1 - cy0) / tall, by = cy0 + scroll * (cy1 - cy0 - bh) / (tall - (cy1 - cy0));
+            g_clip(0, 0, 240, 240);
+            rb_rrect(wx + ww - 5, by + 2, 3, bh - 4, 1, K_LIME, K_LIME);
+            if (scroll < tall - (cy1 - cy0) - 2) {
+                int32_t j, xx;
+                for (j = 0; j < 16; j++) if (g_vis(cy1 - 16 + j, 1)) for (xx = wx + 2; xx < wx + ww - 6; xx++) g_pxa(xx, cy1 - 16 + j, K_PANEL, (uint32_t)(j * 16));
+                rb_tri(wx + ww / 2, cy1 - 7, 2, K_LIME);
+            }
+        }
+    } else if (v->lay == LY_PRESET) presets_g(vi - PAGE_V0[PG_PRE], wx + 6, cy0 + 2, ww - 16, 26, 29, 6, T_S);
+    else if (v->lay == LY_SAVE) save_g(wx + 8, cy0 + 4, ww - 16, 34);
+    else {                                      /* RIBBON CLASSIC (and the lists): the picture, then the rows */
+        int32_t ry = cy0 + 2;
+        uint32_t vz = VZ_OF[vi];
+        if (vz) {
+            rb_rrect(wx + 6, ry, ww - 12, 58, 6, g_mix(K_BG, K_PANEL, 90), g_mix(K_BG, K_PANEL, 90));
+            draw_visual(vz, wx + 8, ry + 2, ww - 16, 54, 0);
+            ry += 64;
+        }
+        rows_g(v, wx + 6, ry, ww - 18, 22, 25, (uint32_t)((cy1 - ry) / 25), T_S);
+    }
+    g_clip(0, 0, 240, 240);
+}
+
 /* ---------------------------------------------------------------- RACK */
 static void th_rack(const view_t *v, uint32_t vi)
 {
@@ -1688,6 +1937,8 @@ static void draw_all(void)
     g_rect(0, g_y0, 240, (int32_t)BAND_H, K_BG);
     if (g_rad) {                                /* RAD palettes: the accent poured in from the top into the second colour at the bottom, on every theme */
         g_vgrad(0, 0, 240, 240, g_rtop, g_rbot);
+    } else if (theme >= TH_RIBBON) {            /* RIBBON: a deep night, a little lighter at the top */
+        g_vgrad(0, 0, 240, 240, g_mix(K_BG, K_LINE, 60), g_mix(K_BG, 0x0000u, 140));
     } else if (g_sky) {                         /* SKY: a pale blue sky, deeper toward the bottom */
         g_vgrad(0, 0, 240, 240, g_mix(K_BG, 0xFFFFu, 90), g_mix(K_BG, RGB(120, 160, 220), 80));
     } else if (theme == TH_GLOW) {              /* GLOW: the accent glowing in from the top, the second colour from the bottom */
@@ -1708,6 +1959,8 @@ static void draw_all(void)
     case TH_PURE: th_pure(v, vi); break;
     case TH_RACK: th_rack(v, vi); break;
     case TH_TECH: th_tech(v, vi); break;
+    case TH_RIBBON: th_ribbon(v, vi, 0); break;
+    case TH_RIBBONC: th_ribbon(v, vi, 1); break;
     default: th_glow(v, vi); break;
     }
     if (dpop_ms && g_vis(22, 200)) {            /* the destination list: the ones before and after, the group of each */
@@ -1771,13 +2024,13 @@ static void draw_all(void)
         int32_t vy = VZ_OF[vidx()] ? 146 : 72;   /* (below the picture, the scope included) */
         if (vpop_ms && vpop_id == G_FONT) {     /* FONT: the ones around, each in itself */
             if (!dpop_ms && !pend_on && !win && g_vis(60, 112)) {
-                static const char *const FN[4] = {"SANS  Aa 123", "MONO  Aa 123", "HYPER  Aa 123", "PIXEL  Aa 123"};
-                int32_t cur = (int32_t)(set.font & 3u), i, y;
+                static const char *const FN[NFONT] = {"SANS  AA 123", "MONO  AA 123", "HYPER  AA 123", "PIXEL  AA 123", "OUTFIT  AA 123", "INSTRUMENT  AA 123", "TEKTUR  AA 123", "JETBRAINS  AA 123", "BIG SHOULDERS  123"};
+                int32_t cur = (int32_t)(set.font % NFONT), i, y;
                 uint8_t bold = g_bold;
                 g_box(20, 60, 200, 112, K_PANEL, K_LIME);
                 g_text_c(T_XS, 120, 64, "FONT", K_GREY);
                 for (i = cur - 2, y = 78; i <= cur + 2; i++, y += 18) {
-                    if (i < 0 || i > 3) continue;
+                    if (i < 0 || i >= (int32_t)NFONT) continue;
                     if (i == cur) g_box(26, y - 2, 188, 18, K_LIMED, K_LIME);
                     g_bold = i == 2;
                     g_text_c(FAMS[i][1], 120, y + 1, FN[i], i == cur ? K_WHITE : K_GREY);

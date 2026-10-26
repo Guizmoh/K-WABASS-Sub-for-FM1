@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: GPL-3.0-only
-"""K-WA SUB: the fixed-point tables and the screen fonts (DejaVu Sans Bold; IBM Plex Mono SemiBold, Atkinson Hyperlegible Mono, Press Start 2P: SIL OFL).
+"""K-WA SUB: the fixed-point tables and the screen fonts (DejaVu Sans Bold; IBM Plex Mono SemiBold, Atkinson Hyperlegible Mono, Press Start 2P, Outfit, Instrument Sans, Tektur, JetBrains Mono, Big Shoulders: SIL OFL).
 
     python3 tools/gen_ksub.py      -> firmware/gen/ksub_tables.h, firmware/gen/ksub_fonts.h
 
@@ -152,6 +152,12 @@ FONTS = [("F", "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", [("XS", 8
          ("G", str(ROOT / "assets/fonts/IBMPlexMono-SemiBold.ttf"), [("XS", 9, 126), ("S", 10, 126), ("M", 12, 126), ("B", 16, 126), ("L", 20, 95)]),
          ("H", str(ROOT / "assets/fonts/AtkinsonHyperlegibleMono.ttf"), [("XS", 9, 126), ("S", 10, 126), ("M", 12, 126), ("B", 16, 126), ("L", 20, 95)]),
          ("P", str(ROOT / "assets/fonts/PressStart2P-Regular.ttf"), [("XS", 8, 126), ("S", 8, 126), ("M", 8, 126), ("B", 16, 126), ("L", 16, 95)]),
+         # five more (0.9.34, SIL OFL), the small sizes only, capitals only (the big titles stay DejaVu Sans Bold)
+         ("O", str(ROOT / "assets/fonts/Outfit-Bold.ttf"), [("XS", 9, 95), ("S", 10, 95), ("M", 12, 95)]),
+         ("I", str(ROOT / "assets/fonts/InstrumentSans-Bold.ttf"), [("XS", 9, 95), ("S", 10, 95), ("M", 12, 95)]),
+         ("T", str(ROOT / "assets/fonts/Tektur-Medium.ttf"), [("XS", 9, 95), ("S", 10, 95), ("M", 12, 95)]),
+         ("J", str(ROOT / "assets/fonts/JetBrainsMono-Bold.ttf"), [("XS", 8, 95), ("S", 9, 95), ("M", 11, 95)]),
+         ("Q", str(ROOT / "assets/fonts/BigShoulders-Bold.ttf"), [("XS", 10, 95), ("S", 11, 95), ("M", 13, 95)]),
          # LOUPE (SYSTEM): the rows' and values' sizes, as big as the rows and boxes take (PIXEL has none: 8 or 16)
          ("FZ", "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", [("S", 11, 126), ("M", 13, 126)]),
          ("GZ", str(ROOT / "assets/fonts/IBMPlexMono-SemiBold.ttf"), [("S", 12, 126), ("M", 14, 126)]),

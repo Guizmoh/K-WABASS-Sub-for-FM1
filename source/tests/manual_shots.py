@@ -10,7 +10,8 @@ def run(lines, tag):
     Path(f"build/{tag}.txt").write_text("\n".join(lines) + "\nend\n")
     subprocess.run(["node", "tests/shots.mjs", f"build/{tag}.txt"], check=True, capture_output=True)
 def look(s, t, p):                              # the theme and the palette, from SYSTEM
-    s.btn(GLO, 200); s.enc(0, -30, 100); s.enc(0, 3, 100); s.enc(1, -8, 100); s.enc(1, t, 100)
+    s.btn(GLO, 200); s.enc(0, -30, 100); s.enc(0, 3, 100); s.enc(1, -8, 100)
+    for _ in range(t): s.enc(1, 1, 150)
     s.enc(0, 1, 100); s.enc(1, -30, 100); s.enc(1, p, 100); s.btn(HOME, 200)
 class S:
     def __init__(s): s.l, s.t, s.names = [], 100, []
@@ -79,9 +80,11 @@ combos += [(1, p, n) for p, n in ((2, "synthwave"), (3, "mint"), (4, "blackwhite
 combos += [(0, 8, "glow-fluo"), (0, 9, "glow-pink"), (0, 10, "glow-gold"), (0, 2, "glow-synthwave"), (0, 7, "glow-ice")]
 combos += [(4, 2, "tech-synthwave"), (4, 8, "tech-fluo"), (4, 9, "tech-pink"), (4, 7, "tech-ice")]
 combos += [(1, 19, "rad-red"), (2, 15, "rad-synthwave"), (1, 23, "rad-gold"), (0, 13, "rad-glow-green"), (4, 14, "rad-tech-cyber"), (2, 22, "rad-pink"), (3, 20, "rad-ice")]
+combos += [(5, 0, "ribbon"), (5, 1, "ribbon-ice"), (6, 0, "ribbon-classic"), (5, 6, "ribbon-red")]
 combos += [(1, 11, "sky"), (0, 11, "glow-sky"), (4, 11, "tech-sky"), (1, 12, "blaze"), (0, 12, "glow-blaze"), (0, 15, "rad-glow-synthwave"), (3, 24, "rad-sky")]
 for t, p, nm in combos:
-    s.btn(GLO, 200); s.enc(0, -30, 100); s.enc(0, 3, 100); s.enc(1, -8, 100); s.enc(1, t, 100)
+    s.btn(GLO, 200); s.enc(0, -30, 100); s.enc(0, 3, 100); s.enc(1, -8, 100)
+    for _ in range(t): s.enc(1, 1, 150)
     s.enc(0, 1, 100); s.enc(1, -30, 100); s.enc(1, p, 100)
     s.btn(HOME, 200); s.btn(EDIT, 200); s.shot("t-" + nm, 1300)
 finish(s, "m3")
@@ -98,6 +101,14 @@ s.shot("k-home", 1300); s.btn(EDIT, 300); s.shot("k-osc", 300); s.btn(EDIT, 200)
 s.btn(LFO, 300); s.shot("k-lfo", 300); s.btn(FX, 300); s.shot("k-fx", 300); s.btn(FX, 200); s.btn(FX, 200); s.shot("k-fx3", 300)
 s.btn(SEQ, 300); s.shot("k-filter", 300); s.btn(ARP, 300); s.shot("k-presets", 300); s.btn(GLO, 300); s.shot("k-system", 300)
 finish(s, "m5")
+
+# 5b. RIBBON: the views side by side, each a tall window that scrolls; RIBBON CLASSIC: the same look, the rows inside
+s = S(); s.t += 2800; s.btn(HOME, 300); s.btn(SEL, 400); look(s, 5, 0)
+s.shot("rb-home", 1300); s.btn(EDIT, 300); s.shot("rb-osc", 300); s.enc(0, 6, 100); s.shot("rb-osc-down", 300); s.enc(0, 3, 100); s.shot("rb-osc-end", 300)
+s.enc(0, -9, 100); s.btn(ENV, 300); s.shot("rb-env", 300); s.btn(LFO, 300); s.shot("rb-lfo", 300); s.btn(FX, 300); s.shot("rb-fx", 300)
+s.btn(ARP, 300); s.shot("rb-presets", 300)
+look(s, 6, 0); s.shot("rbc-home", 1300); s.btn(EDIT, 300); s.shot("rbc-osc", 300); s.btn(ENV, 300); s.shot("rbc-env", 300); s.btn(LFO, 300); s.shot("rbc-lfo", 300)
+finish(s, "m5b")
 
 # 6. BRIGHTNESS: the same screen in the four steps
 s = S(); s.t += 2800; s.btn(HOME, 300); s.btn(SEL, 400); look(s, 0, 0); s.btn(GLO, 200); s.enc(0, -30, 100); s.enc(0, 7, 100)

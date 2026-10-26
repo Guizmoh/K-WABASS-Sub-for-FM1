@@ -12,7 +12,7 @@ static uint8_t g_force = 1, g_tx;
 /* the colours: six palettes for each theme (ksub_draw.c): its own, another, SYNTHWAVE, MINT, black and white, inverted */
 enum { KC_BG, KC_PANEL, KC_LINE, KC_LIME, KC_LIMED, KC_CYAN, KC_WHITE, KC_GREY, KC_TRACK, KC_ORANGE, KC_WAVE, KC_INK, KC_MOD, KC_N };
 #define C3(r, g, b) RGB(r, g, b)
-static const uint16_t PALS[23][KC_N] = {
+static const uint16_t PALS[25][KC_N] = {
     /* CLASSIC: NEON, AMBER */
     {C3(11,18,20), C3(17,27,30), C3(40,56,60), C3(200,240,60), C3(30,40,20), C3(80,216,208), C3(236,242,242), C3(130,146,148), C3(36,52,56), C3(240,140,60), C3(200,240,60), C3(11,18,20), C3(170,140,250)},
     {C3(18,12,6), C3(30,20,10), C3(66,44,20), C3(255,170,40), C3(52,34,10), C3(255,214,140), C3(250,238,220), C3(170,140,110), C3(60,40,20), C3(255,90,60), C3(255,170,40), C3(18,12,6), C3(255,214,140)},
@@ -48,8 +48,11 @@ static const uint16_t PALS[23][KC_N] = {
     /* for every theme: SKY (light: white cards on a pale blue, navy text, a clear blue accent), BLAZE (black, greys, fluo orange, the text white) */
     {C3(226,238,250), C3(252,253,255), C3(176,198,222), C3(18,108,210), C3(206,226,250), C3(0,150,196), C3(8,22,44), C3(70,92,118), C3(200,216,234), C3(226,104,16), C3(18,108,210), C3(255,255,255), C3(120,76,206)},
     {C3(0,0,0), C3(22,22,24), C3(72,72,76), C3(255,112,0), C3(70,30,0), C3(170,170,176), C3(255,255,255), C3(176,176,182), C3(46,46,50), C3(255,60,40), C3(255,128,0), C3(0,0,0), C3(255,176,64)},
+    /* RIBBON (its own two): EMBER (orange, a cyan beside it, yellow, violet: on a deep navy), ICE NEON (cyan, magenta beside it) */
+    {C3(6,8,14), C3(18,22,34), C3(44,52,72), C3(255,112,30), C3(70,34,16), C3(60,200,255), C3(245,248,255), C3(130,140,160), C3(30,36,52), C3(255,190,40), C3(255,112,30), C3(6,8,14), C3(180,120,255)},
+    {C3(5,8,16), C3(16,22,36), C3(40,54,78), C3(60,200,255), C3(14,52,72), C3(255,80,170), C3(240,248,255), C3(124,142,166), C3(28,38,56), C3(255,200,60), C3(60,200,255), C3(5,8,16), C3(170,130,255)},
 };
-static const char *const PAL_NAME[5][2] = {{"FLUO GREEN", "TOXIC"}, {"STUDIO", "OCEAN"}, {"PURE", "PURE RED"}, {"RACK", "MAGMA"}, {"VOLT", "CYBER"}};
+static const char *const PAL_NAME[7][2] = {{"FLUO GREEN", "TOXIC"}, {"STUDIO", "OCEAN"}, {"PURE", "PURE RED"}, {"RACK", "MAGMA"}, {"VOLT", "CYBER"}, {"EMBER", "ICE NEON"}, {"EMBER", "ICE NEON"}};
 static uint16_t kc[KC_N];
 static uint8_t theme, theme_pal, g_rad;        /* (g_rad: a RAD palette, the gradient version of theme_pal) */
 #define NPAL_BASE 13u                           /* the palettes: 0..12, then their RAD versions 13..25 */
@@ -87,10 +90,10 @@ static void lum_gap(uint32_t k, uint32_t min)   /* a text colour too close to th
 static void theme_set(uint32_t t, uint32_t pal)
 {
     uint32_t i, k;
-    theme = (uint8_t)(t < 5u ? t : 0u);
+    theme = (uint8_t)(t < 7u ? t : 0u);
     g_rad = (uint8_t)(pal >= NPAL_BASE && pal < 2u * NPAL_BASE);
     theme_pal = (uint8_t)(pal < NPAL_BASE ? pal : pal < 2u * NPAL_BASE ? pal - NPAL_BASE : 0u);
-    k = theme_pal < 2u ? (theme == 0u ? 15u : theme < 4u ? theme * 2u : 19u) + theme_pal : theme_pal < 9u ? 6u + theme_pal : theme_pal < 11u ? 8u + theme_pal : 10u + theme_pal;   /* (rows: 4 themes x 2, 7 for all, GLOW's 2, 2 more for all, TECH's 2, SKY and BLAZE) */
+    k = theme_pal < 2u ? (theme == 0u ? 15u : theme < 4u ? theme * 2u : theme == 4u ? 19u : 23u) + theme_pal : theme_pal < 9u ? 6u + theme_pal : theme_pal < 11u ? 8u + theme_pal : 10u + theme_pal;   /* (rows: 4 themes x 2, 7 for all, GLOW's 2, 2 more for all, TECH's 2, SKY and BLAZE) */
     for (i = 0; i < KC_N; i++) kc[i] = g_con && theme_pal != PAL_SKY ? con_px(PALS[k][i], PALS[k][KC_BG], PALS[k][KC_WHITE]) : PALS[k][i];   /* (SKY keeps its pale blue) */
     g_rtop = g_mix(kc[KC_BG], kc[KC_LIME], 110); g_rbot = g_mix(kc[KC_BG], kc[KC_CYAN], 110); g_rcell = g_mix(kc[KC_BG], kc[KC_CYAN], 60);
     g_wgrad = 0;
@@ -125,10 +128,15 @@ static void theme_set(uint32_t t, uint32_t pal)
 #define K_INK kc[KC_INK]
 #define K_MOD kc[KC_MOD]
 
-/* the fonts: four families (SANS DejaVu Sans Bold, MONO IBM Plex Mono, HYPER Atkinson Hyperlegible Mono, PIXEL
- * Press Start 2P), five sizes */
-static const ks_font_t *const FAMS[4][5] = {{&F_XS, &F_S, &F_M, &F_B, &F_L}, {&F_GXS, &F_GS, &F_GM, &F_GB, &F_GL},
-                                           {&F_HXS, &F_HS, &F_HM, &F_HB, &F_HL}, {&F_PXS, &F_PS, &F_PM, &F_PB, &F_PL}};
+/* the fonts: nine families (SANS DejaVu Sans Bold, MONO IBM Plex Mono, HYPER Atkinson Hyperlegible Mono, PIXEL
+ * Press Start 2P, then OUTFIT, INSTRUMENT, TEKTUR, JETBRAINS, BIG SHOULDERS: those five in the three small sizes,
+ * the big titles in SANS), five sizes */
+#define NFONT 9u
+static const ks_font_t *const FAMS[NFONT][5] = {{&F_XS, &F_S, &F_M, &F_B, &F_L}, {&F_GXS, &F_GS, &F_GM, &F_GB, &F_GL},
+                                           {&F_HXS, &F_HS, &F_HM, &F_HB, &F_HL}, {&F_PXS, &F_PS, &F_PM, &F_PB, &F_PL},
+                                           {&F_OXS, &F_OS, &F_OM, &F_B, &F_L}, {&F_IXS, &F_IS, &F_IM, &F_B, &F_L},
+                                           {&F_TXS, &F_TS, &F_TM, &F_B, &F_L}, {&F_JXS, &F_JS, &F_JM, &F_B, &F_L},
+                                           {&F_QXS, &F_QS, &F_QM, &F_B, &F_L}};
 static uint8_t g_bold;                          /* (HYPER is light: drawn twice, a pixel apart) */
 static const ks_font_t *tf[5] = {&F_XS, &F_S, &F_M, &F_B, &F_L};
 static const ks_font_t *const ZOOM[3][2] = {{&F_FZS, &F_FZM}, {&F_GZS, &F_GZM}, {&F_HZS, &F_HZM}};   /* LOUPE: S and M bigger */
@@ -136,9 +144,11 @@ static void font_set(uint32_t f, uint32_t zoom)   /* (SKY: always HYPER, the mos
 {
     uint32_t i;
     if (theme_pal == PAL_SKY) f = 2u;
-    for (i = 0; i < 5u; i++) tf[i] = FAMS[f & 3u][i];
-    if (zoom && (f & 3u) < 3u) { tf[1] = ZOOM[f & 3u][0]; tf[2] = ZOOM[f & 3u][1]; }
-    g_bold = (f & 3u) == 2u;
+    f %= NFONT;
+    for (i = 0; i < 5u; i++) tf[i] = FAMS[f][i];
+    if (zoom && f < 3u) { tf[1] = ZOOM[f][0]; tf[2] = ZOOM[f][1]; }
+    else if (zoom && f > 3u) { tf[1] = FAMS[f][2]; tf[2] = &F_FZM; }   /* (the five new ones: S as their M, M as SANS's bigger M) */
+    g_bold = f == 2u;
 }
 #define T_XS tf[0]
 #define T_S tf[1]
@@ -155,11 +165,15 @@ static uint16_t g_mix(uint16_t a, uint16_t b, uint32_t t)   /* a .. b, t = 0..25
     ab = (ab * (256u - t) + bb * t) >> 8;
     return (uint16_t)(ar << 11 | ag << 5 | ab);
 }
+static int32_t g_cx0, g_cy0, g_cx1 = 240, g_cy1 = 240;   /* the clip (RIBBON: a window's inside) */
+static void g_clip(int32_t x0, int32_t y0, int32_t x1, int32_t y1) { g_cx0 = x0; g_cy0 = y0; g_cx1 = x1; g_cy1 = y1; }
 static void g_rect(int32_t x, int32_t y, int32_t w, int32_t h, uint16_t c)
 {
     int32_t x1 = x + w, y1 = y + h, i;
-    if (x < 0) x = 0;
-    if (x1 > 240) x1 = 240;
+    if (x < g_cx0) x = g_cx0;
+    if (x1 > g_cx1) x1 = g_cx1;
+    if (y < g_cy0) y = g_cy0;
+    if (y1 > g_cy1) y1 = g_cy1;
     if (y < g_y0) y = g_y0;
     if (y1 > g_y0 + (int32_t)BAND_H) y1 = g_y0 + (int32_t)BAND_H;
     for (; y < y1; y++) {
@@ -169,11 +183,13 @@ static void g_rect(int32_t x, int32_t y, int32_t w, int32_t h, uint16_t c)
 }
 static void g_px(int32_t x, int32_t y, uint16_t c)
 {
+    if (x < g_cx0 || x >= g_cx1 || y < g_cy0 || y >= g_cy1) return;
     y -= g_y0;
     if ((uint32_t)x < 240u && (uint32_t)y < BAND_H) g_buf[(uint32_t)y * 240u + (uint32_t)x] = c;
 }
 static void g_pxa(int32_t x, int32_t y, uint16_t c, uint32_t t)   /* a pixel blended in (t 0..256) */
 {
+    if (x < g_cx0 || x >= g_cx1 || y < g_cy0 || y >= g_cy1) return;
     y -= g_y0;
     if ((uint32_t)x < 240u && (uint32_t)y < BAND_H) {
         uint16_t *p = &g_buf[(uint32_t)y * 240u + (uint32_t)x];
@@ -268,14 +284,14 @@ static int32_t g_text(const ks_font_t *f, int32_t x, int32_t y, const char *s, u
             for (gy = 0; gy < f->h; gy++) {
                 int32_t py = y + (int32_t)gy - g_y0;
                 uint16_t *row;
-                if ((uint32_t)py >= BAND_H) continue;
+                if ((uint32_t)py >= BAND_H || y + (int32_t)gy < g_cy0 || y + (int32_t)gy >= g_cy1) continue;
                 row = &g_buf[(uint32_t)py * 240u];
                 for (gx = 0; gx < w; gx++) {
                     uint32_t v = d[gy * bpr + gx / 2u];
                     int32_t px = x + (int32_t)gx;
                     v = (gx & 1u) ? (v & 15u) : (v >> 4);
-                    if (v && (uint32_t)px < 240u) row[px] = v >= 15u ? c : g_mix(row[px], c, v * 17u);
-                    if (v && g_bold && (uint32_t)(px + 1) < 240u) row[px + 1] = v >= 15u ? c : g_mix(row[px + 1], c, v * 17u);
+                    if (v && px >= g_cx0 && px < g_cx1) row[px] = v >= 15u ? c : g_mix(row[px], c, v * 17u);
+                    if (v && g_bold && px + 1 >= g_cx0 && px + 1 < g_cx1) row[px + 1] = v >= 15u ? c : g_mix(row[px + 1], c, v * 17u);
                 }
             }
         }
