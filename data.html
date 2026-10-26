@@ -42,7 +42,7 @@ button:focus-visible, .file:focus-within { outline: 2px solid var(--lime); outli
   <div class="card">
     <ol>
       <li><span lang="en"><b>Chrome or Edge</b> on a computer (Web MIDI). Close other MIDI software.</span><span lang="fr"><b>Chrome ou Edge</b> sur ordinateur (Web MIDI). Ferme les autres logiciels MIDI.</span></li>
-      <li><span lang="en">K-WASUB <b>0.9.26 or later</b> on the FM-1, switched on, plugged in with a USB <b>data</b> cable.</span><span lang="fr">K-WASUB <b>0.9.26 ou plus</b> sur le FM-1, allumé, branché avec un câble USB <b>de données</b>.</span></li>
+      <li><span lang="en">K-WASUB <b>0.9.28 or later</b> on the FM-1, switched on, plugged in with a USB <b>data</b> cable.</span><span lang="fr">K-WASUB <b>0.9.28 ou plus</b> sur le FM-1, allumé, branché avec un câble USB <b>de données</b>.</span></li>
       <li><span lang="en">Allow MIDI access (with SysEx) when the browser asks.</span><span lang="fr">Autorise l'accès MIDI (avec SysEx) quand le navigateur le demande.</span></li>
     </ol>
     <div id="status" role="status" aria-live="polite"></div>
@@ -63,9 +63,15 @@ button:focus-visible, .file:focus-within { outline: 2px solid var(--lime); outli
     <div class="mute"><span lang="en">Record a portion of the sound on the FM-1 with <b>RESAMPLE</b> (EDIT, the OSC C SAMPLE view: 2 to 4 s of the output), then save it here as a <b>.wav</b> file (mono, 16 bit, 11 kHz, the quality the FM-1 keeps it in).</span><span lang="fr">Enregistre une portion du son sur le FM-1 avec <b>RESAMPLE</b> (EDIT, la vue SAMPLE d'OSC C : 2 à 4 s de la sortie), puis enregistre-la ici en fichier <b>.wav</b> (mono, 16 bits, 11 kHz, la qualité dans laquelle le FM-1 la garde).</span></div>
     <div class="row"><button id="wav" class="go" type="button"><span lang="en">Save the recording as WAV</span><span lang="fr">Enregistrer en WAV</span></button><audio id="play" controls hidden></audio></div>
   </div>
-  <div class="card soon">
-    <h2><span lang="en">Send a sample to the FM-1</span><span lang="fr">Envoyer un sample vers le FM-1</span> <small><span lang="en">(coming)</span><span lang="fr">(à venir)</span></small></h2>
-    <div class="mute"><span lang="en">A WAV of yours played by OSC C (kept until the FM-1 is switched off).</span><span lang="fr">Un WAV à toi joué par OSC C (gardé jusqu'à l'extinction du FM-1).</span></div>
+  <div class="card">
+    <h2><span lang="en">Send a sample to the FM-1</span><span lang="fr">Envoyer un sample vers le FM-1</span></h2>
+    <div class="mute"><span lang="en">A sound file of yours (WAV, MP3, OGG…) played by <b>OSC C</b>: made mono, 11 kHz, the silence at the start cut, up to <b>4 s</b>, levelled. It takes the place of the RESAMPLE recording and stays until the FM-1 is switched off (save the sound with it: OSC C is set on it).</span><span lang="fr">Un fichier son à toi (WAV, MP3, OGG…) joué par <b>OSC C</b> : passé en mono, 11 kHz, le silence du début coupé, <b>4 s</b> au plus, niveau ajusté. Il prend la place de l'enregistrement RESAMPLE et reste jusqu'à l'extinction du FM-1.</span></div>
+    <div class="row">
+      <label class="file"><input id="smp" type="file" accept="audio/*,.wav,.mp3,.ogg,.flac,.aif,.aiff"><span lang="en">Choose a sound file…</span><span lang="fr">Choisir un fichier son…</span></label>
+      <label class="mute"><span lang="en">start at</span><span lang="fr">début à</span> <input id="smpAt" type="number" min="0" step="0.1" value="0" style="width:5em"> s</label>
+      <button id="smpGo" class="go" type="button" disabled><span lang="en">Send to the FM-1</span><span lang="fr">Envoyer au FM-1</span></button>
+    </div>
+    <div class="row"><span id="smpInfo" class="mute"></span><audio id="smpPlay" controls hidden></audio></div>
   </div>
 </main>
 <script>
@@ -209,12 +215,7 @@ button:focus-visible, .file:focus-within { outline: 2px solid var(--lime); outli
     const i = await this.t.ask(0x06, []);
     const len = (i[0] | i[1] << 8 | i[2] << 16 | i[3] << 24) >>> 0, rate = (i[4] | i[5] << 8 | i[6] << 16) >>> 0;
     if (!len) throw new LinkError(M("no recording on the FM-1 yet: EDIT, the OSC C SAMPLE view, RESAMPLE (or it is still recording)", "pas encore d'enregistrement sur le FM-1 : EDIT, la vue SAMPLE d'OSC C, RESAMPLE (ou il enregistre encore)"));
-    const tab = new Int16Array(256);
-    for (let k = 0; k < 256; k += 64) {
-      const r = await this.t.ask(0x08, [k, 64]);
-      for (let j = 0; j < r[1]; j++) tab[r[0] + j] = r[2 + 2 * j] | r[3 + 2 * j] << 8;
-    }
-    const mu = new Uint8Array(len);
+    const tab = await this.mulaw(), mu = new Uint8Array(len);
     for (let off = 0; off < len;) {
       const n = Math.min(128, len - off);
       const r = await this.t.ask(0x07, [off & 0xFF, off >> 8, n]);
@@ -225,6 +226,40 @@ button:focus-visible, .file:focus-within { outline: 2px solid var(--lime); outli
     }
     return { wav: wav16(Int16Array.from(mu, b => tab[b]), rate), seconds: len / rate, rate };
   };
+  Session.prototype.mulaw = async function () {   /* the FM-1's decoding table (it rises with the index) */
+    const tab = new Int16Array(256);
+    for (let k = 0; k < 256; k += 64) {
+      const r = await this.t.ask(0x08, [k, 64]);
+      for (let j = 0; j < r[1]; j++) tab[r[0] + j] = r[2 + 2 * j] | r[3 + 2 * j] << 8;
+    }
+    return tab;
+  };
+  function muEncode(pcm, tab) {   /* int16 -> the nearest index of the table (as the firmware's RESAMPLE does) */
+    const o = new Uint8Array(pcm.length);
+    for (let i = 0; i < pcm.length; i++) {
+      const x = pcm[i]; let lo = 0, hi = 255;
+      while (lo < hi) { const m = (lo + hi) >> 1; if (tab[m] < x) lo = m + 1; else hi = m; }
+      if (lo && x - tab[lo - 1] < tab[lo] - x) lo--;
+      o[i] = lo;
+    }
+    return o;
+  }
+  /* a sample of yours (int16, mono, 11025 Hz, up to 4 s) into the RESAMPLE memory: OSC C plays it */
+  Session.prototype.sendSample = async function (pcm, progress) {
+    const mu = muEncode(pcm, await this.mulaw());
+    let st = (await this.t.ask(0x09, [mu.length & 0xFF, mu.length >> 8]))[0];
+    if (st) throw new LinkError(st === 5 ? M("the FM-1 is recording (RESAMPLE): wait for the end, then try again", "le FM-1 enregistre (RESAMPLE) : attends la fin, puis réessaie") : M("the sample is too long (4 s at most)", "le sample est trop long (4 s au plus)"));
+    for (let off = 0; off < mu.length;) {
+      const n = Math.min(120, mu.length - off);
+      const r = await this.t.ask(0x0A, [off & 0xFF, off >> 8, n, ...mu.subarray(off, off + n)]);
+      if (r[2]) throw new LinkError(M("the FM-1 refused a part of the sample", "le FM-1 a refusé une partie du sample"));
+      off += n;
+      if (progress) progress(off / mu.length);
+    }
+    st = (await this.t.ask(0x0B, [], 3000))[0];
+    if (st) throw new LinkError(M("the FM-1 did not take the sample", "le FM-1 n'a pas pris le sample"));
+    return mu.length;
+  };
   function wav16(pcm, rate) {
     const b = new Uint8Array(44 + pcm.length * 2), v = new DataView(b.buffer);
     const s = (o, t) => { for (let k = 0; k < t.length; k++) b[o + k] = t.charCodeAt(k); };
@@ -234,7 +269,7 @@ button:focus-visible, .file:focus-within { outline: 2px solid var(--lime); outli
     for (let k = 0; k < pcm.length; k++) v.setInt16(44 + k * 2, pcm[k], true);
     return b;
   }
-  const api = { wav16, setFrench: f => { FR = !!f; }, pack7, unpack7, crc16, frame, parse, Session, connectMidi, emuTransport, LinkError };
+  const api = { muEncode, wav16, setFrench: f => { FR = !!f; }, pack7, unpack7, crc16, frame, parse, Session, connectMidi, emuTransport, LinkError };
   if (typeof module !== "undefined" && module.exports) module.exports = api; else root.KWLink = api;
 })(typeof window !== "undefined" ? window : globalThis);
 
@@ -248,7 +283,7 @@ KWLink.setFrench(FR);
 let busy = false;
 function say(t, cls) { $("status").textContent = t; $("status").className = cls || ""; }
 function bar(f) { $("bar").hidden = f == null; $("fill").style.width = Math.round((f || 0) * 100) + "%"; }
-function lock(on) { busy = on; $("save").disabled = on; $("load").disabled = on; $("wav").disabled = on; }
+function lock(on) { busy = on; $("save").disabled = on; $("load").disabled = on; $("wav").disabled = on; $("smpGo").disabled = on || !smpPcm; }
 async function withFm1(job) {
   if (busy) return;
   lock(true); bar(0);
@@ -277,6 +312,45 @@ $("wav").onclick = () => withFm1(async s => {
   download(r.wav, name, "audio/wav");
   const pl = $("play"); pl.src = URL.createObjectURL(new Blob([r.wav], { type: "audio/wav" })); pl.hidden = false;
   say(T(`Saved: ${name} (${r.seconds.toFixed(1)} s)`, `Enregistré : ${name} (${r.seconds.toFixed(1)} s)`), "ok");
+});
+/* a sound file -> int16, mono, 11025 Hz, from "start at", silence cut, 4 s at most, peak at -1 dB, 10 ms fade out */
+let smpFile = null, smpPcm = null;
+async function smpPrepare() {
+  smpPcm = null; $("smpGo").disabled = true;
+  if (!smpFile) return;
+  try {
+    const AC = window.AudioContext || window.webkitAudioContext, ac = new AC();
+    const src = await ac.decodeAudioData(await smpFile.arrayBuffer());
+    ac.close();
+    const RATE = 11025, at = Math.max(0, +$("smpAt").value || 0);
+    const n = Math.max(1, Math.ceil(src.duration * RATE));
+    const oc = new OfflineAudioContext(1, n, RATE), node = oc.createBufferSource();
+    node.buffer = src; node.connect(oc.destination); node.start();
+    const mono = (await oc.startRendering()).getChannelData(0);
+    let i0 = Math.min(mono.length - 1, Math.floor(at * RATE));
+    while (i0 < mono.length - 1 && Math.abs(mono[i0]) < 0.003) i0++;
+    const part = mono.subarray(i0, Math.min(mono.length, i0 + 4 * RATE));
+    let peak = 0; for (const v of part) peak = Math.max(peak, Math.abs(v));
+    if (peak < 1e-4) throw new Error(T("this part of the file is silent", "cette partie du fichier est silencieuse"));
+    const g = 0.89 / peak, fade = Math.min(part.length, 110), pcm = new Int16Array(part.length);
+    for (let k = 0; k < part.length; k++) {
+      const f = k >= part.length - fade ? (part.length - k) / fade : 1;
+      pcm[k] = Math.max(-32767, Math.min(32767, Math.round(part[k] * g * f * 32767)));
+    }
+    smpPcm = pcm;
+    const pl = $("smpPlay"); pl.src = URL.createObjectURL(new Blob([KWLink.wav16(pcm, RATE)], { type: "audio/wav" })); pl.hidden = false;
+    $("smpInfo").textContent = T(`${smpFile.name}: ${(pcm.length / RATE).toFixed(2)} s ready (listen: it is what OSC C will play)`, `${smpFile.name} : ${(pcm.length / RATE).toFixed(2)} s prêts (écoute : c'est ce que jouera OSC C)`);
+    $("smpGo").disabled = busy;
+  } catch (e) {
+    $("smpInfo").textContent = T("This file cannot be read: ", "Ce fichier ne peut pas être lu : ") + ((e && e.message) || e);
+  }
+}
+$("smp").onchange = e => { smpFile = e.target.files[0] || null; smpPrepare(); };
+$("smpAt").onchange = smpPrepare;
+$("smpGo").onclick = () => withFm1(async s => {
+  say(T("Sending the sample…", "Envoi du sample…"));
+  const n = await s.sendSample(smpPcm, bar);
+  say(T(`Sent (${(n / 11025).toFixed(2)} s). The FM-1 shows SAMPLE LOADED: OSC C plays it.`, `Envoyé (${(n / 11025).toFixed(2)} s). Le FM-1 affiche SAMPLE LOADED : OSC C le joue.`), "ok");
 });
 $("save").onclick = () => withFm1(async s => {
   say(T("Reading the FM-1…", "Lecture du FM-1…"));

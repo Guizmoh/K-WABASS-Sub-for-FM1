@@ -138,12 +138,7 @@
     const i = await this.t.ask(0x06, []);
     const len = (i[0] | i[1] << 8 | i[2] << 16 | i[3] << 24) >>> 0, rate = (i[4] | i[5] << 8 | i[6] << 16) >>> 0;
     if (!len) throw new LinkError(M("no recording on the FM-1 yet: EDIT, the OSC C SAMPLE view, RESAMPLE (or it is still recording)", "pas encore d'enregistrement sur le FM-1 : EDIT, la vue SAMPLE d'OSC C, RESAMPLE (ou il enregistre encore)"));
-    const tab = new Int16Array(256);
-    for (let k = 0; k < 256; k += 64) {
-      const r = await this.t.ask(0x08, [k, 64]);
-      for (let j = 0; j < r[1]; j++) tab[r[0] + j] = r[2 + 2 * j] | r[3 + 2 * j] << 8;
-    }
-    const mu = new Uint8Array(len);
+    const tab = await this.mulaw(), mu = new Uint8Array(len);
     for (let off = 0; off < len;) {
       const n = Math.min(128, len - off);
       const r = await this.t.ask(0x07, [off & 0xFF, off >> 8, n]);
@@ -154,6 +149,40 @@
     }
     return { wav: wav16(Int16Array.from(mu, b => tab[b]), rate), seconds: len / rate, rate };
   };
+  Session.prototype.mulaw = async function () {   /* the FM-1's decoding table (it rises with the index) */
+    const tab = new Int16Array(256);
+    for (let k = 0; k < 256; k += 64) {
+      const r = await this.t.ask(0x08, [k, 64]);
+      for (let j = 0; j < r[1]; j++) tab[r[0] + j] = r[2 + 2 * j] | r[3 + 2 * j] << 8;
+    }
+    return tab;
+  };
+  function muEncode(pcm, tab) {   /* int16 -> the nearest index of the table (as the firmware's RESAMPLE does) */
+    const o = new Uint8Array(pcm.length);
+    for (let i = 0; i < pcm.length; i++) {
+      const x = pcm[i]; let lo = 0, hi = 255;
+      while (lo < hi) { const m = (lo + hi) >> 1; if (tab[m] < x) lo = m + 1; else hi = m; }
+      if (lo && x - tab[lo - 1] < tab[lo] - x) lo--;
+      o[i] = lo;
+    }
+    return o;
+  }
+  /* a sample of yours (int16, mono, 11025 Hz, up to 4 s) into the RESAMPLE memory: OSC C plays it */
+  Session.prototype.sendSample = async function (pcm, progress) {
+    const mu = muEncode(pcm, await this.mulaw());
+    let st = (await this.t.ask(0x09, [mu.length & 0xFF, mu.length >> 8]))[0];
+    if (st) throw new LinkError(st === 5 ? M("the FM-1 is recording (RESAMPLE): wait for the end, then try again", "le FM-1 enregistre (RESAMPLE) : attends la fin, puis réessaie") : M("the sample is too long (4 s at most)", "le sample est trop long (4 s au plus)"));
+    for (let off = 0; off < mu.length;) {
+      const n = Math.min(120, mu.length - off);
+      const r = await this.t.ask(0x0A, [off & 0xFF, off >> 8, n, ...mu.subarray(off, off + n)]);
+      if (r[2]) throw new LinkError(M("the FM-1 refused a part of the sample", "le FM-1 a refusé une partie du sample"));
+      off += n;
+      if (progress) progress(off / mu.length);
+    }
+    st = (await this.t.ask(0x0B, [], 3000))[0];
+    if (st) throw new LinkError(M("the FM-1 did not take the sample", "le FM-1 n'a pas pris le sample"));
+    return mu.length;
+  };
   function wav16(pcm, rate) {
     const b = new Uint8Array(44 + pcm.length * 2), v = new DataView(b.buffer);
     const s = (o, t) => { for (let k = 0; k < t.length; k++) b[o + k] = t.charCodeAt(k); };
@@ -163,6 +192,6 @@
     for (let k = 0; k < pcm.length; k++) v.setInt16(44 + k * 2, pcm[k], true);
     return b;
   }
-  const api = { wav16, setFrench: f => { FR = !!f; }, pack7, unpack7, crc16, frame, parse, Session, connectMidi, emuTransport, LinkError };
+  const api = { muEncode, wav16, setFrench: f => { FR = !!f; }, pack7, unpack7, crc16, frame, parse, Session, connectMidi, emuTransport, LinkError };
   if (typeof module !== "undefined" && module.exports) module.exports = api; else root.KWLink = api;
 })(typeof window !== "undefined" ? window : globalThis);

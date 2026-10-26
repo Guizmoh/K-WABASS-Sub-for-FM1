@@ -41,12 +41,18 @@ Il y a un bloc de latence (5,8 ms). Le démarrage du cœur 1 suit la séquence d
 
 OSC C joue des sons µ-law 8 bits depuis la flash (`KS_SMP`, 10 sons à 22,05 kHz et 5 textures à 11,025 kHz, tous générés par `source/tools/gen_ksub.py`). Le sample 16 est **RESAMPLE** : la sortie finale, 4 échantillons moyennés, encodée en µ-law par recherche dans `KS_MULAW`, dans un tampon RAM de 44 100 octets (4 s à 11,025 kHz), rejoué avec le même code de vitesse / grains. Il est perdu à l'extinction.
 
+## Lien Données (sauvegarde, WAV, samples)
+
+`firmware/src/ksub_link.c` répond à des trames SysEx sur le port USB-MIDI de l'installateur : `F0 7D 4B 57 cmd pack7(corps) F7` (réponse : `cmd | 0x40`). HELLO, READ / BEGIN / WRITE / COMMIT pour la sauvegarde (`KSB1` + les tailles des emplacements, du bloc performance et de l'extension, puis les trois ; CRC16 vérifié, écrit en flash depuis la boucle principale), RS INFO / RS READ / MULAW pour l'enregistrement RESAMPLE (µ-law, 11 025 Hz), SMP BEGIN / WRITE / DONE pour un sample dans la même RAM (OSC C le joue jusqu'à l'extinction). `web/kwlink.js` est le côté ordinateur (Web MIDI, ou les exports `ksub_link_*` de l'émulateur) ; `data.html` est la page.
+
 ## Construire
 
 ```sh
 cd source
-./build.sh --release 0.9.27                 # build/k-wasub-0.9.27.fwsc   (X.Y, X.Y.Z ou X.Y.Z-suffixe ; identité FM-1_97Y)
-APP_VER=0.9.27 bash web/make_emulator.sh    # ../emulator/index.html  
+./build.sh --release 0.9.28                 # build/k-wasub-0.9.28.fwsc   (X.Y, X.Y.Z ou X.Y.Z-suffixe ; identité FM-1_97Y)
+APP_VER=0.9.28 bash web/make_emulator.sh    # ../emulator/index.html  
+sh web/make_data.sh                         # ../data.html (sauvegarde, export WAV, samples)
+node tests/link.mjs                         # le lien Données contre l'émulateur
 bash web/make_installer.sh                  # ../installer.html avec le dernier install/k-wasub-*.fwsc
 bash tests/run_stress.sh                    # 13 000 essais de réglages sous UBSan
 python3 tests/manual_shots.py               # tous les écrans du manuel -> docs/img

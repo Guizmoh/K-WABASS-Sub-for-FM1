@@ -42,5 +42,15 @@ let peak = 0; for (const v of pcm) peak = Math.max(peak, Math.abs(v));
 console.log("recording", r.seconds.toFixed(2), "s at", r.rate, "Hz, wav", r.wav.length, "B, peak", peak);
 fs.writeFileSync("build/rs.wav", r.wav);
 if (r.seconds >= 2 && peak > 500) bad++;
-console.log(bad === 5 ? "link OK" : "link FAILED");
-process.exit(bad === 5 ? 0 : 1);
+// a sample of ours: a 110 Hz saw, 1.5 s; sent, then read back as the recording (the same memory)
+const N = 16538, saw = new Int16Array(N);
+for (let i = 0; i < N; i++) saw[i] = Math.round(((i * 110 / 11025) % 1 * 2 - 1) * 26000);
+const sent = await s.sendSample(saw);
+run(ms + 100);
+const back = await s.recording();
+const pb = new Int16Array(back.wav.buffer.slice(44));
+let err = 0; for (let i = 0; i < N; i++) err = Math.max(err, Math.abs(pb[i] - saw[i]));
+console.log("sample sent", sent, "bytes, read back", pb.length, "samples, max error", err);
+if (pb.length === N && err < 2000) bad++;
+console.log(bad === 6 ? "link OK" : "link FAILED");
+process.exit(bad === 6 ? 0 : 1);

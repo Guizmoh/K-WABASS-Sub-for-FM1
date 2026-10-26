@@ -25,6 +25,7 @@
 - **PERFORM** (`SEL`) : 4 macros nommées, le morph et les pads sur un seul écran.
 - **Son** : OTT multibande, MONO BASS, sub verrouillé sur OSC A, **RESAMPLE** (la sortie dans OSC C, à rejouer, ralentir, boucler).
 - **Presets** : tags (sub, reese, growl, wobble, pluck, 808, drone), changement immédiat.
+- **Données** ([data.html](../data.html?lang=fr), Chrome / Edge, USB) : sauvegarde et rechargement de tes sons (`.kwsub`), export WAV d'un enregistrement RESAMPLE, envoi d'un sample à toi vers OSC C.
 - **Sortie** : DEEP BASS, limiteur, AUTO LEVEL ; si le FM-1 s'arrête, `LAST STOP` dit pourquoi.
 
 ## Installer
@@ -39,8 +40,8 @@ Retour à KAWA (`install/kawa-0.5.fwsc`) ou au firmware officiel (M-UPGRADE) pos
 
 ```sh
 cd source
-./build.sh --release 0.9.27          # -> build/k-wasub-0.9.27.fwsc
-APP_VER=0.9.27 bash web/make_emulator.sh      # émulateur
+./build.sh --release 0.9.28          # -> build/k-wasub-0.9.28.fwsc
+APP_VER=0.9.28 bash web/make_emulator.sh      # émulateur
 bash web/make_installer.sh                    # installer.html avec le dernier paquet
 bash tests/run_stress.sh                      # tests de charge (UBSan)
 python3 tests/manual_shots.py                 # captures du manuel (docs/img)

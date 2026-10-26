@@ -12,6 +12,9 @@
  *   06 RS INFO                       -> length (u32, samples; 0 while recording), rate (u32)
  *   07 RS READ off u16, n u8         -> off u16, n, the recording's mu-law bytes
  *   08 MULAW k u8, n u8 (<= 64)      -> k, n, the decoding table's int16 values
+ *   09 SMP BEGIN len u16 (<= RS_MAX) -> status       a sample of the user's (mu-law, 11025 Hz) into the RESAMPLE memory:
+ *   0A SMP WRITE off u16, n u8, data -> off, status  OSC C plays it, until the FM-1 is switched off (or RESAMPLE records)
+ *   0B SMP DONE                      -> status
  * status: 0 ok, 1 bad size / offset, 2 bad crc, 3 not a K-WASUB backup (or another layout), 4 flash failed, 5 busy
  * The blob: "KSB1", the sizes of the three parts (u16 each), then ustore, perf, uext. Little endian. */
 #define LK_PROTO 1u
@@ -22,6 +25,8 @@ static uint8_t lk_stage[LK_SIZE], lk_out[2 + 3 + 1 + 160];
 static uint32_t lk_got, lk_want;                /* staged bytes; the size BEGIN announced (0: no restore under way) */
 static uint8_t lk_commit;                       /* 1: COMMIT asked, the main loop writes */
 static uint16_t lk_commit_crc;
+static uint32_t lk_smp_want;                    /* the sample being sent (bytes; 0: none) */
+static uint8_t lk_smp_done;                     /* 1: sent, the main loop puts it on OSC C */
 
 static uint32_t lk_crc16(const uint8_t *p, uint32_t n)   /* (poly 0x1021, init 0: as the updater's) */
 {
@@ -170,6 +175,28 @@ static int app_sysex(const uint8_t *p, uint32_t n)
         lk_send(0x08, r, 2u + 2u * m);
         break;
     }
+    case 0x09: {                                /* SMP BEGIN: the RESAMPLE memory emptied for it */
+        uint32_t len = d >= 2u ? (uint32_t)b[0] | (uint32_t)b[1] << 8 : 0u;
+        if (rs_want || lk_smp_done) { lk_status(0x09, 5); break; }
+        if (!len || len > RS_MAX) { lk_status(0x09, 1); break; }
+        rs_desc.len = 0;                        /* (OSC C stops playing the old one first) */
+        lk_smp_want = len;
+        lk_status(0x09, 0);
+        break;
+    }
+    case 0x0A: {                                /* SMP WRITE */
+        uint8_t r[3];
+        uint32_t off = d >= 3u ? (uint32_t)b[0] | (uint32_t)b[1] << 8 : 0xFFFFu, m = d >= 3u ? b[2] : 0u;
+        r[0] = (uint8_t)off; r[1] = (uint8_t)(off >> 8); r[2] = 0;
+        if (!lk_smp_want || rs_want || d < 3u + m || off + m > lk_smp_want) r[2] = 1;
+        else memcpy(rs_buf + off, b + 3, m);
+        lk_send(0x0A, r, 3);
+        break;
+    }
+    case 0x0B:                                  /* SMP DONE */
+        if (!lk_smp_want || rs_want) { lk_status(0x0B, 1); break; }
+        lk_smp_done = 1;
+        break;
     default:
         break;
     }
@@ -179,6 +206,16 @@ static int app_sysex(const uint8_t *p, uint32_t n)
 static void link_service(void)                  /* the main loop: a restore asked for, written to the flash */
 {
     uint32_t st = 0;
+    if (lk_smp_done) {                          /* a sample sent: OSC C plays it */
+        rs_desc.name = "MY SAMPLE";
+        rs_desc.len = lk_smp_want;
+        lk_smp_want = 0; lk_smp_done = 0;
+        patch[SM_SEL] = (int8_t)(KS_NSMP + 1u);
+        if (!patch[SM_LVL]) patch[SM_LVL] = 90;
+        prev_dirty = 1; g_force = 1;
+        toast("SAMPLE LOADED \xB7 OSC C");
+        lk_status(0x0B, 0);
+    }
     if (!lk_commit) return;
     if (lk_crc16(lk_stage, lk_want) != lk_commit_crc) st = 2;
     else {

@@ -1097,7 +1097,7 @@ static void item_set(uint32_t id, int32_t v)
     case G_BRI: set.bri = (uint8_t)v; g_bri = (uint8_t)v; theme_set(set.theme, set.pal); g_force = 1; break;
     case G_RS_LEN: rs_secs = (uint8_t)v; return;
     case G_RS_GO:                               /* RESAMPLE: the output for 2 .. 4 s into OSC C */
-        if (v && !rs_want) { rs_desc.len = 0; rs_pos = 0; rs_n = 0; rs_acc = 0; rs_rec_on = 1; rs_want = (2u + rs_secs) * RS_RATE; toast("RECORDING THE OUTPUT"); }
+        if (v && !rs_want) { rs_desc.len = 0; rs_desc.name = "RESAMPLE"; rs_pos = 0; rs_n = 0; rs_acc = 0; rs_rec_on = 1; rs_want = (2u + rs_secs) * RS_RATE; toast("RECORDING THE OUTPUT"); }
         else if (!v && rs_want) { rs_desc.len = rs_pos; rs_want = 0; }
         return;
     case G_DEEP: set.deep = (uint8_t)v; ks_deep = (uint8_t)v; break;
