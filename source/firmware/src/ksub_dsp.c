@@ -23,7 +23,7 @@ static volatile uint8_t ks_shed;                /* the load governor's step (0: 
 static volatile uint32_t ks_late;               /* blocks cut short (never past the block: the watchdog) */
 
 /* ---- what the main loop sends to the voices (one writer, one reader) */
-enum { EV_ON, EV_OFF, EV_PANIC, EV_SYNC, EV_SEQ };   /* EV_SEQ: a 1 play (b 1: from the bar), 0 stop */
+enum { EV_ON, EV_OFF, EV_PANIC, EV_SYNC, EV_SEQ, EV_DRUM };   /* EV_SEQ: a 1 play (b 1: from the bar), 0 stop; EV_DRUM: track a, velocity b */
 static volatile uint32_t evq[64], ev_w, ev_r;
 static void ev_push(uint32_t t, uint32_t a, uint32_t b)
 {
@@ -59,6 +59,24 @@ static struct {
     uint8_t magic, sum, pad[2];
     struct { uint8_t note[SQ_MAX - 16u], fl[SQ_MAX - 16u], cond[SQ_MAX], prob[SQ_MAX]; } p[SQ_NPAT];   /* prob: 0..100 % */
 } sqx;
+/* a step's note length: cond's high nibble (the condition is the low one); 0 is half a step, as before 0.9.53 */
+#define SQ_HOLD 0xFFFFFFFFu
+static const uint32_t SQ_GL[16] = {0x800000u, 0x200000u, 0x400000u, 0xC00000u, 1u << 24, 2u << 24, 3u << 24, 4u << 24,
+                                   6u << 24, 8u << 24, 12u << 24, 16u << 24, 24u << 24, 32u << 24, 64u << 24, SQ_HOLD};
+/* DRUMS (the SEQ page's fourth view): 8 tracks of an 808 or a 909, synthesised here; patterns of up to 64 steps, a hit,
+ * an accent, a chance and a condition on every step. Stored on the store's fourth and fifth sectors. */
+#define NDK 8u
+#define DK_NPAT 8u
+#define DK_MAX 64u
+#define DK_MAGIC 0x44u
+enum { DK_KICK, DK_SNARE, DK_CLAP, DK_CH, DK_OH, DK_TOM, DK_PERC, DK_CYM };
+typedef struct { uint8_t len, swing, pad[2], on[DK_MAX], acc[DK_MAX], pc[NDK][DK_MAX]; } dkpat_t;   /* pc: chance (high nibble) | condition */
+static struct {
+    uint8_t magic, sum, cur, kit, vol, mode, mute, pad;   /* kit 0 808, 1 909; mode 0 bass + drums, 1 drums only, 2 bass only */
+    int8_t prm[NDK][4];                         /* each track's LEVEL 0..127, TUNE -64..63, DECAY 0..127, TONE 0..127 */
+    dkpat_t pat[DK_NPAT];
+} dk;
+static const uint8_t DK_PROB[16] = {100, 95, 90, 85, 80, 75, 70, 65, 60, 50, 40, 33, 25, 20, 10, 5};
 static uint8_t *sq_np(uint32_t k, uint32_t i) { k %= SQ_NPAT; i %= SQ_MAX; return i < 16u ? &perf.pat[k].note[i] : &sqx.p[k].note[i - 16u]; }
 static uint8_t *sq_fp(uint32_t k, uint32_t i) { k %= SQ_NPAT; i %= SQ_MAX; return i < 16u ? &perf.pat[k].fl[i] : &sqx.p[k].fl[i - 16u]; }
 /* the EQ (held FX), on every sound: 4 biquads a side, Q24 (b0 b1 b2 a1 a2); the main loop works them out (eq_n),
@@ -904,12 +922,13 @@ static volatile uint8_t sq_play, sq_rec;        /* playing (the voices say), ste
 static volatile uint8_t sq_show = 0xFF;         /* the step playing (the screen) */
 static int32_t sq_tr;                           /* the keys' transposition */
 static uint8_t sq_note = 0xFF, sq_slide, ar_held[16], ar_n, ar_was;
-static uint32_t sq_tick = 0xFFFFFFFFu, sq_step, sq_gate, ar_i;
+static uint32_t sq_tick = 0xFFFFFFFFu, sq_step, sq_glen, ar_i;   /* sq_glen: what is left of the note, from this step's start (Q24 steps) */
+static uint32_t sq_at;                          /* (the control block's place in the audio block: a drum hit lands there) */
 static uint32_t sq_pass, sq_nx_i = 0xFFFFFFFFu;  /* the times round since PLAY; the next step drawn (pattern << 8 | step) */
 static uint8_t sq_last, sq_nx_ok;               /* the last step played; the next one's draw */
 static uint32_t sq_draw(uint32_t k, uint32_t i, uint32_t pass)   /* on, its chance, its condition (IF BEFORE / AFTER: later) */
 {
-    uint32_t c = sqx.p[k].cond[i] % NSC, pr = sqx.p[k].prob[i];
+    uint32_t c = (sqx.p[k].cond[i] & 15u) % NSC, pr = sqx.p[k].prob[i];
     if (!(*sq_fp(k, i) & SF_ON)) return 0;
     if (pr < 100u && (rnd() >> 8) % 100u >= pr) return 0;
     if (c >= SC_1_2 && c <= SC_2_2) return pass % 2u == c - SC_1_2;
@@ -927,7 +946,7 @@ static void sq_sound(uint32_t n, uint32_t vel, int slide_in, uint32_t gate)   /*
     ks_slide = 0;
     if (old != 0xFF && old != n) note_off(old);
     sq_note = (uint8_t)n;
-    sq_gate = gate;
+    sq_glen = gate;
 }
 static void ar_add(uint32_t n) { uint32_t i; for (i = 0; i < ar_n; i++) if (ar_held[i] == n) return; if (ar_n < 16u) ar_held[ar_n++] = (uint8_t)n; }
 static void ar_del(uint32_t n)
@@ -945,21 +964,22 @@ static void seq_step_on(void)
         if (sq_step == 0xFFFFFFFFu) { sq_step = 0; sq_pass = 0; }
         else if (++sq_step >= len) { sq_step = 0; sq_pass++; }
         i = sq_step;
+        if (sq_note != 0xFF && sq_glen != SQ_HOLD) sq_glen = sq_glen > (1u << 24) ? sq_glen - (1u << 24) : 0u;   /* (a long note goes on) */
         ok = sq_nx_i == (k << 8 | i) ? sq_nx_ok : sq_draw(k, i, sq_pass);
         j = i + 1u >= len ? 0u : i + 1u;
         sq_nx_ok = (uint8_t)sq_draw(k, j, j ? sq_pass : sq_pass + 1u);
         sq_nx_i = k << 8 | j;
-        c = sqx.p[k].cond[i] % NSC;
+        c = (sqx.p[k].cond[i] & 15u) % NSC;
         if (c == SC_BEFORE) ok = ok && sq_last;
         if (c == SC_AFTER) ok = ok && sq_nx_ok;   /* (and a next IF BEFORE: the two together) */
         sq_last = (uint8_t)ok;
         sq_show = (uint8_t)i;
         f = *sq_fp(k, i);
-        if (ok) {
+        if (ok && dk.mode != 1u) {
             int slide = sq_slide;
-            sq_sound((uint32_t)clampi(24 + *sq_np(k, i) + sq_tr, 0, 127), f & SF_ACC ? 127u : 90u, slide, 0x800000u);
+            sq_sound((uint32_t)clampi(24 + *sq_np(k, i) + sq_tr, 0, 127), f & SF_ACC ? 127u : 90u, slide, SQ_GL[sqx.p[k].cond[i] >> 4]);
             sq_slide = (uint8_t)(f & SF_SLIDE);
-        } else sq_off();
+        } else if (sq_slide || dk.mode == 1u) sq_off();   /* (a rest: a slide stops; a long note goes on to its end) */
         return;
     }
     {                                           /* ARP */
@@ -981,6 +1001,221 @@ static void seq_step_on(void)
         sq_slide = perf.ar_gate >= 10u;
     }
 }
+/* ---- DRUMS: the sequencer (on SEQ BASS's clock, its own pattern, length and swing; 1/16 steps) */
+static uint32_t dk_tick = 0xFFFFFFFFu, dk_step = 0xFFFFFFFFu, dk_pass, dk_nx_i = 0xFFFFFFFFu;
+static uint8_t dk_last, dk_nx;
+static volatile uint8_t dk_show = 0xFF, dk_hit;  /* the step playing; the tracks hit since the screen looked (it clears them) */
+static volatile uint16_t dk_trig_at[NDK] = {0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF};   /* a hit's place in this block */
+static volatile uint8_t dk_trig_vel[NDK];
+static uint32_t dk_draw(uint32_t k, uint32_t t, uint32_t i, uint32_t pass)   /* (as sq_draw) */
+{
+    const dkpat_t *p = &dk.pat[k];
+    uint32_t pc = p->pc[t][i], c = (pc & 15u) % NSC, pr = DK_PROB[pc >> 4];
+    if (!(p->on[i] >> t & 1u)) return 0;
+    if (pr < 100u && (rnd() >> 8) % 100u >= pr) return 0;
+    if (c >= SC_1_2 && c <= SC_2_2) return pass % 2u == c - SC_1_2;
+    if (c >= SC_1_4 && c <= SC_4_4) return pass % 4u == c - SC_1_4;
+    if (c == SC_START) return pass == 0;
+    if (c == SC_NSTART) return pass != 0;
+    return 1;
+}
+static void dk_step_on(void)
+{
+    uint32_t k = dk.cur % DK_NPAT, l = dk.pat[k].len, len = l >= 1u && l <= DK_MAX ? l : 16u, i, j, t, ok = 0, nx = 0;
+    if (dk_step == 0xFFFFFFFFu) { dk_step = 0; dk_pass = 0; }
+    else if (++dk_step >= len) { dk_step = 0; dk_pass++; }
+    i = dk_step;
+    j = i + 1u >= len ? 0u : i + 1u;
+    for (t = 0; t < NDK; t++) {
+        ok |= (dk_nx_i == (k << 8 | i) ? (uint32_t)dk_nx >> t & 1u : dk_draw(k, t, i, dk_pass)) << t;
+        nx |= dk_draw(k, t, j, j ? dk_pass : dk_pass + 1u) << t;
+    }
+    dk_nx = (uint8_t)nx;
+    dk_nx_i = k << 8 | j;
+    for (t = 0; t < NDK; t++) {
+        uint32_t c = (dk.pat[k].pc[t][i] & 15u) % NSC;
+        if ((c == SC_BEFORE && !(dk_last >> t & 1u)) || (c == SC_AFTER && !(nx >> t & 1u))) ok &= ~(1u << t);
+    }
+    dk_last = (uint8_t)ok;
+    dk_show = (uint8_t)i;
+    if (dk.mode == 2u) return;                  /* (BASS ONLY) */
+    ok &= ~(uint32_t)dk.mute;
+    for (t = 0; t < NDK; t++)
+        if (ok >> t & 1u) { dk_trig_at[t] = (uint16_t)sq_at; dk_trig_vel[t] = dk.pat[k].acc[i] >> t & 1u ? 127u : 96u; }
+    dk_hit |= (uint8_t)ok;
+}
+static void dk_clock(uint32_t beats)
+{
+    uint64_t t = (uint64_t)beats * 4u;
+    uint32_t tick = (uint32_t)(t >> 24), fr = (uint32_t)t & 0xFFFFFFu, sw = dk.pat[dk.cur % DK_NPAT].swing;
+    if (sw && (tick & 1u)) {                    /* swing: the odd steps late by up to half a step */
+        uint32_t s = (sw > 50u ? 50u : sw) * 167772u;
+        if (fr < s) tick--;
+    }
+    if (tick != dk_tick) { dk_tick = tick; dk_step_on(); }
+}
+
+/* ---- DRUMS: the voices, synthesised (808: sines, squares, filtered noise; 909: brighter, more noise, a click) */
+typedef struct {
+    uint32_t ph, inc, ph2, inc2, sweep, m[6], minc[6];
+    int32_t amp, pe, ne;                        /* envelopes, Q30 */
+    uint32_t acf, pcf, ncf;                     /* their fall a sample (2^32 / time constant) */
+    int32_t lo, bp, h1, h2, fa, fq, gain, tone;
+    uint16_t cl;
+    uint8_t clk, on;
+} dkv_t;
+static dkv_t dkv[NDK];
+static int32_t dkb[HALF_FRAMES];
+static const uint16_t DK_TR[32] = {256, 280, 306, 335, 366, 400, 438, 479, 524, 573, 626, 685, 749, 819, 895, 979, 1071, 1171, 1281, 1400,
+                                   1531, 1675, 1831, 2003, 2190, 2395, 2619, 2864, 3132, 3425, 3746, 4096};   /* x1 .. x16, Q8 */
+static const uint16_t DK_TMIN[2][NDK] = {{80, 30, 25, 4, 60, 50, 25, 150}, {50, 25, 22, 4, 50, 40, 6, 120}};   /* the shortest decay (ms) */
+static const uint16_t DK_TRIM[NDK] = {300, 330, 900, 230, 230, 300, 300, 200};   /* (levels evened out, Q8) */
+static const uint32_t DK_METAL[6] = {19994485u, 29645987u, 35995916u, 50906562u, 52591436u, 77913239u};   /* 808: 205 304 370 523 540 800 Hz */
+static uint32_t dk_cf(uint32_t ms10) { uint32_t tau = ms10 * 441u / 100u; return 0xFFFFFFFFu / (tau < 20u ? 20u : tau); }   /* (2^32/tau, 32-bit: no 64-bit divide on the chip) */   /* (tenths of ms) */
+static inline int32_t dk_env(int32_t *e, uint32_t cf) { int32_t v = *e; *e = v - (int32_t)(((int64_t)v * cf) >> 32); return v >> 15; }
+static inline int32_t dk_noise(void) { return (int32_t)rnd() >> 17; }
+static void dk_start(uint32_t t, uint32_t vel)
+{
+    dkv_t *v = &dkv[t];
+    const int8_t *p = dk.prm[t];
+    uint32_t kit = dk.kit & 1u, ms10 = DK_TMIN[kit][t] * 10u * DK_TR[((uint32_t)p[2] & 127u) >> 2] / 256u, q;
+    int32_t tq8 = p[1] * 48, tone = p[3] & 127, g;
+    uint32_t tf = pitch_inc(60 * 256 + tq8) / ((pitch_inc(60 * 256) >> 12) | 1u);   /* TUNE, Q12 (no 64-bit divide on the chip) */
+    memset(v, 0, sizeof *v);
+    g = mul15(mul15(lvl15(p[0] & 127), vel >= 120u ? 32767 : 23000), lvl15(dk.vol & 127));
+    v->gain = (g * (int32_t)DK_TRIM[t]) >> 8;
+    v->tone = tone;
+    v->amp = 1 << 30;
+    v->acf = dk_cf(ms10);
+    v->on = 1;
+    switch (t) {
+    case DK_KICK:                               /* a sine falling in pitch, a click (TONE) */
+        v->inc = pitch_inc((kit ? 33 : 31) * 256 + tq8);
+        v->sweep = kit ? v->inc * 3u : v->inc + (v->inc >> 1);
+        v->pe = 1 << 30; v->pcf = dk_cf(kit ? 200u : 120u);
+        v->ne = tone << 22; v->ncf = dk_cf(15u);
+        break;
+    case DK_SNARE:                              /* two sines and a high-passed noise (TONE: the snares) */
+        v->inc = pitch_inc((kit ? 55 : 54) * 256 + tq8);
+        v->inc2 = pitch_inc((kit ? 66 : 64) * 256 + tq8);
+        v->sweep = kit ? v->inc / 3u : 0u;
+        v->pe = 1 << 30; v->pcf = dk_cf(150u);
+        v->ne = 1 << 30; v->ncf = dk_cf(ms10 * (kit ? 15u : 12u) / 10u);
+        v->fa = kit ? 9000 : 6000;
+        break;
+    case DK_CLAP:                               /* noise in a band, four quick bursts, then the tail */
+        v->fa = (int32_t)((kit ? 1300 : 1000) + tone * 12) * 4781 / 1024;
+        v->fq = 11000;
+        v->ncf = dk_cf(25u);
+        break;
+    case DK_CH:
+    case DK_OH:
+    case DK_CYM:                                /* six squares (909: and noise), high-passed twice (TONE: brighter) */
+        for (q = 0; q < 6u; q++) v->minc[q] = (uint32_t)(((uint64_t)DK_METAL[q] * tf) >> 12) * (t == DK_CYM ? 1u : 2u);
+        v->fa = 13000 + tone * 110;
+        if (t == DK_CH) dkv[DK_OH].acf = dk_cf(30u);   /* (the closed hat chokes the open one) */
+        break;
+    case DK_TOM:                                /* a sine falling in pitch (TONE: how far) */
+        v->inc = pitch_inc((kit ? 47 : 45) * 256 + tq8);
+        v->sweep = (uint32_t)(((uint64_t)v->inc * (uint32_t)(tone + 16)) >> 7);
+        v->pe = 1 << 30; v->pcf = dk_cf(300u);
+        if (kit) { v->ne = 1 << 29; v->ncf = dk_cf(40u); }
+        break;
+    default:                                    /* PERC: 808 cowbell (two squares in a band), 909 rim (two sines, a click) */
+        if (!kit) {
+            v->minc[0] = (uint32_t)(((uint64_t)52591436u * tf) >> 12);
+            v->minc[1] = (uint32_t)(((uint64_t)77913239u * tf) >> 12);
+            v->fa = (int32_t)(800 + tone * 16) * 4781 / 1024; v->fq = 20000;
+        } else {
+            v->inc = (uint32_t)(((uint64_t)48695774u * tf) >> 12);
+            v->inc2 = (uint32_t)(((uint64_t)165565633u * tf) >> 12);
+            v->ne = tone << 23; v->ncf = dk_cf(10u);
+        }
+        break;
+    }
+}
+static int32_t dk_voice(dkv_t *v, uint32_t t, uint32_t kit)   /* one sample */
+{
+    int32_t x, a, s;
+    uint32_t q;
+    switch (t) {
+    case DK_KICK:
+        a = dk_env(&v->amp, v->acf);
+        v->ph += v->inc + (uint32_t)(((uint64_t)v->sweep * (uint32_t)dk_env(&v->pe, v->pcf)) >> 15);
+        s = sin32(v->ph);
+        if (v->ne) s += mul15(dk_noise(), dk_env(&v->ne, v->ncf));
+        if (kit) s = sat15(s + (s >> 1));
+        return mul15(s, a);
+    case DK_SNARE: {
+        int32_t n = dk_noise(), e = dk_env(&v->ne, v->ncf), body;
+        a = dk_env(&v->amp, v->acf);
+        v->ph += v->inc + (v->sweep ? (uint32_t)(((uint64_t)v->sweep * (uint32_t)dk_env(&v->pe, v->pcf)) >> 15) : 0u);
+        v->ph2 += v->inc2;
+        body = (sin32(v->ph) * 3 + sin32(v->ph2) * 2) / 5;
+        v->lo += mul15(n - v->lo, v->fa);
+        return mul15(body, mul15(a, 32767 - v->tone * 120)) + mul15(n - v->lo, mul15(e, 6000 + v->tone * 200)) * 2;
+    }
+    case DK_CLAP: {
+        int32_t hp, env;
+        if (v->clk < 4u) { if (!v->cl) { v->ne = 1 << 30; v->cl = 353; v->clk++; } v->cl--; }
+        hp = dk_noise() - v->lo - mul15(v->fq, v->bp);
+        v->bp += mul15(v->fa, hp);
+        v->lo += mul15(v->fa, v->bp);
+        env = dk_env(&v->ne, v->ncf);
+        if (v->clk >= 4u) env += dk_env(&v->amp, v->acf) >> 1;
+        return mul15(v->bp, env);
+    }
+    case DK_CH:
+    case DK_OH:
+    case DK_CYM:
+        a = dk_env(&v->amp, v->acf);
+        for (s = 0, q = 0; q < 6u; q++) { v->m[q] += v->minc[q]; s += v->m[q] >> 31 ? 5000 : -5000; }
+        if (kit) s = (s * 2 + dk_noise() * 3) / 5;
+        v->h1 += mul15(s - v->h1, v->fa); x = s - v->h1;
+        v->h2 += mul15(x - v->h2, v->fa); x -= v->h2;
+        return mul15(x, a);
+    case DK_TOM:
+        a = dk_env(&v->amp, v->acf);
+        v->ph += v->inc + (uint32_t)(((uint64_t)v->sweep * (uint32_t)dk_env(&v->pe, v->pcf)) >> 15);
+        s = sin32(v->ph);
+        if (v->ne) s += mul15(dk_noise(), dk_env(&v->ne, v->ncf)) >> 1;
+        return mul15(s, a);
+    default:
+        a = dk_env(&v->amp, v->acf);
+        if (!kit) {
+            int32_t hp;
+            v->m[0] += v->minc[0]; v->m[1] += v->minc[1];
+            s = (v->m[0] >> 31 ? 12000 : -12000) + (v->m[1] >> 31 ? 12000 : -12000);
+            hp = s - v->lo - mul15(v->fq, v->bp);
+            v->bp += mul15(v->fa, hp);
+            v->lo += mul15(v->fa, v->bp);
+            s = v->bp + (s >> 2);
+        } else {
+            v->ph += v->inc; v->ph2 += v->inc2;
+            s = (sin32(v->ph) + sin32(v->ph2)) >> 1;
+            if (v->ne) s += mul15(dk_noise(), dk_env(&v->ne, v->ncf));
+        }
+        return mul15(s, a);
+    }
+}
+static void dk_render(uint32_t n)               /* the drums for this block -> dkb (mono) */
+{
+    uint32_t t, i, kit = dk.kit & 1u;
+    for (i = 0; i < n; i++) dkb[i] = 0;
+    for (t = 0; t < NDK; t++) {
+        dkv_t *v = &dkv[t];
+        uint32_t at = dk_trig_at[t];
+        if (at == 0xFFFFu && !v->on) continue;
+        dk_trig_at[t] = 0xFFFFu;
+        for (i = 0; i < n; i++) {
+            if (i == at) dk_start(t, dk_trig_vel[t]);
+            if (!v->on) continue;
+            dkb[i] += mul15(dk_voice(v, t, kit), v->gain);
+            if (v->amp < (1 << 16) && (t != DK_CLAP || v->clk >= 4u)) v->on = 0;
+        }
+    }
+}
+
 static void seq_clock(uint32_t beats)
 {
     const seqpat_t *p = &perf.pat[perf.cur % SQ_NPAT];
@@ -993,6 +1228,7 @@ static void seq_clock(uint32_t beats)
         sq_tick = 0xFFFFFFFFu;
         sq_show = 0xFF;
         ar_i = 0;
+        dk_tick = 0xFFFFFFFFu; dk_step = 0xFFFFFFFFu; dk_show = 0xFF;
         return;
     }
     tick = (uint32_t)(t >> 24);
@@ -1002,7 +1238,8 @@ static void seq_clock(uint32_t beats)
         if (fr < s) { tick--; fr += 0x1000000u; } else fr -= s;
     }
     if (tick != sq_tick) { sq_tick = tick; seq_step_on(); }
-    if (sq_note != 0xFF && !sq_slide && fr >= sq_gate) { note_off(sq_note); sq_note = 0xFF; }
+    if (sq_note != 0xFF && !sq_slide && sq_glen < (1u << 24) && fr >= sq_glen) { note_off(sq_note); sq_note = 0xFF; }
+    if (sq_play) dk_clock(beats);
 }
 
 /* all the voices for n samples (core 1's job) -> dst, mono */
@@ -1027,9 +1264,11 @@ static void voices_render(int32_t *dst, uint32_t n, uint32_t t0, uint32_t budget
             sq_tick = 0xFFFFFFFFu;
             sq_nx_i = 0xFFFFFFFFu;
             sq_last = 0;
+            dk_tick = 0xFFFFFFFFu; dk_step = 0xFFFFFFFFu; dk_nx_i = 0xFFFFFFFFu; dk_last = 0; dk_show = 0xFF;
             if (a && b) ks_beats = 0;           /* (the internal clock: from the bar, the LFOs too) */
         } else if (t == EV_PANIC) { for (k = 0; k < NVOICE; k++) { vo[k].on = 0; vo[k].ea.st = 0; vo[k].ea.lv = 0; } nheld = 0; ar_n = 0; sq_note = 0xFF; }
         else if (t == EV_SYNC) ks_beats = a ? b * 699051u : 0u;   /* (the MIDI clock: its tick, 1/24 beat) */
+        else if (t == EV_DRUM) { dk_trig_at[a % NDK] = 0; dk_trig_vel[a % NDK] = (uint8_t)b; }
     }
     for (k = 0; k < NVOICE; k++) on += vo[k].on;
     while (on > lim) {                          /* the governor took voices away: the oldest go */
@@ -1052,6 +1291,7 @@ static void voices_render(int32_t *dst, uint32_t n, uint32_t t0, uint32_t budget
         lfo_run(0, ks_beats);
         lfo_run(1, ks_beats);
         step_run(ks_beats);
+        sq_at = i;
         seq_clock(ks_beats);
         for (k = 0; k < KS_CB; k++) acc[k] = 0;
         for (k = 0; k < NVOICE; k++)
@@ -1126,6 +1366,7 @@ static void fx_render(const int32_t *in, int32_t *out, uint32_t n)
     ot_gl = (int32_t)(((int64_t)fx.ot_g[0] * (4096 + P[OT_LOW] * 32)) >> 12);   /* (LOW / HIGH BAND: +-0.5) */
     ot_gm = fx.ot_g[1];
     ot_gh = (int32_t)(((int64_t)fx.ot_g[2] * (4096 + P[OT_HIGH] * 32)) >> 12);
+    dk_render(n > HALF_FRAMES ? HALF_FRAMES : n);
     if (eq_new) { memcpy(eq_c, eq_n, sizeof eq_c); if (eq_nmask & ~eq_mask) memset(eq_st, 0, sizeof eq_st); eq_mask = eq_nmask; eq_new = 0; }
     uint32_t pb = ks_beats, pinc = (ks_bpm10 * 41546u) >> 16;   /* (the beat, Q24, and its step a sample: PUMP) */
     int32_t cp_amt = fpv(CP_AMT, D_CPAMT), cp_thr = 32767 - cp_amt * 200, cp_r = 2 + cp_amt / 16, cp_mk = 32768 + cp_amt * 150;
@@ -1406,6 +1647,8 @@ static void fx_render(const int32_t *in, int32_t *out, uint32_t n)
             R = (int32_t)(((int64_t)R * ng) >> 12);
             nsum += (L < 0 ? -L : L) + (R < 0 ? -R : R);
         }
+        L += dkb[i] * 3 / 2;                       /* the drums: after AUTO LEVEL (it does not pump them), before MASTER and the limiter */
+        R += dkb[i] * 3 / 2;
         L = (int32_t)(((int64_t)L * vol * makeup) >> 24);
         R = (int32_t)(((int64_t)R * vol * makeup) >> 24);
         {                                       /* the limiter (always on): the gain falls at once under the ceiling, comes back in ~50 ms */

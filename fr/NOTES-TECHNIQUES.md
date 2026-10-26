@@ -40,6 +40,7 @@ Il y a un bloc de latence (5,8 ms). Le démarrage du cœur 1 suit la séquence d
 
 - Un patch a 130 paramètres (`NP`), 140 au maximum (`NP_MAX`). Un emplacement utilisateur garde `NP_STORE` = 112 octets dans le premier secteur de flash et le reste dans `uext` (28 octets par emplacement) dans le second secteur, à `UX_AT` (0x400), après `perf` (SEQ BASS, ARP, MACROS, table des CC MIDI, EQ, choix du MORPH). Des static asserts gardent `perf` sous `UX_AT` et `uext` dans le secteur.
 - `UX_MAGIC` marque la disposition (0x58 : 16 octets par emplacement, 0x59 : 20, 0x5A : 28) ; `ux_migrate` convertit les anciennes et donne aux nouveaux paramètres leur valeur par défaut.
+- Les 48 pas au-delà de 16 de chaque pattern SEQ BASS (`sqx`) occupent le troisième secteur ; la batterie DRUMS (`dk` : 8 patterns jusqu'à 64 pas, le kit, les sons des pistes) les quatrième et cinquième (0x9A000–0x9BFFF, `STORE_HI` 0x9C000), avec un magic et une somme (`dk_mark`). L'octet `cond` d'un pas : la condition dans le quartet bas, la durée de note (`SQ_GL`, 0 = demi-pas comme avant, 15 = HOLD) dans le quartet haut. La chance d'un pas de batterie (`DK_PROB`) est le quartet haut de `pc`, sa condition le bas. La batterie est synthétisée (`dk_start` / `dk_voice`, sans échantillons) et mixée après AUTO LEVEL, avant MASTER et le limiteur ; les coups tombent sur le bloc de 16 échantillons (`sq_at`) du pas.
 - Les réglages (`set`) tiennent dans un secteur avec un CRC ; on n'ajoute des champs qu'à la fin, et les anciennes sauvegardes se chargent avec les nouveaux champs à leur défaut (voir la liste `LEN` dans `app_init`).
 - Les identifiants d'items sont des `uint8_t` (`I_L1RATE` = 136 …) ; un static assert (`ids_fit`) les garde sous 255.
 - Les destinations sont enregistrées dans les patchs : on n'ajoute qu'à la fin (`D_MORPHX/Y/MORPH` viennent après celles du phaser).
@@ -56,8 +57,8 @@ OSC C joue des sons µ-law 8 bits depuis la flash (`KS_SMP`, 10 sons à 22,05 kH
 
 ```sh
 cd source
-./build.sh --release 0.9.52                 # build/k-wasub-0.9.52.fwsc   (X.Y, X.Y.Z ou X.Y.Z-suffixe ; identité FM-1_97Y)
-APP_VER=0.9.52 bash web/make_emulator.sh    # ../emulator/index.html  
+./build.sh --release 0.9.53                 # build/k-wasub-0.9.53.fwsc   (X.Y, X.Y.Z ou X.Y.Z-suffixe ; identité FM-1_97Y)
+APP_VER=0.9.53 bash web/make_emulator.sh    # ../emulator/index.html  
 sh web/make_data.sh                         # ../data.html (sauvegarde, export WAV, samples)
 node tests/link.mjs                         # le lien Données contre l'émulateur
 bash web/make_installer.sh                  # ../installer.html avec le dernier install/k-wasub-*.fwsc

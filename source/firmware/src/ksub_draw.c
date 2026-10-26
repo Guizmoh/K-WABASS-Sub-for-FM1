@@ -8,15 +8,15 @@
  * Every visual is drawn with integers only (no FPU), from the patch and what the voices say (ksub_dsp.c). */
 enum { TH_GLOW, TH_STUDIO, TH_PURE, TH_RACK, TH_TECH, TH_RIBBON, TH_RIBBONC, NTHEMES };
 enum { VZ_NONE, VZ_SCOPE, VZ_OSCA, VZ_OSCB, VZ_SUB, VZ_MIX, VZ_ENV0, VZ_ENV1, VZ_ENV2, VZ_FILT, VZ_LFO1, VZ_LFO2, VZ_STEP,
-       VZ_SEQ, VZ_SMP, VZ_DRIVE, VZ_CRUSH, VZ_CHORUS, VZ_DELAY, VZ_REVERB, VZ_MASTER, VZ_COMP, VZ_PHASER, VZ_OTT, VZ_CPU };
+       VZ_SEQ, VZ_SMP, VZ_DRIVE, VZ_CRUSH, VZ_CHORUS, VZ_DELAY, VZ_REVERB, VZ_MASTER, VZ_COMP, VZ_PHASER, VZ_OTT, VZ_CPU, VZ_DRUM };
 static const uint8_t VZ_OF[] = {VZ_SCOPE, VZ_SCOPE, VZ_OSCA, VZ_OSCB, VZ_SUB, VZ_MIX, VZ_SMP, VZ_ENV0, VZ_ENV1, VZ_ENV2, VZ_FILT, VZ_FILT,
-                                VZ_SEQ, VZ_LFO1, VZ_LFO2, VZ_STEP, VZ_NONE, VZ_DRIVE, VZ_OTT, VZ_COMP, VZ_NONE, VZ_DELAY, VZ_REVERB,
+                                VZ_SEQ, VZ_DRUM, VZ_LFO1, VZ_LFO2, VZ_STEP, VZ_NONE, VZ_DRIVE, VZ_OTT, VZ_COMP, VZ_NONE, VZ_DELAY, VZ_REVERB,
                                 VZ_CHORUS, VZ_PHASER, VZ_CRUSH, VZ_MASTER, VZ_NONE, VZ_NONE, VZ_NONE, VZ_NONE, VZ_CPU, VZ_NONE};
 typedef char vz_fits[sizeof VZ_OF == sizeof VIEWS / sizeof VIEWS[0] ? 1 : -1];
 static const char *const PAGE_SHORT[NPAGE] = {"PLAY", "BASS", "ENV", "FILT", "LFO", "FX", "PRE", "SYS"};
 /* LANGUAGE (SYSTEM): only the view titles (v->cat, top of every screen) are translated; parameter names and values
  * stay in English, as on most hardware synths, and to keep every screen's layout untouched */
-static const char *const L_CAT[25][3] = {
+static const char *const L_CAT[26][3] = {
     {"CURRENT PATCH", "PATCH ACTUEL", "PARCHE ACTUAL"},
     {"LIVE MIX", "MIX EN DIRECT", "MEZCLA EN VIVO"},
     {"OSCILLATOR A", "OSCILLATEUR A", "OSCILADOR A"},
@@ -42,12 +42,13 @@ static const char *const L_CAT[25][3] = {
     {"ARPEGGIATOR", "ARPEGIATEUR", "ARPEGIADOR"},
     {"GLOBAL SETUP", "REGLAGES GENERAUX", "AJUSTES GENERALES"},
     {"MIDI", "MIDI", "MIDI"},
+    {"DRUMS", "BATTERIE", "BATERIA"},
 };
 static const char *cat_tr(const char *cat)      /* v->cat in the user's language (SYSTEM > LANGUAGE); English if not found */
 {
     uint32_t i;
     if (!set.lang) return cat;
-    for (i = 0; i < 25u; i++) if (str_eq(cat, L_CAT[i][0])) return L_CAT[i][set.lang];
+    for (i = 0; i < 26u; i++) if (str_eq(cat, L_CAT[i][0])) return L_CAT[i][set.lang];
     return cat;
 }
 static const uint16_t KNOB_RGB[4] = {RGB(255, 92, 92), RGB(255, 204, 64), RGB(92, 226, 116), RGB(84, 164, 255)};
@@ -252,13 +253,48 @@ static void vis_seq(int32_t x, int32_t y, int32_t w, int32_t h)   /* SEQ BASS: 1
             g_rect(bx + 1, top + H - nh, bw - 2, 3, c);
             g_rect(bx + 2, top + H - nh + 3, bw - 4, nh - 3, g_mix(K_TRACK, c, 45));
             if (f & SF_SLIDE) g_rect(bx + bw - 2, top + H - nh + 1, 3, 1, c);   /* (into the next) */
-            if (sqx.p[k].cond[s] || sqx.p[k].prob[s] < 100u) g_rect(bx + bw / 2 - 1, top + H - nh - 4, 3, 2, K_WHITE);   /* (a chance or a condition: a dot above) */
+            if ((sqx.p[k].cond[s] & 15u) || sqx.p[k].prob[s] < 100u) g_rect(bx + bw / 2 - 1, top + H - nh - 4, 3, 2, K_WHITE);   /* (a chance or a condition: a dot above) */
+            {                                   /* (a note longer than its step: a tail over the next ones, to the page's end) */
+                uint32_t gi = sqx.p[k].cond[s] >> 4, tail = gi == 15u ? (uint32_t)(16 - i) * (uint32_t)bw : (uint32_t)(((uint64_t)SQ_GL[gi] * (uint32_t)bw) >> 24);
+                int32_t tw = (int32_t)tail - bw, room = (16 - i - 1) * bw;
+                if (tw > 0) g_rect(bx + bw - 1, top + H - nh + 1, tw < room ? tw : room, 1, c);
+            }
         }
         g_rect(bx + 1, top + H + 2, bw - 2, 3, s == sq_cur_step ? (sq_rec ? K_ORANGE : K_WHITE) : (i & 3) ? K_BG : K_LINE);
     }
     if (np > 1)                                 /* the pages, top right: this one white, the one playing lime */
         for (i = 0; i < np; i++)
             g_rect(x + w - 6 - (np - i) * 9, top + 1, 7, 3, i == pg ? K_WHITE : sq_play && sq_show != 0xFF && sq_show / 16 == i ? K_LIME : K_LINE);
+}
+
+/* DRUMS: the 8 tracks x the 16 steps of the cursor's page, each instrument its colour; the track chosen lit, the step
+ * playing a column, the cursor underlined, the muted tracks grey, a dot where a chance or a condition is set */
+static const uint16_t DK_COL[NDK] = {RGB(255, 60, 60), RGB(70, 220, 90), RGB(255, 120, 200), RGB(250, 225, 50), RGB(255, 150, 40),
+                                     RGB(70, 140, 255), RGB(170, 90, 255), RGB(150, 235, 255)};
+static void vis_drum(int32_t x, int32_t y, int32_t w, int32_t h)
+{
+    const dkpat_t *q = dk_pp();
+    int32_t len = (int32_t)dk_len(), pg = dk_cur / 16, np = (len + 15) / 16, bw = (w - 30) / 16, x0 = x + 26, rh = (h - 6) / (int32_t)NDK, t, i;
+    if (!g_vis(y, h)) return;
+    if (rh < 3) rh = 3;
+    for (t = 0; t < (int32_t)NDK; t++) {
+        int32_t ry = y + 3 + t * rh, mute = dk.mute >> t & 1u, sel = t == (int32_t)dk_trk;
+        uint16_t col = mute ? K_GREY : DK_COL[t];
+        if (!g_vis(ry, rh)) continue;
+        if (sel) g_rect(x + 2, ry, w - 4, rh, g_mix(K_BG, col, 40));
+        g_rect(x + 4, ry + 1, sel ? 18 : 10, rh - 2, col);   /* (the track's colour, wider when chosen) */
+        for (i = 0; i < 16; i++) {
+            int32_t s = pg * 16 + i, bx = x0 + i * bw;
+            uint32_t on = s < len && (q->on[s] >> t & 1u), acc = q->acc[s] >> t & 1u;
+            uint16_t c = s >= len ? K_BG : on ? (acc ? g_mix(col, 0xFFFFu, 110) : col) : g_mix(K_BG, col, (i & 3) ? 26 : 50);
+            if (s == (int32_t)dk_show && sq_play) c = on ? 0xFFFFu : g_mix(c, 0xFFFFu, 70);
+            g_rect(bx + 1, ry + 1, bw - 2, rh - 2, c);
+            if (on && (q->pc[t][s] & 0xFFu) && rh >= 5) g_rect(bx + bw / 2 - 1, ry + rh / 2 - 1, 2, 2, K_BG);
+            if (sel && s == (int32_t)dk_cur) g_rect(bx + 1, ry + rh - 1, bw - 2, 1, 0xFFFFu);
+        }
+    }
+    for (i = 0; np > 1 && i < np; i++)          /* the pages, bottom right */
+        g_rect(x + w - 6 - (np - i) * 9, y + h - 3, 7, 2, i == pg ? K_WHITE : sq_play && dk_show != 0xFF && dk_show / 16 == i ? K_LIME : K_LINE);
 }
 
 /* ---- the oscillators, each engine its own picture */
@@ -535,6 +571,7 @@ static void draw_visual(uint32_t kind, int32_t x, int32_t y, int32_t w, int32_t 
     case VZ_LFO1: case VZ_LFO2: vis_lfo(x, y, w, h, kind - VZ_LFO1); break;
     case VZ_STEP: vis_step(x, y, w, h); break;
     case VZ_SEQ: vis_seq(x, y, w, h); break;
+    case VZ_DRUM: vis_drum(x, y, w, h); break;
     default: vis_fx(kind, x, y, w, h); break;
     }
 }
@@ -591,8 +628,19 @@ static const char *view_title(uint32_t vi, char *t, char *sub)
         if (sq_rec) p = str_cat(p, " \xB7 REC");
         p = str_cat(p, " \xB7 ");
         p = str_cat(p, L_SRATE[sq_pat()->rate % 6u]);
-        str_cat(p, sq_play ? " \xB7 KEYS TRANSPOSE" : " \xB7 REC = WRITE");
+        str_cat(p, sq_play ? (sq_rec ? " \xB7 KEYS RECORD" : " \xB7 KEYS TRANSPOSE") : sq_rec ? " \xB7 KEYS WRITE" : " \xB7 REC = WRITE");
         item_text(G_SQ_PAT, t);
+        return t;
+    }
+    if (vi == V_DRUM) {                         /* the pattern, the kit, the instrument, the page; what the keys do */
+        p = str_cat(t, "DRUMS P");
+        p = fmt_u(p, dk.cur + 1u, 0);
+        if (dk_psel) { p = str_cat(p, " "); str_cat(p, DKP[(dk_psel - 1u) / 3u % NDKP].name); }
+        p = str_cat(sub, dk.kit ? "909 \xB7 " : "808 \xB7 ");
+        p = str_cat(p, dk_tname(dk_trk));
+        if (dk_len() > 16u) { p = str_cat(p, " \xB7 PAGE "); p = fmt_u(p, dk_cur / 16u + 1u, 0); p = str_cat(p, "/"); p = fmt_u(p, (dk_len() + 15u) / 16u, 0); }
+        if (sq_rec) str_cat(p, sq_play ? " \xB7 REC LIVE" : " \xB7 REC");
+        else str_cat(p, sq_play ? " \xB7 PLAYING" : " \xB7 BLACK: INSTR \xB7 WHITE: STEPS");
         return t;
     }
     if (vi == V_ARP) {
@@ -1016,15 +1064,15 @@ static void th_studio(const view_t *v, uint32_t vi)
     else if (v->lay == LY_SAVE) save_g(6, 98, 228, 70);
     else if (v->lay == LY_SYS || !v->n || vi == PAGE_V0[PG_LFO] + 3u) rows_g(v, 3, 70, 230, 22, 26, 5, T_S);
     else {                                      /* the items in cells of four, a page of eight round the row */
-        uint32_t per = v->n <= 4u ? 4u : v->n <= 8u ? 8u : v->n <= 12u ? 12u : 8u, first = (c / per) * per;
+        uint32_t per = v->n <= 4u || vi == V_DRUM || vi == V_SEQ ? 4u : v->n <= 8u ? 8u : v->n <= 12u ? 12u : 8u, first = (c / per) * per;   /* (SEQ BASS, DRUMS: four, the pattern big) */
         int32_t ch = per == 12u ? 44 : 56, cs = per == 12u ? 47 : 60;   /* (up to twelve: three short rows, nothing else on the page) */
         for (i = 0; i < per && first + i < v->n; i++)
             draw_cell(v, 3 + (int32_t)(i & 3u) * 59, 70 + (int32_t)(i >> 2) * cs, 56, ch, v->it[first + i], first + i == c);
-        if (v->n > 12u && g_vis(186, 4)) {      /* which eight */
-            uint32_t pg, np = (v->n + 7u) / 8u;
-            for (pg = 0; pg < np; pg++) g_rect(110 + (int32_t)pg * 8, 186, 5, 3, pg == c / 8u ? K_LIME : K_LINE);
+        if (v->n > per && per != 12u && g_vis(per == 4u ? 128 : 186, 4)) {   /* which eight (which four) */
+            uint32_t pg, np = (v->n + per - 1u) / per;
+            for (pg = 0; pg < np; pg++) g_rect(110 + (int32_t)pg * 8, per == 4u ? 128 : 186, 5, 3, pg == c / per ? K_LIME : K_LINE);
         }
-        if (per == 4u) draw_visual(vz, 3, 132, 234, 86, 1);
+        if (per == 4u) draw_visual(vz, 3, 133, 234, 86, 1);
         else if (per == 8u) draw_visual(vz, 3, 192, 234, 28, 1);
     }
     if (g_vis(222, 12)) {

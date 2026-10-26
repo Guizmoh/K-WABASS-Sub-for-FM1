@@ -25,7 +25,7 @@
 4. **SEL windows**: PERFORM, MORPH, FX LIVE, MACROS.
 5. **A/B morph**: blend two sounds live.
 6. A live **LFO page** to reshape your wobble basses while you play.
-7. **SEQ BASS** (up to 64 steps, probability and trig conditions per step), **ARP**, **MIDI**.
+7. **SEQ BASS** (up to 64 steps, probability, trig conditions and note length per step, 30 presets, live REC), **DRUMS** (808 / 909 kits, 8 coloured tracks, rhythm presets: techno, dub, dnb…), **ARP**, **MIDI**.
 8. The sound: engines, filters, effects, master, and **FX PADS**.
 9. Animated oscillator visuals, live.
 10. A visual **EQ**.
@@ -45,8 +45,8 @@ You can go back to KAWA (`install/kawa-0.5.fwsc`) or to the stock firmware (M-UP
 
 ```sh
 cd source
-./build.sh --release 0.9.52          # -> build/k-wasub-0.9.52.fwsc
-APP_VER=0.9.52 bash web/make_emulator.sh      # emulator
+./build.sh --release 0.9.53          # -> build/k-wasub-0.9.53.fwsc
+APP_VER=0.9.53 bash web/make_emulator.sh      # emulator
 bash web/make_installer.sh                    # installer.html with the newest package
 bash tests/run_stress.sh                      # load tests (UBSan)
 python3 tests/manual_shots.py                 # the manual's screenshots (docs/img)

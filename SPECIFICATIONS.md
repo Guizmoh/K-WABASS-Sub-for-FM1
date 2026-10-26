@@ -2,7 +2,7 @@
 
 [English](SPECIFICATIONS.md) · [Français](fr/CAHIER-DES-CHARGES.md)
 
-A modern bass synth for the M-VAVE FM-1 (JieLi AC79, two cores, no FPU). Last update: **0.9.52**.
+A modern bass synth for the M-VAVE FM-1 (JieLi AC79, two cores, no FPU). Last update: **0.9.53**.
 This document says where the project stands: what is done, what has to be checked, what is left, and ideas to go further.
 
 ## 1. Vision
@@ -24,7 +24,7 @@ This document says where the project stands: what is done, what has to be checke
 | Master | **DEEP BASS** (shelf +4 / +7 dB under 90 Hz), **always-on limiter**, **AUTO LEVEL** (normaliser) | 0.9.10 |
 | Voices | Mono, legato, poly 4, glide with time | ≤ 0.9 |
 | Presets | 51 factory sounds by style, 32 user slots, favourites, UNDO / REDO | ≤ 0.9 |
-| SEQ / ARP / MIDI | SEQ BASS (16 patterns of up to 64 steps, probability and trig conditions per step, 0.9.52), ARP (5 modes), MIDI: learn, clock in/out, start/stop, program change | ≤ 0.9.8 |
+| SEQ / ARP / MIDI | SEQ BASS (16 patterns of up to 64 steps, probability, trig conditions and note length per step, 30 presets in 16/32/64, live REC; 0.9.53), **DRUMS** (808 / 909, 8 coloured tracks, black keys = instrument, white keys = steps, OCT−/OCT+ = page, chance and conditions per step, 14 rhythm presets in 16/32/64, live REC; 0.9.53), ARP (5 modes), MIDI: learn, clock in/out, start/stop, program change | ≤ 0.9.8 |
 
 ### Playing and workflow
 | Area | Detail | Version |
