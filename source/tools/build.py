@@ -59,7 +59,8 @@ SDK_SHA256 = {
     "cfg/eq_cfg_hw.bin": "41167491bffed4651750719c973d2758adeb9021a5670d02d6a53c85ed80ea7d",
 }
 
-# Package identity (the .fwsc marker, the handshake answer). The installers want FM-1_9NN; K-WASUB takes 97Y (KAWA: 95Y / 96Y):
+# Package identity (the .fwsc marker, the handshake answer). The installers want FM-1_9NN; K-WASUB takes 97Y for 0.Y and
+# 98Y for 1.Y (KAWA: 95Y / 96Y):
 #   no --release   FM-1_950 (firmware/src/kawa.c's default too, for a build outside build.py)
 #   --release X.Y  FM-1_9(5+X)Y: 0.Y -> 95Y (0.2 -> FM-1_952), 1.Y -> 96Y (1.0 -> FM-1_960): majors 0 and 1
 #                  never share one. X.Y.Z and X.Y-suffix keep X.Y's (the full version is in the text).
@@ -391,10 +392,10 @@ def main():
         m = re.fullmatch(r"(\d)\.(\d)(\.\d+)?(-[A-Za-z0-9]+)?", a.release)
         if not m:
             raise SystemExit(f"--release {a.release}: use X.Y, X.Y.Z or X.Y-suffix, one digit each")
-        if int(m[1]) > 0:
-            raise SystemExit(f"--release {a.release}: K-WASUB's identities cover major 0 (FM-1_97Y); "
+        if int(m[1]) > 1:
+            raise SystemExit(f"--release {a.release}: K-WASUB's identities cover majors 0 (FM-1_97Y) and 1 (FM-1_98Y); "
                              "a major 2 needs a new scheme first (tools/build.py, PRODUCT)")
-        PRODUCT = f"FM-1_97{m[2]}"
+        PRODUCT = f"FM-1_9{7 + int(m[1])}{m[2]}"
         VERSION = m[1] + "." + m[2] + (m[3] or "")
         name = f"k-wasub-{a.release}.fwsc"
     fm1pkg_make.SDK = a.sdk
