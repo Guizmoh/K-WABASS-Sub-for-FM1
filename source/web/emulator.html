@@ -22,7 +22,7 @@ html:not([lang="fr"]) [lang="fr"], html[lang="fr"] [lang="en"] { display: none; 
 html, body { background: var(--room); color: var(--ink); }
 body { font: 14px/1.5 var(--f-mono); padding-block: 20px 40px;
   padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
-.wrap { max-width: 980px; margin: 0 auto; display: grid; gap: 18px; }
+.wrap { max-width: 1040px; margin: 0 auto; display: grid; gap: 18px; }
 header { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 10px 20px; }
 h1 { font: 700 26px/1 var(--f-disp); letter-spacing: .04em; margin: 0; text-wrap: balance; }
 h1 span { color: var(--lime); }
@@ -32,33 +32,39 @@ button { font: 600 12px/1 var(--f-mono); letter-spacing: .06em; color: var(--ink
   border: 1px solid var(--edge); border-radius: 6px; padding: 9px 12px; cursor: pointer; }
 button:focus-visible, .knob:focus-visible, .key:focus-visible { outline: 2px solid var(--lime); outline-offset: 2px; }
 button.primary { background: var(--lime); color: #11160a; border-color: var(--lime); }
-label.vol { display: flex; align-items: center; gap: 8px; color: var(--mute); font-size: 12px; }
 #status { color: var(--mute); font-size: 12px; min-height: 1.5em; }
 
 .device { background: linear-gradient(180deg, var(--body-hi), var(--body)); border: 1px solid var(--edge); border-radius: 18px;
-  padding: 18px; display: grid; gap: 18px; box-shadow: 0 20px 50px rgba(0,0,0,.45); }
-.top { display: grid; grid-template-columns: minmax(0, 480px) minmax(0, 1fr); gap: 22px; align-items: start; }
+  padding: 22px; display: grid; gap: 20px; box-shadow: 0 20px 50px rgba(0,0,0,.45); }
+/* the top: the real FM-1's own layout (M-VAVE's manual) -- left controls, the screen, right controls, each the same
+   three rows tall: (MASTER, SELECT) / (PRESETS, ALGO) / (OCT-, OCT+) beside the screen beside (K1..K4) / (the 6x2 buttons) */
+.top { display: grid; grid-template-columns: minmax(150px, 180px) minmax(0, 460px) minmax(260px, 1fr); gap: 16px 22px; align-items: start; }
+.lcol { display: grid; gap: 14px; align-content: start; }
+.lrow { display: flex; gap: 14px; }
 .screen { background: #000; border: 6px solid #0d1112; border-radius: 10px; width: 100%; aspect-ratio: 1; max-width: 480px; }
 .screen canvas { width: 100%; height: 100%; display: block; image-rendering: pixelated; border-radius: 4px; }
-.ctl { display: grid; gap: 16px; min-width: 0; }
-.encs, .knobs { display: flex; flex-wrap: wrap; gap: 14px; }
-.enc { display: grid; justify-items: center; gap: 6px; width: 74px; }
-.knob { width: 56px; height: 56px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #4a565b, #1a2023 70%);
+.rcol { display: grid; gap: 14px; min-width: 0; align-content: start; }
+.encs, .knobs { display: flex; flex-wrap: wrap; gap: 10px; }
+.enc { display: grid; justify-items: center; gap: 6px; width: 64px; }
+.knob { width: 54px; height: 54px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #4a565b, #1a2023 70%);
   border: 1px solid #0c0f10; position: relative; touch-action: none; cursor: ns-resize; }
-.knob::after { content: ""; position: absolute; left: 50%; top: 6px; width: 3px; height: 14px; margin-left: -1.5px; border-radius: 2px;
-  background: var(--ink); transform-origin: 50% 22px; transform: rotate(var(--a, 0deg)); }
-.enc.k .knob::after { background: var(--lime); }
+.knob::after { content: ""; position: absolute; left: 50%; top: 6px; width: 3px; height: 13px; margin-left: -1.5px; border-radius: 2px;
+  background: var(--ink); transform-origin: 50% 21px; transform: rotate(var(--a, 0deg)); }
+.enc.k .knob::after, .enc.m .knob::after { background: var(--lime); }
 .enc b { font: 700 11px/1.2 var(--f-disp); letter-spacing: .08em; text-align: center; }
 .enc i { font: 400 10px/1.2 var(--f-mono); color: var(--cyan); font-style: normal; min-height: 1.2em; text-align: center; }
-.btns { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
-.btn { display: grid; gap: 4px; justify-items: center; padding: 8px 4px; position: relative; min-width: 0; }
-.btn small { font: 400 9px/1 var(--f-mono); color: var(--mute); }
-.btn strong { font: 700 11px/1.1 var(--f-disp); letter-spacing: .05em; text-align: center; }
-.btn .led { position: absolute; top: 5px; right: 6px; width: 6px; height: 6px; border-radius: 50%; background: #2c3437; }
-.btn .led.l1 { background: #4d5a2a; } .btn .led.l2 { background: var(--lime); box-shadow: 0 0 6px var(--lime); }
+/* the 6x2 button grid, exactly FX SEL ENV LFO EDIT GLO / HOME SAVE ARP SEQ PLAY-STOP REC, and OCT-/OCT+ as their own pair */
+.btns { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 7px; }
+.btn { display: grid; place-items: center; aspect-ratio: 1; border-radius: 8px; position: relative; min-width: 0; background: var(--body-hi); padding: 2px; }
+.btn strong { font: 700 9.5px/1.15 var(--f-disp); letter-spacing: 0; text-align: center; overflow-wrap: anywhere; }
+.btn.l1 { background: #3c4420; } .btn.l2 { background: #566b1e; box-shadow: 0 0 10px rgba(200,240,60,.45); }
+.btn.l1 strong, .btn.l2 strong { color: var(--lime); }
 .btn.down { background: #39444a; }
+.octs { display: flex; gap: 10px; }
+.oct { flex: 1; border-radius: 8px; padding: 10px 4px; font: 700 11px/1 var(--f-disp); letter-spacing: .04em; background: var(--body-hi); }
+.oct.down { background: #39444a; }
 .keys-scroll { overflow-x: auto; padding-bottom: 4px; }
-.keys { position: relative; height: 130px; min-width: 620px; user-select: none; touch-action: none; }
+.keys { position: relative; height: 130px; min-width: 760px; user-select: none; touch-action: none; }
 .key { position: absolute; top: 0; border-radius: 0 0 6px 6px; cursor: pointer; }
 .key.w { height: 128px; background: var(--key-w); border: 1px solid #9aa4a2; }
 .key.b { height: 80px; background: var(--key-b); border: 1px solid #000; z-index: 2; }
@@ -73,7 +79,8 @@ label.vol { display: flex; align-items: center; gap: 8px; color: var(--mute); fo
 @media (max-width: 760px) {
   .top { grid-template-columns: 1fr; }
   .screen { margin: 0 auto; }
-  .btns { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .lrow, .encs, .knobs { justify-content: center; }
+  .btns { grid-template-columns: repeat(6, minmax(0, 1fr)); max-width: 420px; margin: 0 auto; }
 }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
@@ -86,16 +93,20 @@ label.vol { display: flex; align-items: center; gap: 8px; color: var(--mute); fo
     </div>
     <div class="bar">
       <button id="midi" type="button">MIDI</button>
-      <label class="vol" for="master">MASTER <input id="master" type="range" min="0" max="100" value="70"></label>
     </div>
   </header>
   <div id="status" role="status"></div>
 
   <div class="device">
+    <!-- the FM-1's own panel (M-VAVE's manual): left controls, the screen, right controls -->
     <div class="top">
+      <div class="lcol">
+        <div class="lrow" id="encs-top"></div>
+        <div class="lrow" id="encs-bot"></div>
+        <div class="octs" id="octs"></div>
+      </div>
       <div class="screen"><canvas id="lcd" width="240" height="240" aria-label="FM-1 screen"></canvas></div>
-      <div class="ctl">
-        <div class="encs" id="encs"></div>
+      <div class="rcol">
         <div class="knobs" id="knobs"></div>
         <div class="btns" id="btns"></div>
       </div>
@@ -142,8 +153,13 @@ const FR = /[?&]lang=fr/.test(location.search), T = (en, fr) => (FR ? fr : en);
 if (FR) document.documentElement.lang = "fr";
 const WASM_B64 = "__KSUB_WASM__";
 const BTN = { OCT_DOWN: 0, OCT_UP: 1, FX: 2, SEL: 3, ENV: 4, LFO: 5, EDIT: 6, GLO: 7, HOME: 8, SAVE: 9, ARP: 10, SEQ: 11, PLAY: 12, REC: 13 };
-const BTN_LAYOUT = [["HOME", "PLAY"], ["EDIT", "BASS"], ["ENV", "ENVELOPE"], ["SEQ", "FILTER · SEQ"], ["LFO", "LFO"], ["FX", "FX"], ["ARP", "PRESETS · ARP"],
-                    ["GLO", "SYSTEM"], ["SEL", "PERFORM · MORPH · FX"], ["SAVE", "SAVE"], ["PLAY", "SEQ ▶ (tenu: HOLD)"], ["REC", "TAP · REC"], ["OCT_DOWN", "OCT -"], ["OCT_UP", "OCT +"]];
+/* the FM-1's own 6x2 button grid, left to right, top row then bottom row (M-VAVE's manual) */
+const BTN_GRID = [["FX", "FX"], ["SEL", "SEL"], ["ENV", "ENV"], ["LFO", "LFO"], ["EDIT", "EDIT"], ["GLO", "GLO"],
+                  ["HOME", "HOME"], ["SAVE", "SAVE"], ["ARP", "ARP"], ["SEQ", "SEQ"], ["PLAY", "PLAY<br>STOP"], ["REC", "REC"]];
+const BTN_TITLE = { HOME: "HOME \xB7 PLAY", EDIT: "EDIT \xB7 BASS", ENV: "ENV \xB7 ENVELOPE", SEQ: "SEQ \xB7 FILTER \xB7 SEQ BASS", LFO: "LFO",
+                    FX: "FX \xB7 held: FX PADS", ARP: "ARP \xB7 PRESETS \xB7 ARP", GLO: "GLO \xB7 SYSTEM \xB7 held: CLASSIC/SHIFT",
+                    SEL: "SEL \xB7 PERFORM \xB7 MORPH \xB7 FX LIVE \xB7 held: A/B", SAVE: "SAVE \xB7 held: UNDO/REDO",
+                    PLAY: "PLAY/STOP \xB7 held: HOLD", REC: "REC \xB7 TAP tempo" };
 const ENC = { SELECT: 0, ALGO: 1, K1: 2, K2: 3, K3: 4, K4: 5, PRESETS: 6 };
 const LS = { get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} } };
 const $ = id => document.getElementById(id);
@@ -223,7 +239,7 @@ function drawScreen(fb) {
 const btnEls = [], knobLab = [];
 function onUi(m) {
   if (m.fb) drawScreen(m.fb);
-  if (m.leds) btnEls.forEach((b, id) => { if (b) b.led.className = "led" + (m.leds[id] ? " l" + m.leds[id] : ""); });
+  if (m.leds) btnEls.forEach((b, id) => { if (b) { b.el.classList.toggle("l1", m.leds[id] === 1); b.el.classList.toggle("l2", m.leds[id] === 2); } });
   if (m.labels) m.labels.forEach((s, i) => { knobLab[i].textContent = s || " "; });
   if (m.store) LS.set("ksub.store", b64enc(m.store));
   if (m.settings) LS.set("ksub.settings", b64enc(m.settings));
@@ -287,18 +303,27 @@ function startAudio() {
 document.addEventListener("visibilitychange", () => { if (!document.hidden && ac && ac.state !== "running") ac.resume(); });
 
 /* ---- the panel */
-function setMaster() { const v = $("master").value / 100; send({ t: "master", v: Math.round(v * v * 4096) }); }
-$("master").addEventListener("input", setMaster);
+let masterV = 0.7;
+function setMaster() { send({ t: "master", v: Math.round(masterV * masterV * 4096) }); }
 function press(id, down) { send({ t: "btn", id, down }); const b = btnEls[id]; if (b) b.el.classList.toggle("down", down); }
-for (const [name, fn] of BTN_LAYOUT) {
+for (const [name, label] of BTN_GRID) {
   const id = BTN[name], el = document.createElement("button");
-  el.type = "button"; el.className = "btn";
-  el.innerHTML = `<span class="led"></span><small>${name.replace("_DOWN", " -").replace("_UP", " +")}</small><strong>${fn}</strong>`;
+  el.type = "button"; el.className = "btn"; el.title = BTN_TITLE[name] || name;
+  el.innerHTML = `<strong>${label}</strong>`;
   el.addEventListener("pointerdown", e => { e.preventDefault(); press(id, true); });
   ["pointerup", "pointerleave", "pointercancel"].forEach(t => el.addEventListener(t, () => { if (el.classList.contains("down")) press(id, false); }));
   el.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); e.stopPropagation(); press(id, true); setTimeout(() => press(id, false), 80); } });
   $("btns").appendChild(el);
-  btnEls[id] = { el, led: el.querySelector(".led") };
+  btnEls[id] = { el };
+}
+for (const name of ["OCT_DOWN", "OCT_UP"]) {
+  const id = BTN[name], el = document.createElement("button");
+  el.type = "button"; el.className = "oct"; el.title = name === "OCT_DOWN" ? "OCT- \xB7 held: UNDO" : "OCT+ \xB7 held: REDO";
+  el.textContent = name === "OCT_DOWN" ? "OCT-" : "OCT+";
+  el.addEventListener("pointerdown", e => { e.preventDefault(); press(id, true); });
+  ["pointerup", "pointerleave", "pointercancel"].forEach(t => el.addEventListener(t, () => { if (el.classList.contains("down")) press(id, false); }));
+  $("octs").appendChild(el);
+  btnEls[id] = { el };
 }
 function makeEnc(parent, name, enc, cls) {
   const w = document.createElement("div"), k = document.createElement("div"), b = document.createElement("b"), i = document.createElement("i");
@@ -315,9 +340,26 @@ function makeEnc(parent, name, enc, cls) {
   return { turn, label: i };
 }
 const encs = {};
-encs.SELECT = makeEnc($("encs"), "SELECT", ENC.SELECT);
-encs.ALGO = makeEnc($("encs"), "ALGO", ENC.ALGO);
-encs.PRESETS = makeEnc($("encs"), "PRESETS", ENC.PRESETS);
+/* the left column, the FM-1's own order: (MASTER, SELECT) above (PRESETS, ALGO) */
+function makeMaster(parent) {
+  const w = document.createElement("div"), k = document.createElement("div"), b = document.createElement("b"), i = document.createElement("i");
+  w.className = "enc m"; k.className = "knob"; k.tabIndex = 0; k.setAttribute("role", "slider"); k.setAttribute("aria-label", "MASTER");
+  b.textContent = "MASTER"; i.textContent = " ";
+  w.append(k, b, i); parent.appendChild(w);
+  let ang = (masterV - 0.5) * 240, y0 = null, acc = 0;
+  const apply = () => { k.style.setProperty("--a", ang + "deg"); masterV = Math.max(0, Math.min(1, ang / 240 + 0.5)); setMaster(); };
+  const turn = s => { if (!s) return; ang = Math.max(-120, Math.min(120, ang + s * 6)); apply(); };
+  k.addEventListener("pointerdown", e => { y0 = e.clientY; acc = 0; k.setPointerCapture(e.pointerId); });
+  k.addEventListener("pointermove", e => { if (y0 === null) return; acc += (y0 - e.clientY); y0 = e.clientY; const s = Math.trunc(acc / 3); if (s) { acc -= s * 3; turn(s); } });
+  k.addEventListener("pointerup", () => { y0 = null; });
+  k.addEventListener("wheel", e => { e.preventDefault(); turn(e.deltaY < 0 ? 1 : -1); }, { passive: false });
+  k.addEventListener("keydown", e => { if (e.key === "ArrowUp" || e.key === "ArrowRight") { e.preventDefault(); e.stopPropagation(); turn(1); } else if (e.key === "ArrowDown" || e.key === "ArrowLeft") { e.preventDefault(); e.stopPropagation(); turn(-1); } });
+  apply();
+}
+makeMaster($("encs-top"));
+encs.SELECT = makeEnc($("encs-top"), "SELECT", ENC.SELECT);
+encs.PRESETS = makeEnc($("encs-bot"), "PRESETS", ENC.PRESETS);
+encs.ALGO = makeEnc($("encs-bot"), "ALGO", ENC.ALGO);
 encs.SELECT.label.textContent = "ligne"; encs.ALGO.label.textContent = "valeur"; encs.PRESETS.label.textContent = "patch";
 ["K1", "K2", "K3", "K4"].forEach((n, i) => { encs[n] = makeEnc($("knobs"), n, ENC[n], "k"); knobLab[i] = encs[n].label; });
 
