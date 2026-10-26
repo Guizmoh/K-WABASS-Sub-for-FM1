@@ -35,16 +35,31 @@ tr:last-child td{border-bottom:0}
 .toc{columns:2 220px;margin:14px 0;padding:0;list-style:none}.toc li{margin:3px 0}.toc a{text-decoration:none}
 .pal{display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
 footer{border-top:1px solid var(--rule);margin-top:50px;padding-top:18px;color:var(--mut);font-size:.9rem}
+
+.fab{position:fixed;right:14px;bottom:14px;z-index:20;display:inline-flex;align-items:center;gap:8px;background:#f08c3c;color:#1b0e02;font:800 .95rem system-ui,sans-serif;text-decoration:none;border-radius:999px;padding:11px 18px;box-shadow:0 8px 26px #000a,0 0 0 2px #1b0e02}
+.fab:hover{filter:brightness(1.1);color:#1b0e02}
+.dbar{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;justify-content:center;background:linear-gradient(90deg,#3a2208,#241a0e 60%,#3a2208);border:1px solid #7a4a18;border-radius:14px;padding:12px 16px;margin:14px 0;color:#ffe2bf;font-size:.98rem;text-align:center}
+.dbar a{background:#f08c3c;color:#1b0e02;font-weight:800;text-decoration:none;border-radius:10px;padding:8px 16px}
 </style></head><body>
 <header class="top"><a class="logo" href="index.html">K-WA<b>SUB</b></a>
-<nav><a href="#start">Démarrer</a><a href="#panel">Le panneau</a><a href="#pages">Les pages</a><a href="#hold">Appuis longs</a><a href="#modes">CLASSIC / SHIFT</a><a href="#perform">PERFORM</a><a href="#sel">Fenêtres SEL</a><a href="#pads">FX PADS</a><a href="#themes">Thèmes</a><a href="#sound">Le son</a><a href="#seq">SEQ · ARP · MIDI</a><a href="#help">Dépannage</a><a href="../manual.html" hreflang="en" style="margin-left:auto">EN</a><b style="color:var(--lime);font-size:.86rem">FR</b></nav></header>
+<nav><a href="#themes-top">Thèmes</a><a href="#start">Démarrer</a><a href="#panel">Le panneau</a><a href="#pages">Les pages</a><a href="#hold">Appuis longs</a><a href="#modes">CLASSIC / SHIFT</a><a href="#perform">PERFORM</a><a href="#sel">Fenêtres SEL</a><a href="#pads">FX PADS</a><a href="#themes">Palettes</a><a href="#sound">Le son</a><a href="#seq">SEQ · ARP · MIDI</a><a href="https://ko-fi.com/omnipotard" target="_blank" rel="noopener" style="color:#f08c3c;font-weight:700">☕ Don</a><a href="#help">Dépannage</a><a href="../manual.html" hreflang="en" style="margin-left:auto">EN</a><b style="color:var(--lime);font-size:.86rem">FR</b></nav></header>
 <main>
 <section class="hero"><h1>Le manuel de <em>K-WASUB</em></h1>
 <p class="lead">Un synthé de basses modernes pour le M-VAVE FM-1 : DnB, dub, dubstep, techno. Wobble en direct, deux oscillateurs de deux moteurs différents, un sub, des effets, un EQ, un morph entre quatre sons. Tout se joue avec les 27 touches, les 4 potards K1–K4 et les boutons du FM-1.</p>
-<img src="../docs/img/promo.png" alt="K-WASUB, synthé de basses modernes, cinq écrans"></section>
+<img src="../docs/img/promo-fr.png" alt="K-WASUB, synthé de basses modernes, cinq écrans"></section>
 
-<ul class="toc"><li><a href="#start">1 · Démarrer en 3 minutes</a></li><li><a href="#panel">2 · Le panneau du FM-1</a></li><li><a href="#pages">3 · Les 8 pages et leurs vues</a></li><li><a href="#hold">4 · Les appuis longs</a></li><li><a href="#modes">5 · CLASSIC et SHIFT</a></li><li><a href="#perform">6 · PERFORM, MORPH, FX LIVE, MACROS (SEL)</a></li><li><a href="#pads">7 · FX PADS</a></li><li><a href="#themes">8 · Thèmes, palettes, contraste</a></li><li><a href="#sound">9 · Le son : moteurs, filtres, effets, master</a></li><li><a href="#seq">10 · SEQ BASS, ARP, MIDI</a></li><li><a href="#help">11 · Stabilité et dépannage</a></li><li><a href="#ab">12 · Versions A et B</a></li></ul>
+<div class="dbar"><span>K-WASUB est gratuit. S'il t'aide pour tes sons, un café aide à le faire vivre.</span><a href="https://ko-fi.com/omnipotard" target="_blank" rel="noopener">Faire un don sur Ko-fi</a></div><ul class="toc"><li><a href="#themes-top">★ Les 6 thèmes en un coup d'œil</a></li><li><a href="#start">1 · Démarrer en 3 minutes</a></li><li><a href="#panel">2 · Le panneau du FM-1</a></li><li><a href="#pages">3 · Les 8 pages et leurs vues</a></li><li><a href="#hold">4 · Les appuis longs</a></li><li><a href="#modes">5 · CLASSIC et SHIFT</a></li><li><a href="#perform">6 · PERFORM, MORPH, FX LIVE, MACROS (SEL)</a></li><li><a href="#pads">7 · FX PADS</a></li><li><a href="#themes">8 · Thèmes, palettes, contraste</a></li><li><a href="#sound">9 · Le son : moteurs, filtres, effets, master</a></li><li><a href="#seq">10 · SEQ BASS, ARP, MIDI</a></li><li><a href="#help">11 · Stabilité et dépannage</a></li><li><a href="#ab">12 · Versions A et B</a></li></ul>
 
+<h2 id="themes-top">Les 6 thèmes en un coup d'œil</h2>
+<p><code>SYSTEM › THEME</code> change toute la mise en page ; <code>PALETTE</code> change les couleurs (19 palettes, voir plus bas). Voici le même écran, la page oscillateur, dans chaque thème.</p>
+<div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(240px,1fr))">
+<figure><img src="../docs/img/t-neon.png" alt="CLASSIC"><figcaption><b>CLASSIC</b><br>Listes, une ligne par réglage, les quatre premières sur K1–K4. La mise en page de référence.</figcaption></figure>
+<figure><img src="../docs/img/t-studio.png" alt="STUDIO"><figcaption><b>STUDIO</b><br>Une barre d'état, les huit pages toujours visibles, des cases compactes.</figcaption></figure>
+<figure><img src="../docs/img/t-pure.png" alt="PURE"><figcaption><b>PURE</b><br>Un en-tête à onglet, une grande onde et quatre cadrans : lisible à bout de bras, pensé pour la scène.</figcaption></figure>
+<figure><img src="../docs/img/t-rack.png" alt="RACK"><figcaption><b>RACK</b><br>Allure de rack : un rail de pages sur le côté, des lignes serrées.</figcaption></figure>
+<figure><img src="../docs/img/t-glow-green.png" alt="CLASSIC GLOW"><figcaption><b>CLASSIC GLOW</b><br>La mise en page classique éclairée par des dégradés, vert fluo.</figcaption></figure>
+<figure><img src="../docs/img/t-tech-volt.png" alt="TECH"><figcaption><b>TECH</b><br>L'image occupe presque toute la page, quatre tuiles, des dégradés dans des sens différents.</figcaption></figure>
+</div>
 <h2 id="start">1 · Démarrer en 3 minutes</h2>
 <div class="card"><ol>
 <li><b>Installer</b> : ouvre <a href="../installer.html?lang=fr">installer.html</a> dans Chrome ou Edge, branche le FM-1 avec un câble USB <i>de données</i>, clique « Installer K-WASUB ». Sans navigateur compatible : <code>INSTALL-Linux.sh</code>, <code>INSTALL-Mac.command</code> ou <code>INSTALL-Windows.bat</code> (Python 3). Pour revenir à KAWA ou à l'officiel : voir le README.</li>
@@ -224,5 +239,5 @@ footer{border-top:1px solid var(--rule);margin-top:50px;padding-top:18px;color:v
 
 <h2 id="ab">12 · Versions A et B</h2>
 <p><b>A</b> : les 8 moteurs. <b>B</b> (<code>install/version-b/</code>) : 4 moteurs (ANALOG, REESE, WAVE, FM), pour tester une interface plus simple. Les deux ont les mêmes pages, thèmes et modes.</p>
-<footer>K-WASUB est un logiciel libre (GPL-3.0), né de <a href="https://github.com/Guizmoh/Kawa-Tracker-Fm1">KAWA</a> (Omnipotard / Leo Kuroshita, Hügelton Instruments), dont il reprend la plate-forme du FM-1. Beta : pas encore essayé sur tous les FM-1. <a href="index.html">← Accueil</a> · <a href="CAHIER-DES-CHARGES.md">Cahier des charges</a></footer>
-</main></body></html>
+<div class="dbar"><span>K-WASUB est gratuit. S'il t'aide pour tes sons, un café aide à le faire vivre.</span><a href="https://ko-fi.com/omnipotard" target="_blank" rel="noopener">Faire un don sur Ko-fi</a></div><footer>K-WASUB est un logiciel libre (GPL-3.0), né de <a href="https://github.com/Guizmoh/Kawa-Tracker-Fm1">KAWA</a> (Omnipotard / Leo Kuroshita, Hügelton Instruments), dont il reprend la plate-forme du FM-1. Beta : pas encore essayé sur tous les FM-1. <a href="index.html">← Accueil</a> · <a href="CAHIER-DES-CHARGES.md">Cahier des charges</a></footer>
+</main><a class="fab" href="https://ko-fi.com/omnipotard" target="_blank" rel="noopener">☕ Soutenir K-WASUB</a></body></html>

@@ -43,10 +43,15 @@ code{font-family:var(--mono);font-size:.9em;background:var(--panel2);border:1px 
 .donate p{max-width:38rem;margin:.4rem auto}
 details{background:var(--panel);border:1px solid var(--rule);border-radius:12px;padding:10px 16px;margin:8px 0}summary{cursor:pointer;font-weight:700}
 footer{margin-top:50px;border-top:1px solid var(--rule);padding-top:18px;color:var(--mut);font-size:.9rem}
+
+.fab{position:fixed;right:14px;bottom:14px;z-index:20;display:inline-flex;align-items:center;gap:8px;background:#f08c3c;color:#1b0e02;font:800 .95rem system-ui,sans-serif;text-decoration:none;border-radius:999px;padding:11px 18px;box-shadow:0 8px 26px #000a,0 0 0 2px #1b0e02}
+.fab:hover{filter:brightness(1.1);color:#1b0e02}
+.dbar{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;justify-content:center;background:linear-gradient(90deg,#3a2208,#241a0e 60%,#3a2208);border:1px solid #7a4a18;border-radius:14px;padding:12px 16px;margin:14px 0;color:#ffe2bf;font-size:.98rem;text-align:center}
+.dbar a{background:#f08c3c;color:#1b0e02;font-weight:800;text-decoration:none;border-radius:10px;padding:8px 16px}
 </style></head><body><main>
 <nav class="bar"><span class="logo">K-WA<b>SUB</b></span><span class="sp"></span><a href="#try">Try it</a><a href="#install">Install</a><a href="manual.html">Manual</a><a href="#news">What's new</a><a href="#don">Support</a><a href="https://github.com/Guizmoh/K-WASUB_Firmware_for_FM1">GitHub</a><span class="lang"><b>EN</b> · <a href="fr/index.html" hreflang="fr">FR</a></span></nav>
 
-<section class="hero"><img src="docs/img/promo.png" alt="K-WASUB, a modern bass synth for the FM-1: wobble, X/Y morph, FX PADS, EQ, SHIFT mode">
+<div class="dbar"><span>K-WASUB is free. If it helps your sounds, a coffee keeps it going.</span><a href="https://ko-fi.com/omnipotard" target="_blank" rel="noopener">Donate on Ko-fi</a></div><section class="hero"><img src="docs/img/promo.png" alt="K-WASUB, a modern bass synth for the FM-1: wobble, X/Y morph, FX PADS, EQ, SHIFT mode">
 <h1>Turn your FM-1 into a modern <em>bass synth</em></h1>
 <p class="lead">K-WASUB is a free firmware for the M-VAVE FM-1. It is made to build and play <b>DnB, dub, dubstep and techno basses</b>: growling reeses, deep subs, 808s, and above all a <b>wobble you shape live</b> with the knobs and the keys.</p>
 <div class="cta"><a class="btn p" href="#try">▶ Try it in the browser</a><a class="btn" href="#install">⬇ Install on the FM-1</a><a class="btn" href="manual.html">📖 Read the manual</a></div></section>
@@ -96,6 +101,7 @@ footer{margin-top:50px;border-top:1px solid var(--rule);padding-top:18px;color:v
 <p>K-WASUB is free and will stay free. If it helps your sounds, you can chip in for the time and the test hardware (FM-1, cables…). Thank you!</p>
 <p><a id="donate" class="btn d p" href="#don" aria-disabled="true">☕ Make a donation</a></p><p id="dnote" style="color:var(--mut);font-size:.88rem">The donation link is coming soon.</p></div></section>
 
+<section class="sec"><div class="dbar"><span>K-WASUB is free. If it helps your sounds, a coffee keeps it going.</span><a href="https://ko-fi.com/omnipotard" target="_blank" rel="noopener">Donate on Ko-fi</a></div></section>
 <section class="sec"><h2>FAQ</h2>
 <details><summary>Do I lose KAWA or the stock firmware?</summary><p>No. Installation works like KAWA's, with the same loader: you can reinstall KAWA (<code>kawa-0.5.fwsc</code>) or the stock firmware (M-UPGRADE) whenever you like.</p></details>
 <details><summary>No sound on the FM-1?</summary><p>In SYSTEM, look at <code>AUDIO CORES</code> (try SINGLE) and the MASTER volume. If the FM-1 switched off, read <code>LAST STOP</code> at start-up and note what it says.</p></details>
@@ -116,4 +122,4 @@ var DONATE_URL = "https://ko-fi.com/omnipotard";
   function pick(v){ver=v;ta.setAttribute("aria-pressed",v==="index.html");tb.setAttribute("aria-pressed",v==="b.html");op.href="emulator/"+v;if(fr.style.display==="block")load();}
   ta.onclick=function(){pick("index.html")};tb.onclick=function(){pick("b.html")};
 })();
-</script></body></html>
+</script><a class="fab" href="https://ko-fi.com/omnipotard" target="_blank" rel="noopener">☕ Support K-WASUB</a></body></html>
