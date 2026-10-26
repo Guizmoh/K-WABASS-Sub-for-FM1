@@ -117,7 +117,8 @@
     async restore(blob, progress) {
       if (String.fromCharCode(...blob.subarray(0, 4)) !== "KSB1") throw new LinkError(M("this file is not a K-WASUB backup (.kwsub)", "ce fichier n'est pas une sauvegarde K-WASUB (.kwsub)"));
       const h = await this.hello();
-      if (h.size !== blob.length) throw new LinkError(M(`this backup (${blob.length} bytes) does not fit this firmware (${h.size}): install the version it was made with, restore, then update`, `cette sauvegarde (${blob.length} octets) ne correspond pas à ce firmware (${h.size}) : installe la version avec laquelle elle a été faite, recharge-la, puis mets à jour`));
+      // (a backup from 0.9.53..0.9.56 has no parameter locks: 2052 bytes fewer, still taken)
+      if (h.size !== blob.length && h.size - 2052 !== blob.length) throw new LinkError(M(`this backup (${blob.length} bytes) does not fit this firmware (${h.size}): install the version it was made with, restore, then update`, `cette sauvegarde (${blob.length} octets) ne correspond pas à ce firmware (${h.size}) : installe la version avec laquelle elle a été faite, recharge-la, puis mets à jour`));
       let st = (await this.t.ask(0x03, [blob.length & 0xFF, blob.length >> 8]))[0];
       if (st) throw new LinkError(STATUS()[st] || M("refused", "refusé"));
       for (let off = 0; off < blob.length;) {

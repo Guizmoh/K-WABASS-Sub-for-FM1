@@ -77,6 +77,23 @@ static struct {
     dkpat_t pat[DK_NPAT];
 } dk;
 static const uint8_t DK_PROB[16] = {100, 95, 90, 85, 80, 75, 70, 65, 60, 50, 40, 33, 25, 20, 10, 5};
+/* PARAMETER LOCKS (0.9.57): a step's own value for a setting, on the drums (per track) and SEQ BASS; one list of 512 for
+ * all their patterns, on the store's sixth sector. pat: SEQ BASS's (PL_BASS | 0..15) or a drum pattern (0..7); tp: the
+ * track << 4 | what is locked */
+#define PL_MAX 512u
+#define PL_MAGIC 0x50u
+#define PL_BASS 0x80u
+enum { PK_LVL, PK_TUNE, PK_DEC, PK_TONE, PK_RAT, PK_ECHO, NPKD };   /* DRUMS: LEVEL TUNE DECAY TONE, RATCHET (1..4 hits), ECHO (DUB TECHNO's send) */
+enum { PB_CUT, PB_RES, PB_ENV, PB_DRV, PB_WOB, PB_SHAPE, PB_SMP, NPKB };   /* SEQ BASS: CUTOFF RESO FILT ENV DRIVE, WOB RATE, A SHAPE, SAMPLE START */
+static const uint8_t PB_ID[NPKB] = {F_CUT, F_RES, F_ENV, F_DRV, L1_DIV, A_P1, SM_START};
+typedef struct { uint8_t pat, step, tp; int8_t v; } plk_t;
+static struct { uint8_t magic, sum; uint16_t n; plk_t l[PL_MAX]; } pl;
+static uint8_t dk_lkm[NDK], dk_rn[NDK];         /* the step playing: each track's locks (bits), its ratchet hits to come */
+static int8_t dk_lkv[NDK][NPKD];
+static uint32_t dk_rc[NDK], dk_riv[NDK];        /* ... the samples to the next ratchet hit, between two */
+static volatile uint8_t sq_lkm;                 /* SEQ BASS: the note playing's locks (bits) and values */
+static int8_t sq_lkv[NPKB];
+#define LKB(b, x) (sq_lkm >> (b) & 1u ? (int32_t)sq_lkv[b] : (int32_t)(x))
 static uint8_t *sq_np(uint32_t k, uint32_t i) { k %= SQ_NPAT; i %= SQ_MAX; return i < 16u ? &perf.pat[k].note[i] : &sqx.p[k].note[i - 16u]; }
 static uint8_t *sq_fp(uint32_t k, uint32_t i) { k %= SQ_NPAT; i %= SQ_MAX; return i < 16u ? &perf.pat[k].fl[i] : &sqx.p[k].fl[i - 16u]; }
 /* the EQ (held FX), on every sound: 4 biquads a side, Q24 (b0 b1 b2 a1 a2); the main loop works them out (eq_n),
@@ -464,7 +481,7 @@ static void lfo_run(uint32_t k, uint32_t beats)
     if (p[L1_SYNC]) {
         uint32_t b = beats - (p[L1_TRIG] ? l->b0 : 0u);
         if (b >= BEATS_WRAP) b += BEATS_WRAP;   /* (wrapped below the start) */
-        int32_t dv = clampi(p[L1_DIV] + (gmod[D_L1RATE + k] >> 8) * 15 / 127, 0, 15);
+        int32_t dv = clampi((k ? p[L1_DIV] : LKB(PB_WOB, p[L1_DIV])) + (gmod[D_L1RATE + k] >> 8) * 15 / 127, 0, 15);
         if (ks_straight) dv = DIV_NEAR[dv];
         ph = (uint32_t)((uint64_t)(b >> 8) * DIV_CPB[dv]);
         l->ph = ph;
@@ -622,7 +639,7 @@ static void voice_mods(voice_t *v, int32_t *m, int32_t fenv, int32_t menv)
     src[SR_RAND] = v->rand;
     src[SR_STEP] = step_val;
     route(m, src);
-    m[D_CUT] += ((patch[F_ENV] + (m[D_FENV] >> 8)) * fenv) >> 6;
+    m[D_CUT] += ((LKB(PB_ENV, patch[F_ENV]) + (m[D_FENV] >> 8)) * fenv) >> 6;
     m[D_CUT] += (int32_t)((((int64_t)(v->pitch - 60 * 256) * 276) >> 8) * patch[F_KEY] >> 7);
     m[D_CUT] += (patch[F_VEL] * (v->vel - 64)) >> 1;
 }
@@ -721,7 +738,7 @@ static void voice_block(voice_t *v, int32_t *acc)
     p = v->pitch + m[D_PITCH] + bend;
 
     qa.eng = (uint8_t)P[A_ENG];
-    qa.p1 = q8to15(pv(P[A_P1], m[D_AP1]));
+    qa.p1 = q8to15(pv(LKB(PB_SHAPE, P[A_P1]), m[D_AP1]));
     qa.p2 = q8to15(pv(P[A_P2], m[D_AP2]));
     qa.p3 = q8to15(pv(P[A_P3], m[D_AP3]));
     qa.inc = pitch_inc(p + m[D_APIT] + ((P[A_OCT] * 12 + P[A_SEMI]) << 8) + P[A_FINE] * 256 / 100 + ((v->drift_a * P[X_DRIFT]) >> 9));
@@ -781,7 +798,7 @@ static void voice_block(voice_t *v, int32_t *acc)
         uint32_t len = sm->len, s0, e0, l0, S, E, L, hinc, sp, dir = (uint32_t)P[SM_DIR] % 3u;
         int loop = P[SM_MODE] == 1 || (P[SM_MODE] == 0 && sm->loop < len);
         int32_t lv = lvl15(pv(P[SM_LVL], 0) >> 8);
-        s0 = (uint32_t)P[SM_START] * len >> 7;  /* START / END: the part played */
+        s0 = (uint32_t)LKB(PB_SMP, P[SM_START]) * len >> 7;  /* START / END: the part played */
         e0 = len - ((uint32_t)P[SM_END] * len >> 7);
         if (e0 < s0 + 32u) e0 = s0 + 32u < len ? s0 + 32u : len;
         if (s0 + 32u > e0) s0 = e0 > 32u ? e0 - 32u : 0u;
@@ -822,15 +839,15 @@ static void voice_block(voice_t *v, int32_t *acc)
     }
 
     /* the filter */
-    cut = pv(P[F_CUT], m[D_CUT]);
+    cut = pv(LKB(PB_CUT, P[F_CUT]), m[D_CUT]);
     if (v->age == vage) {                      /* (the newest voice: what the screen shows) */
         env_st_show[0] = v->ea.st; env_lv_show[0] = v->ea.lv >> 15;
         env_st_show[1] = v->ef.st; env_lv_show[1] = v->ef.lv >> 15;
         env_st_show[2] = v->em.st; env_lv_show[2] = v->em.lv >> 15;
         cut_show = cut;
     }
-    res = pv(P[F_RES], m[D_RES]) >> 8;
-    drv = pv(P[F_DRV], m[D_DRV]) >> 8;
+    res = pv(LKB(PB_RES, P[F_RES]), m[D_RES]) >> 8;
+    drv = pv(LKB(PB_DRV, P[F_DRV]), m[D_DRV]) >> 8;
     gain = 4096 + drv * 160;
     if (ft <= FT_NOTCH) {
         const int8_t *c = FT_MIX[ft];
@@ -1000,6 +1017,12 @@ static void seq_step_on(void)
         f = *sq_fp(k, i);
         if (ok && dk.mode != 1u) {
             int slide = sq_slide;
+            uint32_t q, n = pl.n <= PL_MAX ? pl.n : 0u, mk = 0;   /* (its locks, until the next note) */
+            for (q = 0; q < n; q++) {
+                const plk_t *e = &pl.l[q];
+                if (e->pat == (PL_BASS | k) && e->step == i && (e->tp & 15u) < NPKB) { mk |= 1u << (e->tp & 15u); sq_lkv[e->tp & 15u] = e->v; }
+            }
+            sq_lkm = (uint8_t)mk;
             sq_sound((uint32_t)clampi(24 + *sq_np(k, i) + sq_tr, 0, 127), f & SF_ACC ? 127u : 90u, slide, SQ_GL[sqx.p[k].cond[i] >> 4]);
             sq_slide = (uint8_t)(f & SF_SLIDE);
         } else if (sq_slide || dk.mode == 1u) sq_off();   /* (a rest: a slide stops; a long note goes on to its end) */
@@ -1063,8 +1086,24 @@ static void dk_step_on(void)
     dk_show = (uint8_t)i;
     if (dk.mode == 2u) return;                  /* (BASS ONLY) */
     ok &= ~(uint32_t)dk.mute;
+    {                                           /* this step's locks, track by track */
+        uint32_t q, n = pl.n <= PL_MAX ? pl.n : 0u;
+        for (t = 0; t < NDK; t++) if (ok >> t & 1u) dk_lkm[t] = 0;
+        for (q = 0; q < n; q++) {
+            const plk_t *e = &pl.l[q];
+            uint32_t w = e->tp & 15u;
+            t = e->tp >> 4 & 7u;
+            if (e->pat == k && e->step == i && w < NPKD && (ok >> t & 1u)) { dk_lkm[t] |= (uint8_t)(1u << w); dk_lkv[t][w] = e->v; }
+        }
+    }
     for (t = 0; t < NDK; t++)
-        if (ok >> t & 1u) { dk_trig_at[t] = (uint16_t)sq_at; dk_trig_vel[t] = dk.pat[k].acc[i] >> t & 1u ? 127u : 96u; }
+        if (ok >> t & 1u) {
+            uint32_t r = dk_lkm[t] >> PK_RAT & 1u ? (uint32_t)clampi(dk_lkv[t][PK_RAT], 1, 4) : 1u;
+            dk_trig_at[t] = (uint16_t)sq_at; dk_trig_vel[t] = dk.pat[k].acc[i] >> t & 1u ? 127u : 96u;
+            dk_rn[t] = (uint8_t)(r - 1u);       /* RATCHET: r hits through the step */
+            dk_riv[t] = 6615000u / (ks_bpm10 | 1u) / r;
+            dk_rc[t] = 0;
+        }
     dk_hit |= (uint8_t)ok;
 }
 static void dk_clock(uint32_t beats)
@@ -1109,8 +1148,11 @@ static inline int32_t dk_saw(uint32_t ph) { return (int32_t)(ph >> 18) - 8192; }
 static void dk_start(uint32_t t, uint32_t vel)
 {
     dkv_t *v = &dkv[t];
-    const int8_t *p = dk.prm[t];
-    uint32_t kit = dk.kit % DK_NKIT, ms10 = DK_TMIN[kit][t] * 10u * DK_TR[((uint32_t)p[2] & 127u) >> 2] / 256u, q;
+    int8_t pp[4];                               /* (its sound, or this step's locks) */
+    const int8_t *p = pp;
+    uint32_t kit = dk.kit % DK_NKIT, ms10, q;
+    for (q = 0; q < 4u; q++) pp[q] = dk_lkm[t] >> q & 1u ? dk_lkv[t][q] : dk.prm[t][q];
+    ms10 = DK_TMIN[kit][t] * 10u * DK_TR[((uint32_t)p[2] & 127u) >> 2] / 256u;
     int32_t tq8 = p[1] * 48, tone = p[3] & 127, g;
     uint32_t tf = pitch_inc(60 * 256 + tq8) / ((pitch_inc(60 * 256) >> 12) | 1u);   /* TUNE, Q12 (no 64-bit divide on the chip) */
     memset(v, 0, sizeof *v);
@@ -1299,11 +1341,12 @@ static void dk_render(uint32_t n)               /* the drums for this block -> d
     for (t = 0; t < NDK; t++) {
         dkv_t *v = &dkv[t];
         uint32_t at = dk_trig_at[t];
-        int32_t snd = kit == DK_DUB ? DK_SEND[t] : 0, o;
-        if (at == 0xFFFFu && !v->on) continue;
+        int32_t snd = kit != DK_DUB ? 0 : dk_lkm[t] >> PK_ECHO & 1u ? dk_lkv[t][PK_ECHO] * 258 : DK_SEND[t], o;
+        if (at == 0xFFFFu && !v->on && !dk_rn[t]) continue;
         dk_trig_at[t] = 0xFFFFu;
         for (i = 0; i < n; i++) {
-            if (i == at) dk_start(t, dk_trig_vel[t]);
+            if (i == at) { dk_start(t, dk_trig_vel[t]); dk_rc[t] = dk_riv[t]; }
+            else if (dk_rn[t] && dk_rc[t] && !--dk_rc[t]) { dk_start(t, dk_trig_vel[t] - 16u); if (--dk_rn[t]) dk_rc[t] = dk_riv[t]; }   /* (RATCHET: the next hit) */
             if (!v->on) continue;
             o = mul15(dk_voice(v, t, kit), v->gain);
             dkb[i] += o;
@@ -1364,10 +1407,11 @@ static void voices_render(int32_t *dst, uint32_t n, uint32_t t0, uint32_t budget
             sq_nx_i = 0xFFFFFFFFu;
             sq_last = 0;
             dk_tick = 0xFFFFFFFFu; dk_step = 0xFFFFFFFFu; dk_nx_i = 0xFFFFFFFFu; dk_last = 0; dk_show = 0xFF;
+            sq_lkm = 0;                         /* (no lock past the play) */
             if (a && b) ks_beats = 0;           /* (the internal clock: from the bar, the LFOs too) */
         } else if (t == EV_PANIC) { for (k = 0; k < NVOICE; k++) { vo[k].on = 0; vo[k].ea.st = 0; vo[k].ea.lv = 0; } nheld = 0; ar_n = 0; sq_note = 0xFF; }
         else if (t == EV_SYNC) ks_beats = a ? b * 699051u : 0u;   /* (the MIDI clock: its tick, 1/24 beat) */
-        else if (t == EV_DRUM) { dk_trig_at[a % NDK] = 0; dk_trig_vel[a % NDK] = (uint8_t)b; }
+        else if (t == EV_DRUM) { dk_trig_at[a % NDK] = 0; dk_trig_vel[a % NDK] = (uint8_t)b; dk_lkm[a % NDK] = 0; dk_rn[a % NDK] = 0; }   /* (a key: the sound as set, no locks) */
     }
     for (k = 0; k < NVOICE; k++) on += vo[k].on;
     while (on > lim) {                          /* the governor took voices away: the oldest go */

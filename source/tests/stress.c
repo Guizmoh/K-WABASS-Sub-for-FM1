@@ -134,6 +134,31 @@ int main(void)
             }
         dk.kit = 0; blocks(20);
     }
+    {                                           /* PARAMETER LOCKS: every drum lock and every bass lock at both ends, every step, both sequencers playing */
+        uint32_t s, t, w, j, kit;
+        for (j = 0; j < 2u; j++)
+            for (kit = 0; kit < DK_NKIT; kit++) {
+                pl.n = 0;
+                for (s = 0; s < 16u && pl.n + 16u <= PL_MAX; s++) {
+                    for (t = 0; t < NDK; t++) {
+                        dk.pat[0].on[s] = 0xFF;
+                        w = (s + t) % NPKD;
+                        pl.l[pl.n].pat = 0; pl.l[pl.n].step = (uint8_t)s; pl.l[pl.n].tp = (uint8_t)(t << 4 | w);
+                        pl.l[pl.n].v = (int8_t)(j ? (w == PK_TUNE ? 63 : w == PK_RAT ? 4 : 127) : (w == PK_TUNE ? -64 : w == PK_RAT ? 1 : 0));
+                        pl.n++;
+                    }
+                    for (w = 0; w < NPKB; w++) {
+                        pl.l[pl.n].pat = PL_BASS | (perf.cur % SQ_NPAT); pl.l[pl.n].step = (uint8_t)s; pl.l[pl.n].tp = (uint8_t)w;
+                        pl.l[pl.n].v = (int8_t)(j ? PD[PB_ID[w]].hi : PD[PB_ID[w]].lo);
+                        pl.n++;
+                    }
+                }
+                dk.cur = 0; dk.pat[0].len = 16; dk.kit = (uint8_t)kit; dk.mode = 0;
+                ev_push(EV_SEQ, 1, 1); blocks(300); ev_push(EV_SEQ, 0, 0); blocks(20);
+                runs++;
+            }
+        pl.n = 0; dk.kit = 0;
+    }
     printf("stress: %u parameter runs, peak %.3f, late blocks %u: no integer wrapped\n", runs, (double)peak, ks_late);
     return 0;
 }

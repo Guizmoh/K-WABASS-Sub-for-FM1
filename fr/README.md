@@ -19,7 +19,7 @@
 ## Fonctions clés
 
 1. **4 moteurs efficaces** pour des basses modernes, ou **8 moteurs** pour basses, pads et leads (`SYSTEM › ENGINES`).
-2. **Séquenceur de batterie avec conditions & pads** : 8 pistes colorées (kits 808, 909, dub techno, acoustique), chance et conditions sur chaque pas, touches noires pour l'instrument, touches blanches (pads) pour ses pas, OCT−/OCT+ pour les pages ; REC en direct ; sortie sync pour Pocket Operator et Volca.
+2. **Séquenceur de batterie avec conditions & parameter locks** (sur la basse aussi : maintenir un pas, tourner un potard) : 8 pistes colorées (kits 808, 909, dub techno, acoustique), chance et conditions sur chaque pas, touches noires pour l'instrument, touches blanches (pads) pour ses pas, OCT−/OCT+ pour les pages ; REC en direct ; sortie sync pour Pocket Operator et Volca.
 3. **LFO learn** : `LFO` maintenu + n'importe quel potard, le LFO 2 se branche sur ce réglage en un geste.
 4. Mode **CLASSIC** ou **SHIFT** (`OCT−` / `OCT+`) pour aller plus vite, au choix dans les options.
 5. **Fenêtres SEL** : PERFORM, MORPH, FX LIVE, MACROS.
@@ -45,8 +45,8 @@ Retour à KAWA (`install/kawa-0.5.fwsc`) ou au firmware officiel (M-UPGRADE) pos
 
 ```sh
 cd source
-./build.sh --release 0.9.56          # -> build/k-wasub-0.9.56.fwsc
-APP_VER=0.9.56 bash web/make_emulator.sh      # émulateur
+./build.sh --release 0.9.57          # -> build/k-wasub-0.9.57.fwsc
+APP_VER=0.9.57 bash web/make_emulator.sh      # émulateur
 bash web/make_installer.sh                    # installer.html avec le dernier paquet
 bash tests/run_stress.sh                      # tests de charge (UBSan)
 python3 tests/manual_shots.py                 # captures du manuel (docs/img)

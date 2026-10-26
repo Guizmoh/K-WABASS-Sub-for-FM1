@@ -20,7 +20,7 @@
 ## Key features
 
 1. **4 efficient engines** for modern basses, or **8 engines** for bass, pads & leads (`SYSTEM › ENGINES`).
-2. **Drum sequencer with conditions & pads**: 8 coloured tracks (808, 909, dub techno, acoustic kits), chance and trig conditions on every step, black keys choose the instrument, white keys (pads) place its steps, OCT−/OCT+ turn the pages; live REC; sync out for Pocket Operators and Volcas.
+2. **Drum sequencer with conditions & parameter locks** (on the bass too: hold a step, turn a knob): 8 coloured tracks (808, 909, dub techno, acoustic kits), chance and trig conditions on every step, black keys choose the instrument, white keys (pads) place its steps, OCT−/OCT+ turn the pages; live REC; sync out for Pocket Operators and Volcas.
 3. **LFO learn**: hold `LFO` and turn any knob, LFO 2 is assigned to that setting in one gesture.
 4. **CLASSIC** or **SHIFT** mode (`OCT−` / `OCT+`) for a faster workflow, chosen in the options.
 5. **SEL windows**: PERFORM, MORPH, FX LIVE, MACROS.
@@ -46,8 +46,8 @@ You can go back to KAWA (`install/kawa-0.5.fwsc`) or to the stock firmware (M-UP
 
 ```sh
 cd source
-./build.sh --release 0.9.56          # -> build/k-wasub-0.9.56.fwsc
-APP_VER=0.9.56 bash web/make_emulator.sh      # emulator
+./build.sh --release 0.9.57          # -> build/k-wasub-0.9.57.fwsc
+APP_VER=0.9.57 bash web/make_emulator.sh      # emulator
 bash web/make_installer.sh                    # installer.html with the newest package
 bash tests/run_stress.sh                      # load tests (UBSan)
 python3 tests/manual_shots.py                 # the manual's screenshots (docs/img)

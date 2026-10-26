@@ -242,7 +242,9 @@ static void vis_seq(int32_t x, int32_t y, int32_t w, int32_t h)   /* SEQ BASS: 1
     uint32_t k = perf.cur % SQ_NPAT;
     int32_t i, len = q->len >= 1u && q->len <= SQ_MAX ? q->len : 16, bw = (w - 8) / 16, x0 = x + 4 + (w - 8 - bw * 16) / 2, H = h - 11, top = y + 4;
     int32_t pg = sq_cur_step / 16, np = (len + 15) / 16;
+    uint64_t lkd = 0;                           /* (the steps with a PARAMETER LOCK) */
     if (!g_vis(y, h)) return;
+    { uint32_t j, n = pl.n <= PL_MAX ? pl.n : 0u; for (j = 0; j < n; j++) if (pl.l[j].pat == (PL_BASS | k) && pl.l[j].step < 64u) lkd |= 1ull << pl.l[j].step; }
     for (i = 0; i < 16; i++) {
         int32_t s = pg * 16 + i, bx = x0 + i * bw, f = *sq_fp(k, (uint32_t)s), nh;
         int on = sq_play && s == sq_show;
@@ -254,6 +256,7 @@ static void vis_seq(int32_t x, int32_t y, int32_t w, int32_t h)   /* SEQ BASS: 1
             g_rect(bx + 2, top + H - nh + 3, bw - 4, nh - 3, g_mix(K_TRACK, c, 45));
             if (f & SF_SLIDE) g_rect(bx + bw - 2, top + H - nh + 1, 3, 1, c);   /* (into the next) */
             if ((sqx.p[k].cond[s] & 15u) || sqx.p[k].prob[s] < 100u) g_rect(bx + bw / 2 - 1, top + H - nh - 4, 3, 2, K_WHITE);   /* (a chance or a condition: a dot above) */
+            if (lkd >> s & 1u) { g_rect(bx + 1, top, bw - 2, 2, K_CYAN); g_rect(bx + 1, top + 2, 2, 3, K_CYAN); }   /* (locked: a corner at the top) */
             {                                   /* (a note longer than its step: a tail over the next ones, to the page's end) */
                 uint32_t gi = sqx.p[k].cond[s] >> 4, tail = gi == 15u ? (uint32_t)(16 - i) * (uint32_t)bw : (uint32_t)(((uint64_t)SQ_GL[gi] * (uint32_t)bw) >> 24);
                 int32_t tw = (int32_t)tail - bw, room = (16 - i - 1) * bw;
@@ -275,7 +278,11 @@ static void vis_drum(int32_t x, int32_t y, int32_t w, int32_t h)
 {
     const dkpat_t *q = dk_pp();
     int32_t len = (int32_t)dk_len(), pg = dk_cur / 16, np = (len + 15) / 16, bw = (w - 30) / 16, x0 = x + 26, rh = (h - 6) / (int32_t)NDK, t, i;
+    uint8_t lkd[DK_MAX];                        /* (each step's tracks with a PARAMETER LOCK) */
     if (!g_vis(y, h)) return;
+    memset(lkd, 0, sizeof lkd);
+    { uint32_t j, n = pl.n <= PL_MAX ? pl.n : 0u; for (j = 0; j < n; j++) if (pl.l[j].pat == dk.cur % DK_NPAT && pl.l[j].step < DK_MAX) lkd[pl.l[j].step] |= (uint8_t)(1u << (pl.l[j].tp >> 4 & 7u)); }
+    if (dk_hold && (int32_t)(dk_hold - 1u) / 16 == pg) g_rect(x0 + (int32_t)((dk_hold - 1u) % 16u) * bw, y + 1, bw, h - 2, g_mix(K_BG, K_WHITE, 60));   /* (the step held: its column) */
     if (rh < 3) rh = 3;
     for (t = 0; t < (int32_t)NDK; t++) {
         int32_t ry = y + 3 + t * rh, mute = dk.mute >> t & 1u, sel = t == (int32_t)dk_trk;
@@ -290,6 +297,7 @@ static void vis_drum(int32_t x, int32_t y, int32_t w, int32_t h)
             if (s == (int32_t)dk_show && sq_play) c = on ? 0xFFFFu : g_mix(c, 0xFFFFu, 70);
             g_rect(bx + 1, ry + 1, bw - 2, rh - 2, c);
             if (on && (q->pc[t][s] & 0xFFu) && rh >= 5) g_rect(bx + bw / 2 - 1, ry + rh / 2 - 1, 2, 2, K_BG);
+            if (on && (lkd[s] >> t & 1u)) { g_rect(bx + 1, ry + 1, bw - 2, 1, K_WHITE); g_rect(bx + 1, ry + 1, 1, rh - 2 > 3 ? 3 : rh - 2, K_WHITE); }   /* (locked: a white corner) */
             if (sel && s == (int32_t)dk_cur) g_rect(bx + 1, ry + rh - 1, bw - 2, 1, 0xFFFFu);
         }
     }

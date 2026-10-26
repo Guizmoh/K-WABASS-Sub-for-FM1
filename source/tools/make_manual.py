@@ -126,7 +126,7 @@ def build(L):
 
     # 6 sequencers -- the drums' grid and the keys that fill it
     chaps.append(("seq", t(T("6 · SEQ BASS and DRUMS", "6 · SEQ BASS et DRUMS")),
-                  grid([("d-drums", "DRUMS · TECHNO"), ("d-drums-dub", T("DUB TECHNO kit", "kit DUB TECHNO")), ("d-seq", "SEQ BASS"), ("v-sample-cut", T("OSC C: START / END", "OSC C : START / END"))])
+                  grid([("d-drums", "DRUMS · TECHNO"), ("d-lock", "PARAMETER LOCK"), ("d-drums-dub", T("DUB TECHNO kit", "kit DUB TECHNO")), ("d-seq", "SEQ BASS"), ("v-sample-cut", T("OSC C: START / END", "OSC C : START / END"))])
                   + t(T('<p><b>PLAY</b> starts both sequencers (SEQ BASS and DRUMS) on the tempo; <b>REC</b> on their views records: stopped, step by step; playing, live. '
                         'DRUMS is the 4th view of SEQ (press SEQ until it shows).</p>'
                         '<table><tr><td>Black keys 1–8</td><td>choose the instrument and play it (REC + PLAY: record it now)</td></tr>'
@@ -134,6 +134,7 @@ def build(L):
                         '<tr><td>White keys 1–16</td><td>its steps on the page shown (on / off)</td></tr>'
                         '<tr><td>OCT− · OCT+</td><td>previous · next page of 16 steps (32 and 64-step patterns)</td></tr>'
                         '<tr><td>K1–K4</td><td>LEVEL, TUNE, DECAY, TONE of the instrument</td></tr>'
+                        '<tr><td>A white key held + K1–K4 · ALGO · SELECT</td><td><b>parameter lock</b> on that step: its own LEVEL, TUNE, DECAY, TONE · RATCHET (2–4 hits) · ECHO (DUB TECHNO); a white corner marks it. Held + black 10: its locks cleared. Let go untouched: the step goes off</td></tr>'
                         '<tr><td>SELECT · ALGO</td><td>a row, its value: STEP, HIT (on / accent), PROB (chance), COND, PAT (8 patterns), PRESET, STEPS, KIT, VOL, PLAYS, SWING</td></tr></table>'
                         '<p><b>Colours</b>: kick red, snare green, clap pink, closed hat yellow, open hat orange, tom blue, perc violet, cymbal cyan (shades of white with the BLACK / WHITE palette). '
                         'A dot on a step: it has a chance or a condition. The white column is the step playing.</p>'
@@ -141,7 +142,7 @@ def build(L):
                         '<b>Kits</b>: 808, 909, DUB TECHNO (deep kick, chord stab on PERC, its own dub echo), ACOUSTIC (beater kick, snare wires, toms, conga, ride). '
                         '<b>Presets</b>: 18 rhythms (TECHNO, HOUSE, DUB, DNB, JUNGLE, DUBSTEP, BREAKBEAT, UK GARAGE, ELECTRO, MINIMAL, HALFTIME, TRAP, ROLLING HATS, FOUR FLOOR, DUB TECHNO, ROCK, FUNK, JAZZ RIDE) in 16, 32 and 64 steps; MY PATTERN brings yours back. '
                         '<b>PLAYS</b>: bass + drums, drums only, bass only.</p>'
-                        '<p><b>SEQ BASS</b>: per step a note, a NOTE LEN (1/8 step to 64 steps, or HOLD), a type (accent, slide), a chance and a condition; 30 basslines in 16, 32, 64 steps.</p>'
+                        '<p><b>SEQ BASS</b>: per step a note, a NOTE LEN (1/8 step to 64 steps, or HOLD), a type (accent, slide), a chance and a condition; 30 basslines in 16, 32, 64 steps. <b>Parameter locks</b>: the rows P-LOCK (CUTOFF, RESO, FILT ENV, DRIVE, WOB RATE, A SHAPE, SMP START) and LOCK VALUE give the cursor\'s step its own value (OFF below the range); a cyan corner marks it. <b>REC while it plays</b>: turning one of these settings, in any view, locks it on the step playing, for the bass, and K1–K4 on the drums.</p>'
                         '<p><b>Sync</b>: SYSTEM › MIDI › SYNC OUT = PO / VOLCA puts a pulse every eighth note on the left output while it plays, the sound in mono on the right: '
                         'a stereo-to-two-mono cable to a Pocket Operator (SY mode that follows) or a Volca\'s SYNC IN. MIDI clock in / out is in the same view.</p>',
                         '<p><b>PLAY</b> lance les deux séquenceurs (SEQ BASS et DRUMS) sur le tempo ; <b>REC</b> sur leurs vues enregistre : à l’arrêt pas à pas, en lecture en direct. '
@@ -151,6 +152,7 @@ def build(L):
                         '<tr><td>Blanches 1–16</td><td>ses pas sur la page affichée (on / off)</td></tr>'
                         '<tr><td>OCT− · OCT+</td><td>page de 16 pas précédente · suivante (patterns de 32 et 64 pas)</td></tr>'
                         '<tr><td>K1–K4</td><td>LEVEL, TUNE, DECAY, TONE de l’instrument</td></tr>'
+                        '<tr><td>Blanche maintenue + K1–K4 · ALGO · SELECT</td><td><b>parameter lock</b> sur ce pas : ses propres LEVEL, TUNE, DECAY, TONE · RATCHET (2 à 4 coups) · ECHO (DUB TECHNO) ; un coin blanc le marque. Maintenue + noire 10 : ses verrous effacés. Relâchée sans rien tourner : le pas s’éteint</td></tr>'
                         '<tr><td>SELECT · ALGO</td><td>une ligne, sa valeur : STEP, HIT (on / accent), PROB (chance), COND, PAT (8 patterns), PRESET, STEPS, KIT, VOL, PLAYS, SWING</td></tr></table>'
                         '<p><b>Couleurs</b> : kick rouge, snare vert, clap rose, charley fermé jaune, charley ouvert orange, tom bleu, percu violet, cymbale cyan (nuances de blanc avec la palette BLACK / WHITE). '
                         'Un point sur un pas : il a une chance ou une condition. La colonne blanche est le pas joué.</p>'
@@ -158,7 +160,7 @@ def build(L):
                         '<b>Kits</b> : 808, 909, DUB TECHNO (kick profond, accord sur PERC, son propre écho dub), ACOUSTIC (kick à batte, caisse claire à timbre, toms, conga, ride). '
                         '<b>Presets</b> : 18 rythmes (TECHNO, HOUSE, DUB, DNB, JUNGLE, DUBSTEP, BREAKBEAT, UK GARAGE, ELECTRO, MINIMAL, HALFTIME, TRAP, ROLLING HATS, FOUR FLOOR, DUB TECHNO, ROCK, FUNK, JAZZ RIDE) en 16, 32 et 64 pas ; MY PATTERN ramène le tien. '
                         '<b>PLAYS</b> : basse + batterie, batterie seule, basse seule.</p>'
-                        '<p><b>SEQ BASS</b> : par pas une note, une NOTE LEN (1/8 de pas à 64 pas, ou HOLD), un type (accent, slide), une chance et une condition ; 30 lignes de basse en 16, 32, 64 pas.</p>'
+                        '<p><b>SEQ BASS</b> : par pas une note, une NOTE LEN (1/8 de pas à 64 pas, ou HOLD), un type (accent, slide), une chance et une condition ; 30 lignes de basse en 16, 32, 64 pas. <b>Parameter locks</b> : les lignes P-LOCK (CUTOFF, RESO, FILT ENV, DRIVE, WOB RATE, A SHAPE, SMP START) et LOCK VALUE donnent au pas du curseur sa propre valeur (OFF sous la plage) ; un coin cyan le marque. <b>REC pendant la lecture</b> : tourner un de ces réglages, dans n’importe quelle vue, le verrouille sur le pas joué pour la basse, et K1–K4 sur la batterie.</p>'
                         '<p><b>Synchro</b> : SYSTEM › MIDI › SYNC OUT = PO / VOLCA met une impulsion par croche sur la sortie gauche pendant la lecture, le son en mono à droite : '
                         'un câble stéréo vers deux mono jusqu’à un Pocket Operator (mode SY qui suit) ou le SYNC IN d’une Volca. L’horloge MIDI in / out est dans la même vue.</p>'))))
 
