@@ -1368,7 +1368,11 @@ static void item_text(uint32_t id, char *b)
         case G_BPM: b = fmt_u(b, (uint32_t)v / 10u, 0); *b++ = '.'; b = fmt_u(b, (uint32_t)v % 10u, 0); str_cat(b, " BPM"); break;
         case G_CLOCK: str_cat(b, v ? "MIDI" : "INTERNAL"); break;
         case G_OCT: fmt_s(b, v - 3); break;
-        case G_CORES: str_cat(b, !v ? "SINGLE" : dual_on ? "DUAL \xB7 ON" : KS_DUAL ? "DUAL \xB7 OFF" : "DUAL (FM-1)"); break;
+        case G_CORES: {
+            static const char *const WHY[5] = {"DUAL \xB7 AT NEXT START", "DUAL \xB7 CORE 1 SILENT", "DUAL \xB7 STOPPED: TOO SLOW", "DUAL \xB7 STOPPED: FLASH", "SINGLE \xB7 SAFE (CRASH)"};
+            str_cat(b, !KS_DUAL ? (v ? "DUAL (FM-1)" : "SINGLE") : dual_on ? (v ? "DUAL \xB7 ON" : "DUAL \xB7 OFF AT NEXT START") : dual_why == DW_SAFE ? WHY[4] : !v ? "SINGLE" : WHY[dual_why % 4u]);
+            break;
+        }
         case G_THEME: { static const char *const TN[7] = {"CLASSIC GLOW", "STUDIO", "PURE", "RACK", "TECH", "RIBBON", "RIBBON CLASSIC"}; str_cat(b, TN[(uint32_t)v % 7u]); break; }
         case G_PAL: { static const char *const PN[11] = {"SYNTHWAVE", "MINT", "BLACK / WHITE", "INVERTED", "RED", "ICE", "FLUO", "PINK", "GOLD", "SKY", "BLAZE"}; int32_t q = v >= (int32_t)NPAL_BASE ? v - (int32_t)NPAL_BASE : v; str_cat(b, q < 2 ? PAL_NAME[set.theme % 7u][q] : PN[(q - 2) % 11]); if (v >= (int32_t)NPAL_BASE) str_cat(b, " RAD"); break; }
         case G_GRID: str_cat(b, v ? "STRAIGHT" : "ALL (T, D)"); break;
@@ -2294,26 +2298,27 @@ static void app_init(void)
     pre_cur[set.bank] = set.idx;
     set_dirty = 0;
     dual_on = 0;
+    rst_read();
 #if KS_DUAL
-    if (set.cores) {                            /* the voices on core 1: unless the last try did not hold */
-        if (dual_mark[0] == DUAL_MAGIC && dual_mark[1] == ~DUAL_MAGIC) {
-            set.cores = 0;                      /* (it crashed within 10 s: one core from now, SYSTEM to try again) */
+    if (set.cores) {                            /* the voices on core 1: unless the last try crashed */
+        if (dual_mark[0] == DUAL_MAGIC && dual_mark[1] == ~DUAL_MAGIC && rst_bad) {
+            set.cores = 0;                      /* (a crash or the watchdog within 10 s: one core from now, SYSTEM to try again) */
             set_dirty = 1;
             set_ms = fm1_ms;
+            dual_why = DW_SAFE;
             toast("ONE CORE (SAFE)");
         } else {
             dual_mark[0] = DUAL_MAGIC;
             dual_mark[1] = ~DUAL_MAGIC;
             dual_ms = fm1_ms;
             dual_on = fm1_cpu1_start(core1_main) == 0;
-            if (!dual_on) { dual_mark[0] = dual_mark[1] = 0; toast("CORE 1 SILENT: ONE CORE"); }
+            if (!dual_on) { dual_mark[0] = dual_mark[1] = 0; dual_why = DW_SILENT; toast("CORE 1 SILENT: ONE CORE"); }
         }
     }
     if (!set.cores) dual_mark[0] = dual_mark[1] = 0;
 #endif
     booted = 1;
     splash_until = 1;                           /* the start screen: the picture, the last patch, the cores; until a touch */
-    rst_read();
     if (set.ask || first_run) { ask_on = 1; ask_sel = set.ui; ask_ms = fm1_ms; }   /* ... and the question (the first start only, or ASK on): CLASSIC or SHIFT */
     g_force = 1;
 }
@@ -2358,8 +2363,7 @@ static void app_step(void)
     if (!dimmed && fm1_ms - idle_ms > 120000u) dim_set(1);
 #if KS_DUAL
     if (c1_failed) {                            /* core 1 stalled (no sound, frozen LFOs): one core, kept */
-        c1_failed = 0;
-        set.cores = 0; set_dirty = 1; set_ms = fm1_ms;
+        c1_failed = 0;                          /* (this session only: the next start tries two cores again) */
         dual_mark[0] = dual_mark[1] = 0;
         toast("CORE 1 TOO SLOW: 1 CORE");
     }

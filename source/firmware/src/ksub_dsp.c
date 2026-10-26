@@ -1464,7 +1464,9 @@ static void fx_render(const int32_t *in, int32_t *out, uint32_t n)
 static int32_t vbus[2][HALF_FRAMES], vzero[HALF_FRAMES];
 static volatile uint32_t c1_req, c1_done, c1_park_req, c1_parked;
 static volatile uint8_t dual_on;                /* the second core runs (fm1_cpu1_start said yes) */
-static volatile uint8_t c1_failed;              /* core 1 stopped answering: back on one core (the UI saves it) */
+static volatile uint8_t c1_failed;              /* core 1 could not keep up: back on one core (this session) */
+enum { DW_NONE, DW_SILENT, DW_SLOW, DW_FLASH, DW_SAFE };
+static volatile uint8_t dual_why;               /* why two cores do not run now (SYSTEM, the start screen) */
 static volatile uint32_t c1_cut;                /* blocks core 1 could not finish (too slow) */
 static volatile uint32_t ks_load[2];            /* % of a block, per core (the SYSTEM page) */
 
@@ -1507,7 +1509,7 @@ static void c1_pause(void)
     c1_park_req = 1;
     KS_SYNC();
     while (!c1_parked && fm1_ticks() - t0 < 20000u * FM1_TICKS_PER_US) {}
-    if (!c1_parked) { fm1_cpu1_stop(); dual_on = 0; c1_park_req = 0; }
+    if (!c1_parked) { fm1_cpu1_stop(); dual_on = 0; c1_park_req = 0; dual_why = DW_FLASH; }
 }
 static void c1_resume(void) { c1_park_req = 0; KS_SYNC(); }
 static void app_flash_busy(void)                /* an update, UBOOT, a crash: core 1 stops for good */
@@ -1552,6 +1554,7 @@ static void app_audio(int32_t *out, uint32_t n)
             fm1_cpu1_stop();
             dual_on = 0;
             c1_failed = 1;
+            dual_why = DW_SLOW;
             voices_render(vbus[0], n, t0, room / 2u);
             fx_render(vbus[0], out, n);
         }
