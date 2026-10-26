@@ -57,13 +57,7 @@ static uint16_t bri_px(uint16_t c, uint32_t f)  /* every channel x f / 256 (f > 
 {
     return (uint16_t)(bri_ch(c >> 11, f, 31u) << 11 | bri_ch((c >> 5) & 63u, f, 63u) << 5 | bri_ch(c & 31u, f, 31u));
 }
-static uint16_t bri_full(uint16_t c)             /* MAX: the colour with its brightest channel at the top (the hue the same) */
-{
-    uint32_t r = c >> 11, g = (c >> 5) & 63u, b = c & 31u, m = r > g / 2u ? r : g / 2u;
-    if (b > m) m = b;
-    if (!m) return c;
-    return (uint16_t)(bri_ch(r, 31u * 256u / m, 31u) << 11 | bri_ch(g, 31u * 256u / m, 63u) << 5 | bri_ch(b, 31u * 256u / m, 31u));
-}                           /* CONTRAST: 0 as drawn, 1 HIGH and 2 MAX: the background to black, the text to white */
+/* CONTRAST: 0 as drawn, 1 HIGH and 2 MAX: the background to black, the text to white */
 static uint32_t con_ch(uint32_t v, uint32_t a, uint32_t b)   /* one channel (8 bits): a -> 0, b -> 255 (a > b: reversed) */
 {
     if (a > b) return 255u - con_ch(255u - v, 255u - a, 255u - b);
@@ -77,6 +71,12 @@ static uint16_t con_px(uint16_t c, uint16_t bg, uint16_t wh)
     uint32_t b = con_ch((c & 31u) * 255u / 31u, (bg & 31u) * 255u / 31u, (wh & 31u) * 255u / 31u);
     return RGB(r, g, b);
 }
+static uint32_t lum8(uint16_t c) { return ((c >> 11) * 255u / 31u * 77u + ((c >> 5) & 63u) * 255u / 63u * 150u + (c & 31u) * 255u / 31u * 29u) >> 8; }
+static void lum_gap(uint32_t k, uint32_t min)   /* a text colour too close to the background (in luminance): pushed to white or black, whichever is farther */
+{
+    uint32_t b = lum8(kc[KC_BG]), t = lum8(kc[k]);
+    if ((t > b ? t - b : b - t) < min) kc[k] = b < 128u ? 0xFFFFu : 0x0000u;
+}
 static void theme_set(uint32_t t, uint32_t pal)
 {
     uint32_t i, k;
@@ -88,14 +88,10 @@ static void theme_set(uint32_t t, uint32_t pal)
     if (g_con) {                                /* (the cards stay apart from the background) */
         kc[KC_PANEL] = g_mix(kc[KC_PANEL], PALS[k][KC_PANEL], 128u);
     }
-    if (theme_pal == 5u) {                      /* INVERTED: black text on light grey; MAX would turn that text pale, so it is left alone */
-        if (g_bri < 3u) { static const uint16_t FI[3] = {104, 168, 218}; for (i = 0; i < KC_N; i++) kc[i] = bri_px(kc[i], FI[g_bri]); }
-    } else if (g_bri == 3u) {                   /* MAX: the text white, the accents at their top (the most the panel gives) */
-        for (i = 0; i < KC_N; i++) if (i == KC_LIME || i == KC_CYAN || i == KC_ORANGE || i == KC_WAVE || i == KC_MOD || i == KC_WHITE) kc[i] = bri_full(kc[i]);
-        kc[KC_WHITE] = 0xFFFFu;
-    } else {
+    lum_gap(KC_WHITE, 120u); lum_gap(KC_GREY, 70u); lum_gap(KC_LIME, 70u);   /* (the text always stands off its background) */
+    if (g_bri < 3u) {                           /* ECO, NORMAL, BRIGHT: every channel scaled on its own; MAX: the colours as drawn */
         static const uint16_t F[3] = {104, 168, 218};
-        for (i = 0; i < KC_N; i++) kc[i] = bri_px(kc[i], F[g_bri < 3u ? g_bri : 0u]);
+        for (i = 0; i < KC_N; i++) kc[i] = bri_px(kc[i], F[g_bri]);
     }
 }
 #define K_BG kc[KC_BG]

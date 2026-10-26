@@ -204,7 +204,7 @@ details.toc2{margin:10px 0 0;background:var(--panel);border:1px solid var(--rule
 <figure><img src="docs/img/t-glow-gold.png" alt=""><figcaption>GOLD</figcaption></figure><figure><img src="docs/img/t-glow-synthwave.png" alt=""><figcaption>SYNTHWAVE</figcaption></figure>
 <figure><img src="docs/img/t-glow-ice.png" alt=""><figcaption>ICE</figcaption></figure></div>
 <h3>Brightness</h3>
-<p><code>SYSTEM › BRIGHTNESS</code>: <b>ECO</b>, <b>NORMAL</b>, <b>BRIGHT</b> and <b>MAX</b>. The FM-1's backlight is a plain switch (fully on, no steps): the low steps darken the colours, and the screen is also sent its brightness command (WRDISBV). <b>MAX</b> is the most the FM-1 can give: backlight full, screen at 255, pure white text, and every accent colour pushed to full intensity (same hue). It is the default.</p>
+<p><code>SYSTEM › BRIGHTNESS</code>: <b>ECO</b>, <b>NORMAL</b>, <b>BRIGHT</b> and <b>MAX</b>. The FM-1's backlight is a plain switch (fully on, no steps): the low steps darken the colours (each channel on its own). <b>MAX</b> (the default) shows the colours exactly as the theme draws them, backlight full. No command is sent to the screen (since 0.9.24: the earlier ones broke the display on the FM-1). Whatever the theme, the text always keeps a minimum gap in brightness from its background.</p>
 <div class="grid"><figure><img src="docs/img/b-eco.png" alt=""><figcaption>ECO</figcaption></figure><figure><img src="docs/img/b-normal.png" alt=""><figcaption>NORMAL</figcaption></figure>
 <figure><img src="docs/img/b-bright.png" alt=""><figcaption>BRIGHT</figcaption></figure><figure><img src="docs/img/b-max.png" alt=""><figcaption>MAX</figcaption></figure></div>
 <h3>All the palettes</h3>

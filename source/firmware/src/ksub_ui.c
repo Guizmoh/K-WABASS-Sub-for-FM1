@@ -326,24 +326,8 @@ static void eq_update(void)                     /* the coefficients to the audio
         eq_curve[x] = (int16_t)clampi(db, -24 * 16, 24 * 16);
     }
 }
-/* BRIGHTNESS: the backlight is on, full (PA2 is a plain switch: no steps there); the lower steps dim the colours (theme_set), the panel is asked for its
- * display brightness too (WRDISBV, WRCTRLD: a panel without them ignores both); MAX is every colour at its top and the panel at 255 */
-static void lcd_bright(uint32_t l)
-{
-#if !defined(KAWA_WASM) && !defined(DINGHY_HOST)
-    static uint8_t d[2];
-    static const uint8_t DBV[4] = {70, 140, 200, 255};
-    lcd_sync();
-    d[0] = 0x2Cu;
-    lcd_cmd(0x53);
-    lcd_data(&d[0], 1);
-    d[1] = DBV[l & 3u];
-    lcd_cmd(0x51);
-    lcd_data(&d[1], 1);
-#else
-    (void)l;
-#endif
-}
+/* BRIGHTNESS: the backlight is on, full (PA2 is a plain switch: no steps there); the lower steps dim the colours (theme_set), MAX leaves them as
+ * drawn. Nothing is sent to the panel: WRCTRLD / WRDISBV (0x53, 0x51) broke the FM-1's screen (letters eaten, grey cards gone, until a restart) */
 /* CONTRAST on the panel: MAX picks the ST7789's darker gamma curve (GAMSET 0x26: 1 = 2.2, the default; 4 = 2.5) */
 static void lcd_contrast(uint32_t c)
 {
@@ -1110,7 +1094,7 @@ static void item_set(uint32_t id, int32_t v)
     case G_NORM: set.norm = (uint8_t)v; ks_norm = (uint8_t)v; break;
     case G_QLFO: set.qlfo = (uint8_t)v; break;
     case G_ENG8: set.eng8 = (uint8_t)v; toast(v ? "ENGINES: ALL 8" : "ENGINES: ESSENTIAL 4"); break;
-    case G_BRI: set.bri = (uint8_t)v; g_bri = (uint8_t)v; lcd_bright((uint32_t)v); theme_set(set.theme, set.pal); g_force = 1; break;
+    case G_BRI: set.bri = (uint8_t)v; g_bri = (uint8_t)v; theme_set(set.theme, set.pal); g_force = 1; break;
     case G_RS_LEN: rs_secs = (uint8_t)v; return;
     case G_RS_GO:                               /* RESAMPLE: the output for 2 .. 4 s into OSC C */
         if (v && !rs_want) { rs_desc.len = 0; rs_pos = 0; rs_n = 0; rs_acc = 0; rs_rec_on = 1; rs_want = (2u + rs_secs) * RS_RATE; toast("RECORDING THE OUTPUT"); }
@@ -2124,7 +2108,7 @@ static void app_init(void)
     set.norm = set.norm ? 1u : 0u; set.deep = set.deep < 3u ? set.deep : 1u;
     ks_norm = set.norm; ks_deep = set.deep;
     set.contrast = set.contrast < 3u ? set.contrast : 1u;
-    g_con = set.contrast; lcd_contrast(set.contrast); lcd_bright(set.bri);
+    g_con = set.contrast; lcd_contrast(set.contrast);
     set.cores = set.cores ? 1u : 0u;
     theme_set(set.theme, set.pal);
     font_set(set.font, set.zoom);
