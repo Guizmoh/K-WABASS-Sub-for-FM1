@@ -1243,13 +1243,14 @@ static int32_t rb_content(const view_t *v, uint32_t vi, int32_t x, int32_t y0, i
 }
 static void th_ribbon(const view_t *v, uint32_t vi, int classic)
 {
-    const int32_t wy = 26, wh = 206, ww = 190;
-    int32_t wx = 25, k, off = 0, tall, sel_y, scroll = 0, cy0 = wy + 28, cy1 = wy + wh - 2;
+    const int32_t wy = 26, wh = 206;
+    int32_t ww = 190, wx = 25, k, off = 0, tall, sel_y, scroll = 0, cy0 = wy + 28, cy1 = wy + wh - 2;
     char t[32], sub[48], b[24];
     const char *ti = view_title(vi, t, sub);
     uint32_t nv = sizeof VIEWS / sizeof VIEWS[0], stack = !classic && (v->lay == LY_PLAY || v->lay == LY_LIST || v->lay == LY_BOX || v->lay == LY_LFO || v->lay == LY_STEP);
+    if (classic) { wx = 2; ww = 236; }         /* RIBBON CLASSIC: the whole page, no neighbours, no sliding */
     if (vi != rb_vi) { rb_dir = vi > rb_vi ? 1 : -1; rb_ms = fm1_ms; rb_vi = vi; }
-    if (fm1_ms - rb_ms < 180u) off = rb_dir * (int32_t)(180u - (fm1_ms - rb_ms)) * 200 / 180;
+    if (!classic && fm1_ms - rb_ms < 180u) off = rb_dir * (int32_t)(180u - (fm1_ms - rb_ms)) * 200 / 180;
     if (g_vis(0, 19)) {                         /* the ribbon: the views around, the one shown lit */
         for (k = -3; k <= 3; k++) {
             int32_t j = (int32_t)vi + k, cx = 120 + k * 50 + off / 4;
@@ -1260,7 +1261,7 @@ static void th_ribbon(const view_t *v, uint32_t vi, int classic)
         }
         g_rect(0, 18, 240, 1, K_LINE);
     }
-    for (k = -1; k <= 1; k += 2) {              /* the neighbours peek in at the sides */
+    for (k = -1; k <= 1 && !classic; k += 2) {   /* the neighbours peek in at the sides */
         int32_t nx = k < 0 ? -176 : 226, nj = (int32_t)vi + k;
         uint16_t acc = k < 0 ? K_ORANGE : K_CYAN;
         if (nj < 0 || nj >= (int32_t)nv) continue;
@@ -1312,7 +1313,12 @@ static void th_rack(const view_t *v, uint32_t vi)
     const char *ti = view_title(vi, t, sub), *ff = foot_fixed(vi);
     uint32_t vz = VZ_OF[vi], i;
     if (g_vis(0, 240)) {                        /* the rail: the eight pages */
-        if (g_vis(g_y0, 1)) g_rect(0, g_y0, 31, (int32_t)BAND_H, K_PANEL);
+        rb_rrect(1, 1, 30, 238, 8, K_PANEL, K_PANEL);   /* (the rail: rounded, a notch between two pages) */
+        for (i = 1; i < NPAGE; i++) {
+            int32_t ny = 3 + (int32_t)i * 29 - 2;
+            g_rect(1, ny - 1, 3, 3, K_BG); g_rect(28, ny - 1, 3, 3, K_BG);
+            g_rect(7, ny, 18, 1, g_mix(K_PANEL, K_BG, 140));
+        }
         for (i = 0; i < NPAGE; i++) {
             int32_t y = 3 + (int32_t)i * 29;
             char nb[3];
