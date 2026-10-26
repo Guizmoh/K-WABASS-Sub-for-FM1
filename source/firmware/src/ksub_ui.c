@@ -64,7 +64,7 @@ static const view_t VIEWS[] = {
     {LY_PRESET, "PRESET BANK B", 0, {0}, "PRESET"},
     {LY_SAVE, "SAVE PATCH", 0, {0}, "PRESET"},
     {LY_LIST, "ARPEGGIATOR", 5, {G_AR_ON, G_AR_MODE, G_AR_RATE, G_AR_OCT, G_AR_GATE}, "ARP"},
-    {LY_SYS, "GLOBAL SETUP", 24, {G_BPM, V_MODE, G_UI, G_THEME, G_PAL, V_GLIDE, G_QLFO, G_BRI, G_ENG8, G_CON, G_DEEP, G_NORM, G_ACCEL, G_GRID, V_BEND, V_VEL,
+    {LY_SYS, "GLOBAL SETUP", 23, {G_BPM, V_MODE, G_UI, G_THEME, G_PAL, V_GLIDE, G_QLFO, G_BRI, G_ENG8, G_DEEP, G_NORM, G_ACCEL, G_GRID, V_BEND, V_VEL,
                                   G_FONT, G_ZOOM, G_C3COL, G_BROWSE, G_ASK, G_CORES, G_CPU, G_RST}, "SYSTEM"},
     {LY_SYS, "MIDI", 7, {G_MLEARN, G_MMAP, G_MIDICH, G_CLOCK, G_MSTART, G_MPROG, G_MCLK}, "SYSTEM"},
 };
@@ -2107,8 +2107,8 @@ static void app_init(void)
     if (!set.askv) { set.ask = 0; set.askv = 1; set_dirty = 1; set_ms = fm1_ms; }   /* (0.10: no more question at each start; SYSTEM > ASK brings it back) */
     set.norm = set.norm ? 1u : 0u; set.deep = set.deep < 3u ? set.deep : 1u;
     ks_norm = set.norm; ks_deep = set.deep;
-    set.contrast = set.contrast < 3u ? set.contrast : 1u;
-    g_con = set.contrast; lcd_contrast(set.contrast);
+    set.contrast = 2;                           /* no CONTRAST setting any more: always MAX (DEEP BLACK), the one look that shows right on the FM-1 */
+    g_con = 2; lcd_contrast(2);
     set.cores = set.cores ? 1u : 0u;
     theme_set(set.theme, set.pal);
     font_set(set.font, set.zoom);
