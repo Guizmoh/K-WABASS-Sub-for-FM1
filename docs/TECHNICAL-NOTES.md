@@ -11,15 +11,20 @@ M-VAVE FM-1: JieLi AC79, two cores, no FPU, code run in place from flash. Rules 
 - a flash write stops the sound for a few tens of ms, so settings are written 2 s after the last change and only in silence; core 1 then waits in a RAM loop;
 - memory: RAM about 54 KB of 96, pool 330 KB of 344 (the RESAMPLE buffer is 44 KB of it), image about 500 KB of 581.
 
-## Two cores
+## Two cores: off since 0.9.52
+
+The AC79 is a two-core chip, and the code to split the voices onto a second core still lives in `ksub_dsp.c`
+(`#if KS_DUAL`), but `KS_DUAL` is 0: a crash report pointed at the second core, and `SYSTEM › AUDIO CORES`
+is gone (there is nothing left to switch). The notes below describe that code as it stood, kept because the
+fallback / safeguard logic it used (core 1 silent, too slow, a flash write) still shapes `voices_render`'s single-core path.
 
 - **core 1**: the voices (oscillators, filter, envelopes, LFOs, matrix) of the next block, into `vbus`;
 - **core 0**: the audio interrupt, the effects of the current block, the screen, buttons, MIDI and USB.
 
 There is one block of latency (5.8 ms). The start of core 1 follows the JieLi SDK sequence (`EnableOtherCpu`, `cpu1_start`; see `source/firmware/hal/fm1_cpu1.h`) with safeguards:
 - if core 1 does not answer, everything runs on core 0 (same sound);
-- if core 1 cannot keep up (6 late or cut blocks out of the last 32, about 0.2 s), core 0 takes the voices back, `CORE 1 TOO SLOW: 1 CORE` shows; for this session only (0.9.51: the next start tries two cores again);
-- if the FM-1 crashes (crash, watchdog, low voltage) within 10 s of a two-core start, the next start uses one core; `SYSTEM › AUDIO CORES` lets you try again (0.9.51: a power off or a restart asked for no longer counts);
+- if core 1 cannot keep up (6 late or cut blocks out of the last 32, about 0.2 s), core 0 takes the voices back, `CORE 1 TOO SLOW: 1 CORE` shows; for this session only (0.9.52: the next start tries two cores again);
+- if the FM-1 crashes (crash, watchdog, low voltage) within 10 s of a two-core start, the next start uses one core; `SYSTEM › AUDIO CORES` lets you try again (0.9.52: a power off or a restart asked for no longer counts);
 - `SYSTEM › AUDIO CORES` says why two cores do not run: `AT NEXT START`, `CORE 1 SILENT` (it did not answer at the start), `STOPPED: TOO SLOW`, `STOPPED: FLASH` (it did not wait for a flash write), `SAFE (CRASH)`; the start screen too;
 - before an update, UBOOT mode or a crash, core 1 is put back in reset.
 
@@ -50,8 +55,8 @@ OSC C plays 8-bit mu-law sounds from flash (`KS_SMP`, 10 sounds at 22.05 kHz and
 
 ```sh
 cd source
-./build.sh --release 0.9.51                 # build/k-wasub-0.9.51.fwsc   (X.Y, X.Y.Z or X.Y.Z-suffix; identity FM-1_97Y)
-APP_VER=0.9.51 bash web/make_emulator.sh    # ../emulator/index.html  
+./build.sh --release 0.9.52                 # build/k-wasub-0.9.52.fwsc   (X.Y, X.Y.Z or X.Y.Z-suffix; identity FM-1_97Y)
+APP_VER=0.9.52 bash web/make_emulator.sh    # ../emulator/index.html  
 bash web/make_installer.sh                  # ../installer.html with the newest install/k-wasub-*.fwsc
 sh web/make_data.sh                         # ../data.html (backup, WAV export, samples) with web/kwlink.js
 node tests/link.mjs                         # the Data link against the emulator

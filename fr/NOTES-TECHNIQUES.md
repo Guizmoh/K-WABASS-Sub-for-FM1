@@ -11,15 +11,21 @@ M-VAVE FM-1 : JieLi AC79, deux cœurs, pas de FPU, code exécuté depuis la flas
 - une écriture en flash arrête le son quelques dizaines de ms : les réglages sont écrits 2 s après le dernier changement, et seulement en silence ; le cœur 1 attend alors dans une boucle en RAM ;
 - mémoire : RAM environ 54 Ko sur 96, pool 330 Ko sur 344 (dont 44 Ko pour le tampon RESAMPLE), image environ 500 Ko sur 581.
 
-## Deux cœurs
+## Deux cœurs : désactivés depuis la 0.9.52
+
+L'AC79 est une puce à deux cœurs, et le code qui répartit les voix sur un second cœur vit toujours dans
+`ksub_dsp.c` (`#if KS_DUAL`), mais `KS_DUAL` vaut 0 : un rapport de plantage pointait vers le second cœur,
+et `SYSTEM › AUDIO CORES` a disparu (il n'y a plus rien à choisir). Les notes ci-dessous décrivent ce code
+tel qu'il était, gardées parce que la logique de repli / sécurité qu'il utilisait (cœur 1 silencieux, trop
+lent, une écriture flash) façonne toujours le chemin à un seul cœur de `voices_render`.
 
 - **cœur 1** : les voix (oscillateurs, filtre, enveloppes, LFO, matrice) du bloc suivant, dans `vbus` ;
 - **cœur 0** : l'interruption audio, les effets du bloc en cours, l'écran, les boutons, le MIDI et l'USB.
 
 Il y a un bloc de latence (5,8 ms). Le démarrage du cœur 1 suit la séquence du SDK JieLi (`EnableOtherCpu`, `cpu1_start`, voir `source/firmware/hal/fm1_cpu1.h`), avec des sécurités :
 - si le cœur 1 ne répond pas, tout tourne sur le cœur 0 (même son) ;
-- s'il ne suit pas (6 blocs en retard ou coupés sur les 32 derniers, environ 0,2 s), le cœur 0 reprend les voix, `CORE 1 TOO SLOW: 1 CORE` s'affiche ; pour cette session seulement (0.9.51 : le démarrage suivant réessaie deux cœurs) ;
-- si le FM-1 plante (crash, watchdog, tension basse) dans les 10 s d'un démarrage à deux cœurs, le démarrage suivant se fait sur un seul cœur ; `SYSTEM › AUDIO CORES` permet de réessayer (0.9.51 : une extinction ou un redémarrage voulu ne compte plus) ;
+- s'il ne suit pas (6 blocs en retard ou coupés sur les 32 derniers, environ 0,2 s), le cœur 0 reprend les voix, `CORE 1 TOO SLOW: 1 CORE` s'affiche ; pour cette session seulement (0.9.52 : le démarrage suivant réessaie deux cœurs) ;
+- si le FM-1 plante (crash, watchdog, tension basse) dans les 10 s d'un démarrage à deux cœurs, le démarrage suivant se fait sur un seul cœur ; `SYSTEM › AUDIO CORES` permet de réessayer (0.9.52 : une extinction ou un redémarrage voulu ne compte plus) ;
 - `SYSTEM › AUDIO CORES` dit pourquoi les deux cœurs ne tournent pas : `AT NEXT START`, `CORE 1 SILENT` (pas de réponse au démarrage), `STOPPED: TOO SLOW`, `STOPPED: FLASH` (il n'a pas attendu une écriture flash), `SAFE (CRASH)` ; l'écran de démarrage aussi ;
 - avant une mise à jour, le mode UBOOT ou un plantage, le cœur 1 est remis en reset.
 
@@ -50,8 +56,8 @@ OSC C joue des sons µ-law 8 bits depuis la flash (`KS_SMP`, 10 sons à 22,05 kH
 
 ```sh
 cd source
-./build.sh --release 0.9.51                 # build/k-wasub-0.9.51.fwsc   (X.Y, X.Y.Z ou X.Y.Z-suffixe ; identité FM-1_97Y)
-APP_VER=0.9.51 bash web/make_emulator.sh    # ../emulator/index.html  
+./build.sh --release 0.9.52                 # build/k-wasub-0.9.52.fwsc   (X.Y, X.Y.Z ou X.Y.Z-suffixe ; identité FM-1_97Y)
+APP_VER=0.9.52 bash web/make_emulator.sh    # ../emulator/index.html  
 sh web/make_data.sh                         # ../data.html (sauvegarde, export WAV, samples)
 node tests/link.mjs                         # le lien Données contre l'émulateur
 bash web/make_installer.sh                  # ../installer.html avec le dernier install/k-wasub-*.fwsc

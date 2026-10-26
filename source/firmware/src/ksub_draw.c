@@ -505,13 +505,10 @@ static void vis_fx(uint32_t kind, int32_t x, int32_t y, int32_t w, int32_t h)
         g_bar(x0 + 28, y + h - 13, bw, 6, (uint32_t)(gr >> 6), K_CYAN);
         break;
     }
-    default: {                                  /* CPU: each core's share of a block */
-        g_text(T_XS, x0, y + 6, "C0", K_GREY);
-        g_bar(x0 + 20, y + 7, W - 20, 6, ks_load[0] * 256u / 100u, ks_load[0] > 70u ? K_ORANGE : K_WAVE);
-        g_text(T_XS, x0, y + h - 14, "C1", K_GREY);
-        g_bar(x0 + 20, y + h - 13, W - 20, 6, dual_on ? ks_load[1] * 256u / 100u : 0u, K_CYAN);
+    default:                                     /* CPU: the block's share */
+        g_text(T_XS, x0, y + h / 2 - 7, "C0", K_GREY);
+        g_bar(x0 + 20, y + h / 2 - 6, W - 20, 6, ks_load[0] * 256u / 100u, ks_load[0] > 70u ? K_ORANGE : K_WAVE);
         break;
-    }
     }
 }
 static void draw_visual(uint32_t kind, int32_t x, int32_t y, int32_t w, int32_t h, int box)

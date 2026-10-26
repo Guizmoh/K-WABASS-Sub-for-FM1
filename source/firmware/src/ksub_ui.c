@@ -65,8 +65,8 @@ static const view_t VIEWS[] = {
     {LY_PRESET, "PRESET BANK B", 0, {0}, "PRESET"},
     {LY_SAVE, "SAVE PATCH", 0, {0}, "PRESET"},
     {LY_LIST, "ARPEGGIATOR", 5, {G_AR_ON, G_AR_MODE, G_AR_RATE, G_AR_OCT, G_AR_GATE}, "ARP"},
-    {LY_SYS, "GLOBAL SETUP", 25, {G_BPM, V_MODE, G_UI, G_THEME, G_PAL, V_GLIDE, G_QLFO, G_BRI, G_ASAVE, G_LANG, G_ENG8, G_DEEP, G_NORM, G_ACCEL, G_GRID, V_BEND, V_VEL,
-                                  G_FONT, G_ZOOM, G_C3COL, G_BROWSE, G_ASK, G_CORES, G_CPU, G_RST}, "SYSTEM"},
+    {LY_SYS, "GLOBAL SETUP", 24, {G_BPM, V_MODE, G_UI, G_THEME, G_PAL, V_GLIDE, G_QLFO, G_BRI, G_ASAVE, G_LANG, G_ENG8, G_DEEP, G_NORM, G_ACCEL, G_GRID, V_BEND, V_VEL,
+                                  G_FONT, G_ZOOM, G_C3COL, G_BROWSE, G_ASK, G_CPU, G_RST}, "SYSTEM"},
     {LY_SYS, "MIDI", 7, {G_MLEARN, G_MMAP, G_MIDICH, G_CLOCK, G_MSTART, G_MPROG, G_MCLK}, "SYSTEM"},
 };
 /* what K1..K4 turn: the first four rows (the preset lists and SAVE have their own) */
@@ -1000,7 +1000,7 @@ static void item_range(uint32_t id, int32_t *lo, int32_t *hi)
         return;
     }
     *lo = 0;
-    *hi = id == G_MIDICH ? 16 : id == G_BPM ? 2400 : id == G_CLOCK || id == G_QLFO || id == G_ENG8 || id == G_ASAVE || id == G_LANG || id == G_NORM || id == G_RS_GO || id == G_CORES || id == G_GRID || id == G_BROWSE || id == G_C3COL || id == G_UI || id == G_ASK || id == G_ZOOM || id == G_MLEARN || id == G_MSTART || id == G_MPROG || id == G_MCLK ? 1 : id == G_MMAP ? 16 : id == I_ABMIX ? 127 : id == G_BRI ? 3 : id == G_ACCEL || id == G_CON || id == G_DEEP || id == G_RS_LEN ? 2 : id == G_THEME ? 6 : id == G_FONT ? (int32_t)NFONT - 1 : id == G_PAL ? (int32_t)(2u * NPAL_BASE - 1u) : id == G_OCT ? 6 : 0;
+    *hi = id == G_MIDICH ? 16 : id == G_BPM ? 2400 : id == G_CLOCK || id == G_QLFO || id == G_ENG8 || id == G_ASAVE || id == G_LANG || id == G_NORM || id == G_RS_GO || id == G_GRID || id == G_BROWSE || id == G_C3COL || id == G_UI || id == G_ASK || id == G_ZOOM || id == G_MLEARN || id == G_MSTART || id == G_MPROG || id == G_MCLK ? 1 : id == G_MMAP ? 16 : id == I_ABMIX ? 127 : id == G_BRI ? 3 : id == G_ACCEL || id == G_CON || id == G_DEEP || id == G_RS_LEN ? 2 : id == G_THEME ? 6 : id == G_FONT ? (int32_t)NFONT - 1 : id == G_PAL ? (int32_t)(2u * NPAL_BASE - 1u) : id == G_OCT ? 6 : 0;
     if (id == G_ACCEL) *hi = 3;                 /* (OFF, ON, FAST, ULTRA) */
     if (id == G_LANG) *hi = 2;                  /* (ENGLISH, FRANCAIS, ESPANOL) */
     if (id == G_BPM) *lo = 600;
@@ -1031,7 +1031,6 @@ static int32_t item_get(uint32_t id)
     case G_BPM: return set.bpm10;
     case G_CLOCK: return set.clock;
     case G_OCT: return OCT + 3;
-    case G_CORES: return set.cores;
     case G_THEME: return set.theme;
     case G_PAL: return set.pal;
     case G_FONT: return set.font;
@@ -1159,7 +1158,6 @@ static void item_set(uint32_t id, int32_t v)
     case G_BPM: set.bpm10 = (uint16_t)v; ks_bpm10 = (uint32_t)v; break;
     case G_CLOCK: set.clock = (uint8_t)v; break;
     case G_OCT: set.oct = (uint8_t)(int8_t)(v - 3); break;
-    case G_CORES: set.cores = (uint8_t)v; toast("RESTART TO APPLY"); break;
     case G_THEME: set.theme = (uint8_t)v; theme_set(set.theme, set.pal); g_force = 1; break;
     case G_PAL:
         set.pal = (uint8_t)v;
@@ -1222,7 +1220,6 @@ static const char *item_name(uint32_t id)
     case G_BPM: return "TEMPO";
     case G_CLOCK: return "CLOCK";
     case G_OCT: return "KEYS OCTAVE";
-    case G_CORES: return "AUDIO CORES";
     case G_CPU: return "CPU LOAD";
     case G_THEME: return "THEME";
     case G_PAL: return "PALETTE";
@@ -1292,7 +1289,7 @@ static const char *item_sname(uint32_t id)
     if (k) return ENG_P[e][k - 1];
     if (id == I_L1RATE || id == I_L2RATE) return "RATE";
     if (item_patch(id)) return PD[id].sname;
-    return id == G_MIDICH ? "MIDI" : id == G_BPM ? "BPM" : id == G_CLOCK ? "CLOCK" : id == G_OCT ? "OCT" : id == G_CORES ? "CORES" : id == G_THEME ? "THEME" : id == G_PAL ? "PALETTE" : id == G_FONT ? "FONT" : id == G_GRID ? "GRID" : id == G_BROWSE ? "BROWSE" : id == G_ACCEL ? "ACCEL" : id == G_C3COL ? "COLOURS" : id == G_UI ? "UI" : id == G_ASK ? "ASK" : id == G_ZOOM ? "LOUPE" : id == G_CON ? "CONTRAST" : id == G_NORM ? "LEVEL" : id == G_BRI ? "BRIGHT" : id == G_QLFO ? "QLFO" : id == G_ENG8 ? "ENGINES" : id == G_ASAVE ? "AUTOSAVE" : id == G_LANG ? "LANGUAGE" : id == G_RS_GO ? "RESAMP" : id == G_RS_LEN ? "LENGTH" : id == G_DEEP ? "DEEP" : id == G_MLEARN ? "LEARN" : id == G_MMAP ? "CC MAP" : id == I_ABMIX ? "A/B" : id == G_SQ_TYPE ? "TYPE" : id == G_SQ_PROB ? "PROB" : id == G_SQ_COND ? "COND" : id == G_SQ_PAT ? "PAT" : id == G_SQ_LEN ? "LEN" : id == G_AR_OCT ? "OCT" : item_name(id);
+    return id == G_MIDICH ? "MIDI" : id == G_BPM ? "BPM" : id == G_CLOCK ? "CLOCK" : id == G_OCT ? "OCT" : id == G_THEME ? "THEME" : id == G_PAL ? "PALETTE" : id == G_FONT ? "FONT" : id == G_GRID ? "GRID" : id == G_BROWSE ? "BROWSE" : id == G_ACCEL ? "ACCEL" : id == G_C3COL ? "COLOURS" : id == G_UI ? "UI" : id == G_ASK ? "ASK" : id == G_ZOOM ? "LOUPE" : id == G_CON ? "CONTRAST" : id == G_NORM ? "LEVEL" : id == G_BRI ? "BRIGHT" : id == G_QLFO ? "QLFO" : id == G_ENG8 ? "ENGINES" : id == G_ASAVE ? "AUTOSAVE" : id == G_LANG ? "LANGUAGE" : id == G_RS_GO ? "RESAMP" : id == G_RS_LEN ? "LENGTH" : id == G_DEEP ? "DEEP" : id == G_MLEARN ? "LEARN" : id == G_MMAP ? "CC MAP" : id == I_ABMIX ? "A/B" : id == G_SQ_TYPE ? "TYPE" : id == G_SQ_PROB ? "PROB" : id == G_SQ_COND ? "COND" : id == G_SQ_PAT ? "PAT" : id == G_SQ_LEN ? "LEN" : id == G_AR_OCT ? "OCT" : item_name(id);
 }
 static uint32_t ilog2q8(uint32_t x)             /* log2(x) in Q8, x >= 1 */
 {
@@ -1368,11 +1365,6 @@ static void item_text(uint32_t id, char *b)
         case G_BPM: b = fmt_u(b, (uint32_t)v / 10u, 0); *b++ = '.'; b = fmt_u(b, (uint32_t)v % 10u, 0); str_cat(b, " BPM"); break;
         case G_CLOCK: str_cat(b, v ? "MIDI" : "INTERNAL"); break;
         case G_OCT: fmt_s(b, v - 3); break;
-        case G_CORES: {
-            static const char *const WHY[5] = {"DUAL \xB7 AT NEXT START", "DUAL \xB7 CORE 1 SILENT", "DUAL \xB7 STOPPED: TOO SLOW", "DUAL \xB7 STOPPED: FLASH", "SINGLE \xB7 SAFE (CRASH)"};
-            str_cat(b, !KS_DUAL ? (v ? "DUAL (FM-1)" : "SINGLE") : dual_on ? (v ? "DUAL \xB7 ON" : "DUAL \xB7 OFF AT NEXT START") : dual_why == DW_SAFE ? WHY[4] : !v ? "SINGLE" : WHY[dual_why % 4u]);
-            break;
-        }
         case G_THEME: { static const char *const TN[7] = {"CLASSIC GLOW", "STUDIO", "PURE", "RACK", "TECH", "RIBBON", "RIBBON CLASSIC"}; str_cat(b, TN[(uint32_t)v % 7u]); break; }
         case G_PAL: { static const char *const PN[11] = {"SYNTHWAVE", "MINT", "BLACK / WHITE", "INVERTED", "RED", "ICE", "FLUO", "PINK", "GOLD", "SKY", "BLAZE"}; int32_t q = v >= (int32_t)NPAL_BASE ? v - (int32_t)NPAL_BASE : v; str_cat(b, q < 2 ? PAL_NAME[set.theme % 7u][q] : PN[(q - 2) % 11]); if (v >= (int32_t)NPAL_BASE) str_cat(b, " RAD"); break; }
         case G_GRID: str_cat(b, v ? "STRAIGHT" : "ALL (T, D)"); break;

@@ -1524,7 +1524,9 @@ static void app_flash_busy(void)                /* an update, UBOOT, a crash: co
 static void c1_pause(void) {}
 static void c1_resume(void) {}
 static void app_flash_busy(void) {}
+#if defined(DINGHY_HOST) || defined(KAWA_WASM)        /* real hardware: fm1_cpu1.h's own fm1_cpu1_stop is still there to reach core 1's reset bit */
 static void fm1_cpu1_stop(void) {}
+#endif
 #endif
 
 static void app_audio(int32_t *out, uint32_t n)
