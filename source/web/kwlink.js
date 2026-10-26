@@ -133,6 +133,36 @@
       return true;
     }
   }
-  const api = { setFrench: f => { FR = !!f; }, pack7, unpack7, crc16, frame, parse, Session, connectMidi, emuTransport, LinkError };
+  /* the RESAMPLE recording as a WAV file (16 bit, mono, at its rate) */
+  Session.prototype.recording = async function (progress) {
+    const i = await this.t.ask(0x06, []);
+    const len = (i[0] | i[1] << 8 | i[2] << 16 | i[3] << 24) >>> 0, rate = (i[4] | i[5] << 8 | i[6] << 16) >>> 0;
+    if (!len) throw new LinkError(M("no recording on the FM-1 yet: EDIT, the OSC C SAMPLE view, RESAMPLE (or it is still recording)", "pas encore d'enregistrement sur le FM-1 : EDIT, la vue SAMPLE d'OSC C, RESAMPLE (ou il enregistre encore)"));
+    const tab = new Int16Array(256);
+    for (let k = 0; k < 256; k += 64) {
+      const r = await this.t.ask(0x08, [k, 64]);
+      for (let j = 0; j < r[1]; j++) tab[r[0] + j] = r[2 + 2 * j] | r[3 + 2 * j] << 8;
+    }
+    const mu = new Uint8Array(len);
+    for (let off = 0; off < len;) {
+      const n = Math.min(128, len - off);
+      const r = await this.t.ask(0x07, [off & 0xFF, off >> 8, n]);
+      if ((r[0] | r[1] << 8) !== off || r[2] !== n) throw new LinkError(M("the recording came back in the wrong order", "l'enregistrement est revenu dans le désordre"));
+      mu.set(r.subarray(3, 3 + n), off);
+      off += n;
+      if (progress) progress(off / len);
+    }
+    return { wav: wav16(Int16Array.from(mu, b => tab[b]), rate), seconds: len / rate, rate };
+  };
+  function wav16(pcm, rate) {
+    const b = new Uint8Array(44 + pcm.length * 2), v = new DataView(b.buffer);
+    const s = (o, t) => { for (let k = 0; k < t.length; k++) b[o + k] = t.charCodeAt(k); };
+    s(0, "RIFF"); v.setUint32(4, 36 + pcm.length * 2, true); s(8, "WAVEfmt "); v.setUint32(16, 16, true); v.setUint16(20, 1, true);
+    v.setUint16(22, 1, true); v.setUint32(24, rate, true); v.setUint32(28, rate * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true);
+    s(36, "data"); v.setUint32(40, pcm.length * 2, true);
+    for (let k = 0; k < pcm.length; k++) v.setInt16(44 + k * 2, pcm[k], true);
+    return b;
+  }
+  const api = { wav16, setFrench: f => { FR = !!f; }, pack7, unpack7, crc16, frame, parse, Session, connectMidi, emuTransport, LinkError };
   if (typeof module !== "undefined" && module.exports) module.exports = api; else root.KWLink = api;
 })(typeof window !== "undefined" ? window : globalThis);

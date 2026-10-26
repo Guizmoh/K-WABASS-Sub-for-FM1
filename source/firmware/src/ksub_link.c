@@ -1,5 +1,5 @@
 /* SPDX-License-Identifier: GPL-3.0-only */
-/* K-WASUB: the link with the web page (DATA): the backup of the sound design (the 32 user slots, SEQ BASS / ARP /
+/* K-WASUB: the link with the web page (DATA): the RESAMPLE recording read out; the backup of the sound design (the 32 user slots, SEQ BASS / ARP /
  * MACROS / CC / EQ / MORPH, the slots' rest) read out and written back, over the USB-MIDI SysEx the updater uses.
  *
  * Frames (between F0 and F7, every byte 7 bits): 7D 4B 57 cmd pack7(body)        (7D: non-commercial; "KW")
@@ -9,6 +9,9 @@
  *   03 BEGIN size u16                -> status
  *   04 WRITE off u16, n u8, bytes    -> off u16, status
  *   05 COMMIT crc16 (u16)            -> status (sent once written: the flash work is done from the main loop)
+ *   06 RS INFO                       -> length (u32, samples; 0 while recording), rate (u32)
+ *   07 RS READ off u16, n u8         -> off u16, n, the recording's mu-law bytes
+ *   08 MULAW k u8, n u8 (<= 64)      -> k, n, the decoding table's int16 values
  * status: 0 ok, 1 bad size / offset, 2 bad crc, 3 not a K-WASUB backup (or another layout), 4 flash failed, 5 busy
  * The blob: "KSB1", the sizes of the three parts (u16 each), then ustore, perf, uext. Little endian. */
 #define LK_PROTO 1u
@@ -140,6 +143,33 @@ static int app_sysex(const uint8_t *p, uint32_t n)
         lk_commit_crc = (uint16_t)(b[0] | b[1] << 8);
         lk_commit = 1;
         break;
+    case 0x06: {                                /* RS INFO: the RESAMPLE recording's length (samples) and rate; 0 while recording */
+        uint32_t n2 = rs_want ? 0u : rs_desc.len;
+        uint8_t r[8] = {(uint8_t)n2, (uint8_t)(n2 >> 8), (uint8_t)(n2 >> 16), (uint8_t)(n2 >> 24), (uint8_t)RS_RATE, (uint8_t)(RS_RATE >> 8), (uint8_t)(RS_RATE >> 16), 0};
+        lk_send(0x06, r, 8);
+        break;
+    }
+    case 0x07: {                                /* RS READ off u16, n u8 (<= 128): the recording's mu-law bytes */
+        uint8_t r[3 + 128];
+        uint32_t off = d >= 3u ? (uint32_t)b[0] | (uint32_t)b[1] << 8 : 0xFFFFu, m = d >= 3u ? b[2] : 0u, len = rs_want ? 0u : rs_desc.len;
+        if (m > 128u) m = 128u;
+        if (off >= len) m = 0;
+        else if (off + m > len) m = len - off;
+        r[0] = (uint8_t)off; r[1] = (uint8_t)(off >> 8); r[2] = (uint8_t)m;
+        memcpy(r + 3, rs_buf + (off < len ? off : 0u), m);
+        lk_send(0x07, r, 3u + m);
+        break;
+    }
+    case 0x08: {                                /* MULAW from u8, n u8 (<= 64): the decoding table, as int16 */
+        uint8_t r[2 + 128];
+        uint32_t k0 = d >= 2u ? b[0] : 0u, m = d >= 2u ? b[1] : 0u, i;
+        if (m > 64u) m = 64u;
+        if (k0 + m > 256u) m = 256u - k0;
+        r[0] = (uint8_t)k0; r[1] = (uint8_t)m;
+        for (i = 0; i < m; i++) { int32_t v = KS_MULAW[k0 + i]; r[2 + 2 * i] = (uint8_t)v; r[3 + 2 * i] = (uint8_t)((uint32_t)v >> 8); }
+        lk_send(0x08, r, 2u + 2u * m);
+        break;
+    }
     default:
         break;
     }

@@ -58,9 +58,10 @@ button:focus-visible, .file:focus-within { outline: 2px solid var(--lime); outli
     </div>
   </div>
 
-  <div class="card soon">
-    <h2><span lang="en">Export a recording as WAV</span><span lang="fr">Exporter un enregistrement en WAV</span> <small><span lang="en">(next version)</span><span lang="fr">(prochaine version)</span></small></h2>
-    <div class="mute"><span lang="en">The RESAMPLE recording (2 to 4 s) saved as a .wav file.</span><span lang="fr">L'enregistrement RESAMPLE (2 à 4 s) enregistré en fichier .wav.</span></div>
+  <div class="card">
+    <h2><span lang="en">Export a recording as WAV</span><span lang="fr">Exporter un enregistrement en WAV</span></h2>
+    <div class="mute"><span lang="en">Record a portion of the sound on the FM-1 with <b>RESAMPLE</b> (EDIT, the OSC C SAMPLE view: 2 to 4 s of the output), then save it here as a <b>.wav</b> file (mono, 16 bit, 11 kHz, the quality the FM-1 keeps it in).</span><span lang="fr">Enregistre une portion du son sur le FM-1 avec <b>RESAMPLE</b> (EDIT, la vue SAMPLE d'OSC C : 2 à 4 s de la sortie), puis enregistre-la ici en fichier <b>.wav</b> (mono, 16 bits, 11 kHz, la qualité dans laquelle le FM-1 la garde).</span></div>
+    <div class="row"><button id="wav" class="go" type="button"><span lang="en">Save the recording as WAV</span><span lang="fr">Enregistrer en WAV</span></button><audio id="play" controls hidden></audio></div>
   </div>
   <div class="card soon">
     <h2><span lang="en">Send a sample to the FM-1</span><span lang="fr">Envoyer un sample vers le FM-1</span> <small><span lang="en">(coming)</span><span lang="fr">(à venir)</span></small></h2>
@@ -79,7 +80,7 @@ KWLink.setFrench(FR);
 let busy = false;
 function say(t, cls) { $("status").textContent = t; $("status").className = cls || ""; }
 function bar(f) { $("bar").hidden = f == null; $("fill").style.width = Math.round((f || 0) * 100) + "%"; }
-function lock(on) { busy = on; $("save").disabled = on; $("load").disabled = on; }
+function lock(on) { busy = on; $("save").disabled = on; $("load").disabled = on; $("wav").disabled = on; }
 async function withFm1(job) {
   if (busy) return;
   lock(true); bar(0);
@@ -95,15 +96,25 @@ async function withFm1(job) {
     lock(false); bar(null);
   }
 }
+function stamp() { const d = new Date(), p = n => String(n).padStart(2, "0"); return `${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}`; }
+function download(bytes, name, type) {
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([bytes], { type }));
+  a.download = name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+}
+$("wav").onclick = () => withFm1(async s => {
+  say(T("Reading the recording…", "Lecture de l'enregistrement…"));
+  const r = await s.recording(bar), name = `k-wasub-resample-${stamp()}.wav`;
+  download(r.wav, name, "audio/wav");
+  const pl = $("play"); pl.src = URL.createObjectURL(new Blob([r.wav], { type: "audio/wav" })); pl.hidden = false;
+  say(T(`Saved: ${name} (${r.seconds.toFixed(1)} s)`, `Enregistré : ${name} (${r.seconds.toFixed(1)} s)`), "ok");
+});
 $("save").onclick = () => withFm1(async s => {
   say(T("Reading the FM-1…", "Lecture du FM-1…"));
   const { blob, version } = await s.backup(bar);
-  const d = new Date(), p = n => String(n).padStart(2, "0");
-  const name = `k-wasub-backup-${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}.kwsub`;
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(new Blob([blob], { type: "application/octet-stream" }));
-  a.download = name; document.body.appendChild(a); a.click(); a.remove();
-  setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  const name = `k-wasub-backup-${stamp()}.kwsub`;
+  download(blob, name, "application/octet-stream");
   say(T(`Saved: ${name} (K-WASUB ${version})`, `Enregistré : ${name} (K-WASUB ${version})`), "ok");
 });
 $("load").onchange = e => {

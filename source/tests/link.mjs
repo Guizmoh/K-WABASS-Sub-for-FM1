@@ -28,5 +28,19 @@ for (let off = 0; off < a.blob.length; off += 120) { const n = Math.min(120, a.b
 const st = (await t.ask(0x05, [1, 2]))[0];
 console.log("bad crc status", st, st === 2 ? "(refused)" : "(WRONG)");
 if (st === 2) bad++;
-console.log(bad === 3 ? "link OK" : "link FAILED");
-process.exit(bad === 3 ? 0 : 1);
+// the RESAMPLE recording: none yet, then one made as the manual's picture does (EDIT x5: the sample view, a key held, RESAMPLE on)
+try { await s.recording(); } catch (e) { bad++; console.log("no recording yet:", e.message.slice(0, 50)); }
+let ms = 0;
+const run = until => { while (ms < until) { x.ksub_audio(); x.ksub_step(); x.ksub_step(); ms += 256 / 44.1; } };
+const btn = id => { x.ksub_button(id, 1); x.ksub_step(); x.ksub_button(id, 0); };
+run(3000); btn(3); run(3400);                        // (the first start's question: CLASSIC)
+for (let i = 0; i < 5; i++) { btn(6); run(ms + 150); }
+x.ksub_keys(1 << 12); run(ms + 200); x.ksub_turn(0, 4); run(ms + 150); x.ksub_turn(1, 1); run(ms + 5000); x.ksub_keys(0); run(ms + 300);
+const r = await s.recording();
+const pcm = new Int16Array(r.wav.buffer.slice(44));
+let peak = 0; for (const v of pcm) peak = Math.max(peak, Math.abs(v));
+console.log("recording", r.seconds.toFixed(2), "s at", r.rate, "Hz, wav", r.wav.length, "B, peak", peak);
+fs.writeFileSync("build/rs.wav", r.wav);
+if (r.seconds >= 2 && peak > 500) bad++;
+console.log(bad === 5 ? "link OK" : "link FAILED");
+process.exit(bad === 5 ? 0 : 1);
