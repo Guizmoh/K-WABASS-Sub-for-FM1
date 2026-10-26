@@ -9,7 +9,7 @@
 | 🎛 **Essayer** (navigateur) | [`emulator/index.html`](emulator/index.html) (version A, 8 moteurs) · [`emulator/b.html`](emulator/b.html) (version B, 4 moteurs) |
 | ⬇️ **Installer** sur le FM-1 | [`installer.html`](installer.html) (Chrome ou Edge, USB) · ou `INSTALL-Windows.bat` / `INSTALL-Mac.command` / `INSTALL-Linux.sh` |
 | 📖 **Manuel** illustré | [`manual.html`](manual.html) |
-| 🏠 **Accueil** | [`index.html`](index.html) (si GitHub Pages est activé : <https://guizmoh.github.io/K-WASUB..Firmware..for..FM1/>) |
+| 🏠 **Accueil** | [`index.html`](index.html) (si GitHub Pages est activé : <https://guizmoh.github.io/K-WASUB_Firmware_for_FM1/>) |
 | 🗺 **Cahier des charges** | [`CAHIER-DES-CHARGES.md`](CAHIER-DES-CHARGES.md) : fait, à faire, idées |
 | 📜 Documentation détaillée | [`docs/DOCUMENTATION-COMPLETE.md`](docs/DOCUMENTATION-COMPLETE.md) |
 
