@@ -18,7 +18,7 @@
 ## Ce que ça fait
 
 - **Jouer** : les 27 touches jouent la basse, `K1`–`K4` règlent les quatre réglages importants de chaque page.
-- **Wobble** : `LFO` maintenu + un potard branche le LFO 2 sur ce que règle le potard (le LFO 1 si vous préférez : `SYSTEM › LFO HELD = LFO`).
+- **Wobble** : `LFO` maintenu + un potard branche le LFO 2 sur ce que règle le potard ; appuie sur `OCT−` pendant que `LFO` est maintenu pour brancher le LFO 1 à la place (le choix par défaut se règle dans `SYSTEM › LFO HELD = LFO`).
 - **FX PADS** : `FX` maintenu, les touches blanches changent la vitesse du wobble (4, 8, 16, 24, 32, 48), les noires jouent stutters, tape stop, DJ filter, saturation, phaser…
 - **MORPH** : `SEL` ×2 = carré X/Y (au départ, le même son en 4 variantes), ×5 = fondu A/B sur le tempo.
 - **Deux modes** : CLASSIC (listes) ou SHIFT (3 colonnes, `OCT−` et `OCT+` comme Shift) ; `GLO` maintenu pour basculer.
@@ -40,8 +40,8 @@ Retour à KAWA (`install/kawa-0.5.fwsc`) ou au firmware officiel (M-UPGRADE) pos
 
 ```sh
 cd source
-./build.sh --release 0.9.29          # -> build/k-wasub-0.9.29.fwsc
-APP_VER=0.9.29 bash web/make_emulator.sh      # émulateur
+./build.sh --release 0.9.30          # -> build/k-wasub-0.9.30.fwsc
+APP_VER=0.9.30 bash web/make_emulator.sh      # émulateur
 bash web/make_installer.sh                    # installer.html avec le dernier paquet
 bash tests/run_stress.sh                      # tests de charge (UBSan)
 python3 tests/manual_shots.py                 # captures du manuel (docs/img)

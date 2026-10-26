@@ -1812,18 +1812,19 @@ static const char *hold_label(uint32_t b)
     if (b == BTN_OCT_DOWN) return "UNDO  (OR TURN A KNOB: SHIFT)";
     if (b == BTN_OCT_UP) return "REDO  (OR TURN A KNOB: SHIFT)";
     if (b == BTN_PLAY) return hold ? "HOLD OFF" : "HOLD: THE KEYS STAY ON";
-    if (b == BTN_LFO) return set.qlfo ? "TURN A KNOB: LFO 2 ON IT" : "TURN A KNOB: LFO 1 ON IT";
+    if (b == BTN_LFO) return set.qlfo ? "KNOB: LFO 2 \xB7 +OCT-: LFO 1" : "KNOB: LFO 1 \xB7 +OCT-: LFO 2";
     if (b == BTN_ENV) return "TURN A KNOB: MOD ENV ON IT";
     str_cat(str_cat(t, "RANDOM "), PAGE_SHORT[pg >= 0 ? pg : 0]);
     return t;
 }
 
-/* QUICK ASSIGN (as Pure SUB's drag and drop): LFO 1 (or the mod envelope) onto what this knob moves, the turn
- * sets how much */
+/* QUICK ASSIGN (as Pure SUB's drag and drop): an LFO (or the mod envelope) onto what this knob moves, the turn
+ * sets how much. LFO held: the LFO of SYSTEM's LFO HELD (LFO 2 at first); with OCT- held too, the other one */
+static uint32_t qa_lfo2(void) { return (fm1_in.buttons >> BTN_OCT_DOWN & 1u) ? !set.qlfo : set.qlfo; }
 static void quick_assign(uint32_t src, uint32_t id, int32_t d)
 {
     int32_t dst = dest_of(id);
-    uint32_t o = src == BTN_LFO && set.qlfo ? (uint32_t)LFO_2 : 0u;   /* (SYSTEM: LFO HELD = LFO 1 or LFO 2) */
+    uint32_t l2 = qa_lfo2(), o = src == BTN_LFO && l2 ? (uint32_t)LFO_2 : 0u;
     uint32_t pd = src == BTN_LFO ? L1_DST + o : ME_DST, pa = src == BTN_LFO ? L1_DEP + o : ME_AMT;
     char t[32], *p;
     if (dst < 0) { toast("NOT A DESTINATION"); return; }
@@ -1831,7 +1832,7 @@ static void quick_assign(uint32_t src, uint32_t id, int32_t d)
     undo_mark(pa);
     patch[pa] = (int8_t)clampi(patch[pa] + d * 2, -64, 63);
     if ((dst == D_DRAMT || dst == D_DRMIX) && !patch[DR_ON]) patch[DR_ON] = 1;
-    p = str_cat(t, src == BTN_LFO ? (set.qlfo ? "LFO2 > " : "LFO1 > ") : "ENV > ");
+    p = str_cat(t, src == BTN_LFO ? (l2 ? "LFO2 > " : "LFO1 > ") : "ENV > ");
     p = str_cat(p, dst_name((uint32_t)dst));
     *p++ = ' ';
     item_text(pa, p);
@@ -1920,6 +1921,10 @@ static void ui_input(void)
         if (hb.b == BTN_SAVE && !PRE_BROWSING && b <= BTN_OCT_UP) {   /* SAVE held: OCT- UNDO, OCT+ REDO */
             ur_on = 1; hb.fired = 1;
             if (b == BTN_OCT_DOWN) undo(); else redo();
+            continue;
+        }
+        if (hb.b == BTN_LFO && b == BTN_OCT_DOWN) {   /* LFO held, then OCT-: the knobs put the other LFO on (no octave) */
+            toast(qa_lfo2() ? "LFO 2 ON THE KNOBS" : "LFO 1 ON THE KNOBS");
             continue;
         }
         if ((set.ui || win == 3u) && b <= BTN_OCT_UP && (fm1_in.buttons & 3u) == 3u) {
