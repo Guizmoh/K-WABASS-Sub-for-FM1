@@ -40,8 +40,8 @@ Retour à KAWA (`install/kawa-0.5.fwsc`) ou au firmware officiel (M-UPGRADE) pos
 
 ```sh
 cd source
-./build.sh --release 0.9.30          # -> build/k-wasub-0.9.30.fwsc
-APP_VER=0.9.30 bash web/make_emulator.sh      # émulateur
+./build.sh --release 0.9.31          # -> build/k-wasub-0.9.31.fwsc
+APP_VER=0.9.31 bash web/make_emulator.sh      # émulateur
 bash web/make_installer.sh                    # installer.html avec le dernier paquet
 bash tests/run_stress.sh                      # tests de charge (UBSan)
 python3 tests/manual_shots.py                 # captures du manuel (docs/img)

@@ -11,7 +11,7 @@ def run(lines, tag):
     subprocess.run(["node", "tests/shots.mjs", f"build/{tag}.txt"], check=True, capture_output=True)
 def look(s, t, p):                              # the theme and the palette, from SYSTEM
     s.btn(GLO, 200); s.enc(0, -30, 100); s.enc(0, 3, 100); s.enc(1, -8, 100); s.enc(1, t, 100)
-    s.enc(0, 1, 100); s.enc(1, -25, 100); s.enc(1, p, 100); s.btn(HOME, 200)
+    s.enc(0, 1, 100); s.enc(1, -30, 100); s.enc(1, p, 100); s.btn(HOME, 200)
 class S:
     def __init__(s): s.l, s.t, s.names = [], 100, []
     def c(s, cmd, dt=120): s.l.append(f"{s.t} {cmd}"); s.t += dt
@@ -78,10 +78,11 @@ combos = [(0, 0, "glow-green"), (0, 1, "glow-toxic"), (1, 0, "studio"), (1, 1, "
 combos += [(1, p, n) for p, n in ((2, "synthwave"), (3, "mint"), (4, "blackwhite"), (5, "inverted"), (6, "red"), (7, "ice"), (8, "fluo"), (9, "pink"), (10, "gold"))]
 combos += [(0, 8, "glow-fluo"), (0, 9, "glow-pink"), (0, 10, "glow-gold"), (0, 2, "glow-synthwave"), (0, 7, "glow-ice")]
 combos += [(4, 2, "tech-synthwave"), (4, 8, "tech-fluo"), (4, 9, "tech-pink"), (4, 7, "tech-ice")]
-combos += [(1, 17, "rad-red"), (1, 13, "rad-synthwave"), (1, 21, "rad-gold"), (0, 11, "rad-glow-green"), (4, 12, "rad-tech-cyber"), (2, 20, "rad-pink"), (3, 18, "rad-ice")]
+combos += [(1, 19, "rad-red"), (2, 15, "rad-synthwave"), (1, 23, "rad-gold"), (0, 13, "rad-glow-green"), (4, 14, "rad-tech-cyber"), (2, 22, "rad-pink"), (3, 20, "rad-ice")]
+combos += [(1, 11, "sky"), (0, 11, "glow-sky"), (4, 11, "tech-sky"), (1, 12, "blaze"), (0, 12, "glow-blaze"), (0, 15, "rad-glow-synthwave"), (3, 24, "rad-sky")]
 for t, p, nm in combos:
     s.btn(GLO, 200); s.enc(0, -30, 100); s.enc(0, 3, 100); s.enc(1, -8, 100); s.enc(1, t, 100)
-    s.enc(0, 1, 100); s.enc(1, -25, 100); s.enc(1, p, 100)
+    s.enc(0, 1, 100); s.enc(1, -30, 100); s.enc(1, p, 100)
     s.btn(HOME, 200); s.btn(EDIT, 200); s.shot("t-" + nm, 1300)
 finish(s, "m3")
 

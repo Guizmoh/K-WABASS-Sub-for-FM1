@@ -25,8 +25,13 @@ static void draw_poly(int32_t x, int32_t y, int32_t w, int32_t h, const int16_t 
     if (!g_vis(y - 1, h + 2)) return;
     for (i = 1; i < n; i++) {
         int32_t xx = x + (int32_t)(i * (uint32_t)(w - 1) / (n - 1u)), yy = cy - (pt[i] * (h / 2 - 1)) / 32768;
-        g_line(px, py, xx, yy, c);
-        g_line(px, py + 1, xx, yy + 1, g_mix(K_BG, c, 120));
+        uint16_t cc = c;
+        if (g_wgrad && c == K_WAVE) {           /* (SYNTHWAVE RAD: yellow, then orange, then light red, left to right) */
+            uint32_t t = i * 512u / n;
+            cc = t < 256u ? g_mix(RGB(255, 230, 40), RGB(255, 140, 20), t) : g_mix(RGB(255, 140, 20), RGB(255, 96, 96), t - 256u);
+        }
+        g_line(px, py, xx, yy, cc);
+        g_line(px, py + 1, xx, yy + 1, g_mix(K_BG, cc, 120));
         px = xx;
         py = yy;
     }
@@ -642,7 +647,7 @@ static void draw_vbox(int32_t x, int32_t y, int32_t w, int32_t h, uint32_t id, i
     if (!g_vis(y, h)) return;
     item_text(id, b);
     g_box(x, y, w, h, sel ? K_LIMED : K_PANEL, sel ? K_LIME : K_LINE);
-    if (theme == TH_GLOW || g_rad) g_vgrad(x + 1, y + 1, w - 2, h - 2, g_mix(K_PANEL, K_LIME, sel ? 100 : 36), g_rad ? g_mix(K_BG, K_CYAN, 60) : K_BG);   /* (GLOW, RAD: lit from the top) */
+    if (theme == TH_GLOW || g_rad) g_vgrad(x + 1, y + 1, w - 2, h - 2, g_mix(K_PANEL, K_LIME, sel ? 100 : 36), g_rad ? g_rcell : K_BG);   /* (GLOW, RAD: lit from the top) */
     g_text(T_XS, x + 7, y + 6, lab ? lab : item_name(id), sel ? K_LIME : K_GREY);
     if (h >= 50) g_text(g_fit(T_B, b, w - 14), x + 7, y + 18, b, sel ? K_LIME : K_WHITE);
     else g_text(g_fit(T_M, b, w - 14), x + 7, y + 17, b, sel ? K_LIME : K_WHITE);
@@ -656,7 +661,7 @@ static void draw_cell(const view_t *v, int32_t x, int32_t y, int32_t w, int32_t 
     if (!g_vis(y, h)) return;
     item_text(id, b);
     g_box(x, y, w, h, sel ? K_LIMED : K_PANEL, sel ? K_LIME : K_LINE);
-    if (g_rad) g_vgrad(x + 1, y + 1, w - 2, h - 2, g_mix(K_PANEL, K_LIME, sel ? 100 : 40), g_mix(K_BG, K_CYAN, 60));
+    if (g_rad) g_vgrad(x + 1, y + 1, w - 2, h - 2, g_mix(K_PANEL, K_LIME, sel ? 100 : 40), g_rcell);
     if (k >= 0) {
         char kn[3] = {'K', (char)('1' + k), 0};
         g_rect(x + 5, y + 5, 5, 5, PAL_BW ? K_WHITE : KNOB_RGB[k]);
@@ -1682,7 +1687,9 @@ static void draw_all(void)
     uint32_t vi = vidx();
     g_rect(0, g_y0, 240, (int32_t)BAND_H, K_BG);
     if (g_rad) {                                /* RAD palettes: the accent poured in from the top into the second colour at the bottom, on every theme */
-        g_vgrad(0, 0, 240, 240, g_mix(K_BG, K_LIME, 110), g_mix(K_BG, K_CYAN, 110));
+        g_vgrad(0, 0, 240, 240, g_rtop, g_rbot);
+    } else if (g_sky) {                         /* SKY: a pale blue sky, deeper toward the bottom */
+        g_vgrad(0, 0, 240, 240, g_mix(K_BG, 0xFFFFu, 90), g_mix(K_BG, RGB(120, 160, 220), 80));
     } else if (theme == TH_GLOW) {              /* GLOW: the accent glowing in from the top, the second colour from the bottom */
         g_vgrad(0, 0, 240, 96, g_mix(K_BG, K_LIME, 46), K_BG);
         g_vgrad(0, 196, 240, 44, K_BG, g_mix(K_BG, K_CYAN, 30));

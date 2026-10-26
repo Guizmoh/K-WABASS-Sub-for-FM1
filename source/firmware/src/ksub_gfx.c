@@ -12,7 +12,7 @@ static uint8_t g_force = 1, g_tx;
 /* the colours: six palettes for each theme (ksub_draw.c): its own, another, SYNTHWAVE, MINT, black and white, inverted */
 enum { KC_BG, KC_PANEL, KC_LINE, KC_LIME, KC_LIMED, KC_CYAN, KC_WHITE, KC_GREY, KC_TRACK, KC_ORANGE, KC_WAVE, KC_INK, KC_MOD, KC_N };
 #define C3(r, g, b) RGB(r, g, b)
-static const uint16_t PALS[21][KC_N] = {
+static const uint16_t PALS[23][KC_N] = {
     /* CLASSIC: NEON, AMBER */
     {C3(11,18,20), C3(17,27,30), C3(40,56,60), C3(200,240,60), C3(30,40,20), C3(80,216,208), C3(236,242,242), C3(130,146,148), C3(36,52,56), C3(240,140,60), C3(200,240,60), C3(11,18,20), C3(170,140,250)},
     {C3(18,12,6), C3(30,20,10), C3(66,44,20), C3(255,170,40), C3(52,34,10), C3(255,214,140), C3(250,238,220), C3(170,140,110), C3(60,40,20), C3(255,90,60), C3(255,170,40), C3(18,12,6), C3(255,214,140)},
@@ -45,10 +45,17 @@ static const uint16_t PALS[21][KC_N] = {
     /* TECH (its own two): VOLT (fluo green, an ice white-cyan beside it), CYBER (electric cyan, magenta beside it) */
     {C3(2,5,6), C3(8,18,16), C3(22,50,44), C3(57,255,20), C3(8,56,20), C3(120,255,230), C3(240,255,250), C3(104,150,140), C3(16,38,34), C3(255,200,60), C3(57,255,20), C3(2,5,6), C3(120,255,230)},
     {C3(2,4,10), C3(8,14,30), C3(22,40,80), C3(0,225,255), C3(6,48,76), C3(255,70,200), C3(238,250,255), C3(104,136,170), C3(16,30,60), C3(255,190,60), C3(0,225,255), C3(2,4,10), C3(255,70,200)},
+    /* for every theme: SKY (light: white cards on a pale blue, navy text, a clear blue accent), BLAZE (black, greys, fluo orange, the text white) */
+    {C3(226,238,250), C3(252,253,255), C3(176,198,222), C3(18,108,210), C3(206,226,250), C3(0,150,196), C3(8,22,44), C3(70,92,118), C3(200,216,234), C3(226,104,16), C3(18,108,210), C3(255,255,255), C3(120,76,206)},
+    {C3(0,0,0), C3(22,22,24), C3(72,72,76), C3(255,112,0), C3(70,30,0), C3(170,170,176), C3(255,255,255), C3(176,176,182), C3(46,46,50), C3(255,60,40), C3(255,128,0), C3(0,0,0), C3(255,176,64)},
 };
 static const char *const PAL_NAME[5][2] = {{"FLUO GREEN", "TOXIC"}, {"STUDIO", "OCEAN"}, {"PURE", "PURE RED"}, {"RACK", "MAGMA"}, {"VOLT", "CYBER"}};
 static uint16_t kc[KC_N];
 static uint8_t theme, theme_pal, g_rad;        /* (g_rad: a RAD palette, the gradient version of theme_pal) */
+#define NPAL_BASE 13u                           /* the palettes: 0..12, then their RAD versions 13..25 */
+#define PAL_SKY 11u
+static uint16_t g_rtop, g_rbot, g_rcell;        /* RAD: the background's top and bottom, the cards' bottom */
+static uint8_t g_wgrad, g_sky;                  /* (g_sky: SKY, office-like: square windows in relief, with a shadow) */                         /* 1: the oscillator's line yellow -> orange -> light red (SYNTHWAVE RAD) */
 #define PAL_BW (theme_pal == 4u || theme_pal == 5u)   /* black and white, inverted: no colours of their own */
 static uint16_t g_mix(uint16_t a, uint16_t b, uint32_t t);
 static uint8_t g_con, g_bri = 3;                /* BRIGHTNESS: 0 ECO, 1 NORMAL, 2 BRIGHT, 3 MAX */
@@ -81,11 +88,21 @@ static void theme_set(uint32_t t, uint32_t pal)
 {
     uint32_t i, k;
     theme = (uint8_t)(t < 5u ? t : 0u);
-    g_rad = (uint8_t)(pal >= 11u && pal < 22u);
-    theme_pal = (uint8_t)(pal < 11u ? pal : pal < 22u ? pal - 11u : 0u);
-    k = theme_pal < 2u ? (theme == 0u ? 15u : theme < 4u ? theme * 2u : 19u) + theme_pal : theme_pal < 9u ? 6u + theme_pal : 8u + theme_pal;   /* (rows: 4 themes x 2, 7 for all, GLOW's 2, 2 more for all) */
-    for (i = 0; i < KC_N; i++) kc[i] = g_con ? con_px(PALS[k][i], PALS[k][KC_BG], PALS[k][KC_WHITE]) : PALS[k][i];
-    if (g_con) {                                /* (the cards stay apart from the background) */
+    g_rad = (uint8_t)(pal >= NPAL_BASE && pal < 2u * NPAL_BASE);
+    theme_pal = (uint8_t)(pal < NPAL_BASE ? pal : pal < 2u * NPAL_BASE ? pal - NPAL_BASE : 0u);
+    k = theme_pal < 2u ? (theme == 0u ? 15u : theme < 4u ? theme * 2u : 19u) + theme_pal : theme_pal < 9u ? 6u + theme_pal : theme_pal < 11u ? 8u + theme_pal : 10u + theme_pal;   /* (rows: 4 themes x 2, 7 for all, GLOW's 2, 2 more for all, TECH's 2, SKY and BLAZE) */
+    for (i = 0; i < KC_N; i++) kc[i] = g_con && theme_pal != PAL_SKY ? con_px(PALS[k][i], PALS[k][KC_BG], PALS[k][KC_WHITE]) : PALS[k][i];   /* (SKY keeps its pale blue) */
+    g_rtop = g_mix(kc[KC_BG], kc[KC_LIME], 110); g_rbot = g_mix(kc[KC_BG], kc[KC_CYAN], 110); g_rcell = g_mix(kc[KC_BG], kc[KC_CYAN], 60);
+    g_wgrad = 0;
+    g_sky = theme_pal == PAL_SKY;
+    if (g_rad && theme == 0u && theme_pal == 0u) {   /* CLASSIC GLOW, FLUO GREEN RAD: a deeper, bluer green into a night blue, the line yellow */
+        g_rtop = RGB(10, 74, 66); g_rbot = RGB(3, 7, 30); g_rcell = RGB(4, 22, 40);
+        kc[KC_WAVE] = RGB(255, 222, 40);
+    } else if (g_rad && theme_pal == 2u) {      /* SYNTHWAVE RAD: violet into a very dark blue-violet, the line yellow to orange to light red */
+        g_rtop = RGB(74, 22, 110); g_rbot = RGB(10, 6, 30); g_rcell = RGB(20, 10, 46);
+        kc[KC_WAVE] = RGB(255, 140, 20); g_wgrad = 1;
+    }
+    if (g_con && theme_pal != PAL_SKY) {        /* (the cards stay apart from the background) */
         kc[KC_PANEL] = g_mix(kc[KC_PANEL], PALS[k][KC_PANEL], 128u);
     }
     lum_gap(KC_WHITE, 120u); lum_gap(KC_GREY, 70u); lum_gap(KC_LIME, 70u);   /* (the text always stands off its background) */
@@ -115,9 +132,10 @@ static const ks_font_t *const FAMS[4][5] = {{&F_XS, &F_S, &F_M, &F_B, &F_L}, {&F
 static uint8_t g_bold;                          /* (HYPER is light: drawn twice, a pixel apart) */
 static const ks_font_t *tf[5] = {&F_XS, &F_S, &F_M, &F_B, &F_L};
 static const ks_font_t *const ZOOM[3][2] = {{&F_FZS, &F_FZM}, {&F_GZS, &F_GZM}, {&F_HZS, &F_HZM}};   /* LOUPE: S and M bigger */
-static void font_set(uint32_t f, uint32_t zoom)
+static void font_set(uint32_t f, uint32_t zoom)   /* (SKY: always HYPER, the most readable, drawn a little thick) */
 {
     uint32_t i;
+    if (theme_pal == PAL_SKY) f = 2u;
     for (i = 0; i < 5u; i++) tf[i] = FAMS[f & 3u][i];
     if (zoom && (f & 3u) < 3u) { tf[1] = ZOOM[f & 3u][0]; tf[2] = ZOOM[f & 3u][1]; }
     g_bold = (f & 3u) == 2u;
@@ -164,6 +182,18 @@ static void g_pxa(int32_t x, int32_t y, uint16_t c, uint32_t t)   /* a pixel ble
 }
 static void g_box(int32_t x, int32_t y, int32_t w, int32_t h, uint16_t fill, uint16_t edge)   /* rounded, 1 px edge */
 {
+    if (g_sky && w >= 8 && h >= 8) {            /* SKY: square, a shadow below and right, lit from the top (a bevel), a light gradient */
+        int32_t j;
+        uint16_t sh = g_mix(kc[KC_BG], RGB(20, 50, 100), 70), hi = g_mix(fill, 0xFFFFu, 150), lo = g_mix(fill, RGB(40, 80, 140), 40);
+        if (!g_vis(y, h + 2)) return;
+        g_rect(x + 2, y + h, w, 2, sh);
+        g_rect(x + w, y + 2, 2, h - 2, sh);
+        g_rect(x, y, w, h, edge);
+        for (j = 1; j < h - 1; j++) g_rect(x + 1, y + j, w - 2, 1, g_mix(hi, lo, (uint32_t)(j * 256 / h)));
+        g_rect(x + 1, y + 1, w - 2, 1, 0xFFFFu);   /* (the bevel: a white top edge, a darker bottom one) */
+        g_rect(x + 1, y + h - 2, w - 2, 1, g_mix(edge, fill, 90));
+        return;
+    }
     if (!g_vis(y, h)) return;
     g_rect(x + 1, y, w - 2, h, edge);
     g_rect(x, y + 1, w, h - 2, edge);

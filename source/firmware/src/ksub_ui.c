@@ -937,7 +937,7 @@ static void item_range(uint32_t id, int32_t *lo, int32_t *hi)
         return;
     }
     *lo = 0;
-    *hi = id == G_MIDICH ? 16 : id == G_BPM ? 2400 : id == G_CLOCK || id == G_QLFO || id == G_ENG8 || id == G_NORM || id == G_RS_GO || id == G_CORES || id == G_GRID || id == G_BROWSE || id == G_C3COL || id == G_UI || id == G_ASK || id == G_ZOOM || id == G_MLEARN || id == G_MSTART || id == G_MPROG || id == G_MCLK ? 1 : id == G_MMAP ? 16 : id == I_ABMIX ? 127 : id == G_BRI ? 3 : id == G_ACCEL || id == G_CON || id == G_DEEP || id == G_RS_LEN ? 2 : id == G_THEME ? 4 : id == G_FONT ? 3 : id == G_PAL ? 21 : id == G_OCT ? 6 : 0;
+    *hi = id == G_MIDICH ? 16 : id == G_BPM ? 2400 : id == G_CLOCK || id == G_QLFO || id == G_ENG8 || id == G_NORM || id == G_RS_GO || id == G_CORES || id == G_GRID || id == G_BROWSE || id == G_C3COL || id == G_UI || id == G_ASK || id == G_ZOOM || id == G_MLEARN || id == G_MSTART || id == G_MPROG || id == G_MCLK ? 1 : id == G_MMAP ? 16 : id == I_ABMIX ? 127 : id == G_BRI ? 3 : id == G_ACCEL || id == G_CON || id == G_DEEP || id == G_RS_LEN ? 2 : id == G_THEME ? 4 : id == G_FONT ? 3 : id == G_PAL ? (int32_t)(2u * NPAL_BASE - 1u) : id == G_OCT ? 6 : 0;
     if (id == G_BPM) *lo = 600;
     if (id >= G_SQ_STEP && id <= G_AR_GATE) {
         static const int8_t LO[12] = {0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1}, HI[12] = {15, 48, 4, 15, 16, 5, 50, 1, 4, 5, 3, 10};
@@ -1082,7 +1082,9 @@ static void item_set(uint32_t id, int32_t v)
     case G_OCT: set.oct = (uint8_t)(int8_t)(v - 3); break;
     case G_CORES: set.cores = (uint8_t)v; toast("RESTART TO APPLY"); break;
     case G_THEME: set.theme = (uint8_t)v; theme_set(set.theme, set.pal); g_force = 1; break;
-    case G_PAL: set.pal = (uint8_t)v; theme_set(set.theme, set.pal); g_force = 1; break;
+    case G_PAL:
+        set.pal = (uint8_t)v;
+        theme_set(set.theme, set.pal); font_set(set.font, set.zoom); g_force = 1; break;
     case G_FONT: set.font = (uint8_t)v; font_set(set.font, set.zoom); g_force = 1; break;
     case G_GRID: set.grid = (uint8_t)v; ks_straight = set.grid; break;
     case G_BROWSE: set.browse = (uint8_t)v; break;
@@ -1283,7 +1285,7 @@ static void item_text(uint32_t id, char *b)
         case G_OCT: fmt_s(b, v - 3); break;
         case G_CORES: str_cat(b, !v ? "SINGLE" : dual_on ? "DUAL \xB7 ON" : KS_DUAL ? "DUAL \xB7 OFF" : "DUAL (FM-1)"); break;
         case G_THEME: { static const char *const TN[5] = {"CLASSIC GLOW", "STUDIO", "PURE", "RACK", "TECH"}; str_cat(b, TN[(uint32_t)v % 5u]); break; }
-        case G_PAL: { static const char *const PN[9] = {"SYNTHWAVE", "MINT", "BLACK / WHITE", "INVERTED", "RED", "ICE", "FLUO", "PINK", "GOLD"}; int32_t q = v >= 11 ? v - 11 : v; str_cat(b, q < 2 ? PAL_NAME[set.theme % 5u][q] : PN[(q - 2) % 9]); if (v >= 11) str_cat(b, " RAD"); break; }
+        case G_PAL: { static const char *const PN[11] = {"SYNTHWAVE", "MINT", "BLACK / WHITE", "INVERTED", "RED", "ICE", "FLUO", "PINK", "GOLD", "SKY", "BLAZE"}; int32_t q = v >= (int32_t)NPAL_BASE ? v - (int32_t)NPAL_BASE : v; str_cat(b, q < 2 ? PAL_NAME[set.theme % 5u][q] : PN[(q - 2) % 11]); if (v >= (int32_t)NPAL_BASE) str_cat(b, " RAD"); break; }
         case G_GRID: str_cat(b, v ? "STRAIGHT" : "ALL (T, D)"); break;
         case G_BROWSE: str_cat(b, v ? "FAVORITES" : "ALL"); break;
         case G_ACCEL: str_cat(b, v == 2 ? "FAST" : v ? "ON" : "OFF"); break;
@@ -1894,7 +1896,7 @@ static void ask_done(uint32_t sel)
 {
     ask_on = 0;
     splash_until = 0;
-    if (set.ui != sel || first_run || set.askv < 2u) { set.ui = (uint8_t)sel; set.askv = 2; set_dirty = 1; set_ms = fm1_ms; first_run = 0; }
+    if (set.ui != sel || first_run || set.askv < 2u) { set.ui = (uint8_t)sel; set.askv = 3; set_dirty = 1; set_ms = fm1_ms; first_run = 0; }
     toast(sel ? "SHIFT MODE" : "CLASSIC MODE");
     g_force = 1;
 }
@@ -2117,13 +2119,17 @@ static void app_init(void)
     if (!ok) {
         set.font = set.grid = set.browse = 0; set.theme = 1; set.pal = 6;   /* (STUDIO, RED) */
         memset(set.fav, 0, sizeof set.fav);
-        set.ver = 6; set.midich = 0; set.clock = 0; set.oct = 0xFF; set.bpm10 = 1400; set.bank = 0; set.idx = 0; set.cores = 1; set.accel = 1; set.c3col = 0; set.ui = 0; set.ask = 0; set.zoom = 0; set.mstart = 1; set.mprog = 1; set.mclk = 0; set.contrast = 1; set.norm = 1; set.deep = 1; set.askv = 1; set.bri = 3; set.qlfo = 1; set.eng8 = 0;
+        set.ver = 6; set.midich = 0; set.clock = 0; set.oct = 0xFF; set.bpm10 = 1400; set.bank = 0; set.idx = 0; set.cores = 1; set.accel = 1; set.c3col = 0; set.ui = 0; set.ask = 0; set.zoom = 1; set.mstart = 1; set.mprog = 1; set.mclk = 0; set.contrast = 1; set.norm = 1; set.deep = 1; set.askv = 1; set.bri = 3; set.qlfo = 1; set.eng8 = 0;
     }
     set.eng8 = set.eng8 ? 1u : 0u;
     set.qlfo = set.qlfo ? 1u : 0u;
     set.bri = set.bri < 4u ? set.bri : 3u;
     g_bri = set.bri;
-    if (!set.askv) { set.ask = 0; set.askv = 1; set_dirty = 1; set_ms = fm1_ms; }   /* (0.10: no more question at each start; SYSTEM > ASK brings it back) */
+    if (!set.askv) { set.ask = 0; set.askv = 1; set_dirty = 1; set_ms = fm1_ms; }
+    if (set.askv == 2u) {                       /* (a save from before 0.9.31: LOUPE on, once; the RAD palettes two further, after SKY and BLAZE) */
+        set.zoom = 1; set.askv = 3; set_dirty = 1; set_ms = fm1_ms;
+        if (set.pal >= 11u && set.pal < 22u) set.pal = (uint8_t)(set.pal + 2u);
+    }   /* (0.10: no more question at each start; SYSTEM > ASK brings it back) */
     set.norm = set.norm ? 1u : 0u; set.deep = set.deep < 3u ? set.deep : 1u;
     ks_norm = set.norm; ks_deep = set.deep;
     set.contrast = 2;                           /* no CONTRAST setting any more: always MAX (DEEP BLACK), the one look that shows right on the FM-1 */
