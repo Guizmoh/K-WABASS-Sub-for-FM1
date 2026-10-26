@@ -611,7 +611,7 @@ static void row_g(int32_t x, int32_t y, int32_t w, int32_t h, const char *lab, c
     int32_t ty, room;
     const ks_font_t *fl = f, *fv;
     if (!g_vis(y, h)) return;
-    if (theme == TH_GLOW || g_rad) {            /* GLOW (and the RAD palettes): the row chosen lit from the left, the others only a line */
+    if (theme == TH_GLOW || (g_rad && !g_rflat)) {   /* GLOW (and the RAD palettes): the row chosen lit from the left, the others only a line */
         if (sel) { g_box(x, y, w, h, K_PANEL, K_LIME); g_hgrad(x + 1, y + 1, w - 2, h - 2, g_mix(K_PANEL, K_LIME, 120), K_PANEL); }
         else g_hgrad(x + 4, y + h - 1, w - 8, 1, g_mix(K_BG, K_LIME, 90), K_BG);
     } else if (theme == TH_RACK) rb_frame(x, y, w, h, 6, sel ? K_LIME : K_LINE, sel ? K_LIMED : K_PANEL, sel ? K_LIMED : K_PANEL);   /* (RACK: rounder) */
@@ -649,7 +649,7 @@ static void draw_vbox(int32_t x, int32_t y, int32_t w, int32_t h, uint32_t id, i
     if (!g_vis(y, h)) return;
     item_text(id, b);
     g_box(x, y, w, h, sel ? K_LIMED : K_PANEL, sel ? K_LIME : K_LINE);
-    if (theme == TH_GLOW || g_rad) g_vgrad(x + 1, y + 1, w - 2, h - 2, g_mix(K_PANEL, K_LIME, sel ? 100 : 36), g_rad ? g_rcell : K_BG);   /* (GLOW, RAD: lit from the top) */
+    if (theme == TH_GLOW || (g_rad && !g_rflat)) g_vgrad(x + 1, y + 1, w - 2, h - 2, g_mix(K_PANEL, K_LIME, sel ? 100 : 36), g_rad ? g_rcell : K_BG);   /* (GLOW, RAD: lit from the top) */
     g_text(T_XS, x + 7, y + 6, lab ? lab : item_name(id), sel ? K_LIME : K_GREY);
     if (h >= 50) g_text(g_fit(T_B, b, w - 14), x + 7, y + 18, b, sel ? K_LIME : K_WHITE);
     else g_text(g_fit(T_M, b, w - 14), x + 7, y + 17, b, sel ? K_LIME : K_WHITE);
@@ -663,7 +663,7 @@ static void draw_cell(const view_t *v, int32_t x, int32_t y, int32_t w, int32_t 
     if (!g_vis(y, h)) return;
     item_text(id, b);
     g_box(x, y, w, h, sel ? K_LIMED : K_PANEL, sel ? K_LIME : K_LINE);
-    if (g_rad) g_vgrad(x + 1, y + 1, w - 2, h - 2, g_mix(K_PANEL, K_LIME, sel ? 100 : 40), g_rcell);
+    if (g_rad && !g_rflat) g_vgrad(x + 1, y + 1, w - 2, h - 2, g_mix(K_PANEL, K_LIME, sel ? 100 : 40), g_rcell);
     if (k >= 0) {
         char kn[3] = {'K', (char)('1' + k), 0};
         g_rect(x + 5, y + 5, 5, 5, PAL_BW ? K_WHITE : KNOB_RGB[k]);
@@ -1962,6 +1962,13 @@ static void draw_all(void)
     g_rect(0, g_y0, 240, (int32_t)BAND_H, K_BG);
     if (g_rad) {                                /* RAD palettes: the accent poured in from the top into the second colour at the bottom, on every theme */
         g_vgrad(0, 0, 240, 240, g_rtop, g_rbot);
+    } else if (theme_pal == 2u) {   /* SYNTHWAVE: a light pink rising from the bottom */
+        g_vgrad(0, 150, 240, 90, K_BG, g_mix(K_BG, RGB(255, 170, 220), 80));
+    } else if (theme_pal == 8u) {               /* FLUO: a yellow glow from the top */
+        g_vgrad(0, 0, 240, 80, g_mix(K_BG, RGB(240, 255, 40), 60), K_BG);
+    } else if (theme_pal == 9u) {               /* PINK: synthwave, blue above and a pink haze below */
+        g_vgrad(0, 0, 240, 120, g_mix(K_BG, RGB(40, 60, 160), 90), K_BG);
+        g_vgrad(0, 160, 240, 80, K_BG, g_mix(K_BG, RGB(255, 60, 170), 50));
     } else if (theme >= TH_RIBBON) {            /* RIBBON: a deep night, a little lighter at the top */
         g_vgrad(0, 0, 240, 240, g_mix(K_BG, K_LINE, 60), g_mix(K_BG, 0x0000u, 140));
     } else if (g_sky) {                         /* SKY: a pale blue sky, deeper toward the bottom */

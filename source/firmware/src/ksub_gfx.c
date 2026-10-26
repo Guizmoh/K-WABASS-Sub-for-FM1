@@ -40,17 +40,17 @@ static const uint16_t PALS[25][KC_N] = {
     {C3(1,6,3), C3(6,22,12), C3(20,62,34), C3(57,255,20), C3(10,70,16), C3(90,255,190), C3(240,255,244), C3(110,160,128), C3(16,44,26), C3(255,200,60), C3(57,255,20), C3(1,6,3), C3(0,230,180)},
     {C3(4,6,1), C3(16,22,4), C3(52,66,12), C3(198,255,0), C3(54,78,0), C3(120,240,255), C3(250,255,232), C3(150,165,110), C3(36,46,10), C3(255,150,40), C3(198,255,0), C3(4,6,1), C3(120,240,255)},
     /* for every theme too: PINK, GOLD */
-    {C3(16,4,12), C3(34,10,26), C3(76,26,60), C3(255,60,170), C3(80,12,52), C3(120,230,255), C3(255,236,248), C3(180,130,160), C3(62,20,48), C3(255,190,60), C3(255,60,170), C3(16,4,12), C3(170,140,255)},
+    {C3(10,8,34), C3(66,26,62), C3(255,60,170), C3(255,60,170), C3(110,30,84), C3(90,170,255), C3(255,240,250), C3(196,156,200), C3(40,24,62), C3(255,190,60), C3(255,60,170), C3(16,4,12), C3(120,170,255)},   /* (PINK: fluo pink edges, a darker pale pink inside, blue around: synthwave) */
     {C3(12,9,2), C3(28,22,6), C3(70,56,16), C3(255,196,40), C3(72,52,8), C3(255,240,180), C3(255,250,236), C3(176,160,120), C3(56,44,14), C3(255,110,50), C3(255,196,40), C3(12,9,2), C3(255,140,90)},
     /* TECH (its own two): VOLT (fluo green, an ice white-cyan beside it), CYBER (electric cyan, magenta beside it) */
     {C3(2,5,6), C3(8,18,16), C3(22,50,44), C3(57,255,20), C3(8,56,20), C3(120,255,230), C3(240,255,250), C3(104,150,140), C3(16,38,34), C3(255,200,60), C3(57,255,20), C3(2,5,6), C3(120,255,230)},
     {C3(2,4,10), C3(8,14,30), C3(22,40,80), C3(0,225,255), C3(6,48,76), C3(255,70,200), C3(238,250,255), C3(104,136,170), C3(16,30,60), C3(255,190,60), C3(0,225,255), C3(2,4,10), C3(255,70,200)},
     /* for every theme: SKY (light: white cards on a pale blue, navy text, a clear blue accent), BLAZE (black, greys, fluo orange, the text white) */
-    {C3(226,238,250), C3(252,253,255), C3(176,198,222), C3(18,108,210), C3(206,226,250), C3(0,150,196), C3(8,22,44), C3(70,92,118), C3(200,216,234), C3(226,104,16), C3(18,108,210), C3(255,255,255), C3(120,76,206)},
+    {C3(210,222,236), C3(240,244,250), C3(160,182,208), C3(18,108,210), C3(198,216,240), C3(28,62,142), C3(8,22,44), C3(64,84,110), C3(190,206,226), C3(226,104,16), C3(28,62,142), C3(255,255,255), C3(120,76,206)},   /* (SKY: a blue-grey, its second blue navy) */
     {C3(0,0,0), C3(22,22,24), C3(72,72,76), C3(255,112,0), C3(70,30,0), C3(170,170,176), C3(255,255,255), C3(176,176,182), C3(46,46,50), C3(255,60,40), C3(255,128,0), C3(0,0,0), C3(255,176,64)},
     /* RIBBON (its own two): EMBER (orange, a cyan beside it, yellow, violet: on a deep navy), ICE NEON (cyan, magenta beside it) */
     {C3(6,8,14), C3(18,22,34), C3(44,52,72), C3(255,112,30), C3(70,34,16), C3(60,200,255), C3(245,248,255), C3(130,140,160), C3(30,36,52), C3(255,190,40), C3(255,112,30), C3(6,8,14), C3(180,120,255)},
-    {C3(5,8,16), C3(16,22,36), C3(40,54,78), C3(60,200,255), C3(14,52,72), C3(255,80,170), C3(240,248,255), C3(124,142,166), C3(28,38,56), C3(255,200,60), C3(60,200,255), C3(5,8,16), C3(170,130,255)},
+    {C3(14,22,38), C3(28,40,60), C3(62,82,112), C3(80,210,255), C3(20,60,82), C3(255,96,180), C3(244,250,255), C3(140,158,182), C3(38,50,70), C3(255,200,60), C3(80,210,255), C3(14,22,38), C3(170,130,255)},   /* (ICE NEON: a little lighter) */
 };
 static const char *const PAL_NAME[7][2] = {{"FLUO GREEN", "TOXIC"}, {"STUDIO", "OCEAN"}, {"PURE", "PURE RED"}, {"RACK", "MAGMA"}, {"VOLT", "CYBER"}, {"EMBER", "ICE NEON"}, {"EMBER", "ICE NEON"}};
 static uint16_t kc[KC_N];
@@ -58,7 +58,7 @@ static uint8_t theme, theme_pal, g_rad;        /* (g_rad: a RAD palette, the gra
 #define NPAL_BASE 13u                           /* the palettes: 0..12, then their RAD versions 13..25 */
 #define PAL_SKY 11u
 static uint16_t g_rtop, g_rbot, g_rcell;        /* RAD: the background's top and bottom, the cards' bottom */
-static uint8_t g_wgrad, g_sky;                  /* (g_sky: SKY, office-like: square windows in relief, with a shadow) */                         /* 1: the oscillator's line yellow -> orange -> light red (SYNTHWAVE RAD) */
+static uint8_t g_wgrad, g_sky, g_rflat;          /* (g_rflat: RAD, the boxes left plain) */                  /* (g_sky: SKY, office-like: square windows in relief, with a shadow) */                         /* 1: the oscillator's line yellow -> orange -> light red (SYNTHWAVE RAD) */
 #define PAL_BW (theme_pal == 4u || theme_pal == 5u)   /* black and white, inverted: no colours of their own */
 static uint16_t g_mix(uint16_t a, uint16_t b, uint32_t t);
 static uint8_t g_con, g_bri = 3;                /* BRIGHTNESS: 0 ECO, 1 NORMAL, 2 BRIGHT, 3 MAX */
@@ -97,14 +97,21 @@ static void theme_set(uint32_t t, uint32_t pal)
     for (i = 0; i < KC_N; i++) kc[i] = g_con && theme_pal != PAL_SKY ? con_px(PALS[k][i], PALS[k][KC_BG], PALS[k][KC_WHITE]) : PALS[k][i];   /* (SKY keeps its pale blue) */
     g_rtop = g_mix(kc[KC_BG], kc[KC_LIME], 110); g_rbot = g_mix(kc[KC_BG], kc[KC_CYAN], 110); g_rcell = g_mix(kc[KC_BG], kc[KC_CYAN], 60);
     g_wgrad = 0;
+    g_rflat = 0;
     g_sky = theme_pal == PAL_SKY;
     if (g_rad && theme == 0u && theme_pal == 0u) {   /* CLASSIC GLOW, FLUO GREEN RAD: a deeper, bluer green into a night blue, the line yellow */
         g_rtop = RGB(10, 74, 66); g_rbot = RGB(3, 7, 30); g_rcell = RGB(4, 22, 40);
         kc[KC_WAVE] = RGB(255, 222, 40);
+    } else if (g_rad && theme >= 5u && theme_pal == 1u) {   /* (RIBBON) ICE NEON RAD: a cyan blue into a pale dark blue-green */
+        g_rtop = RGB(40, 150, 196); g_rbot = RGB(20, 58, 58); g_rcell = RGB(24, 64, 72);
+    } else if (g_rad && theme_pal == 4u) {      /* BLACK / WHITE RAD: darker at the top, lighter at the bottom, the boxes a touch lighter */
+        g_rtop = RGB(20, 20, 22); g_rbot = RGB(92, 94, 98); g_rcell = RGB(64, 66, 70);
+    } else if (g_rad && theme_pal == 5u) {      /* INVERTED RAD: the gradient outside (dark at the top, darker toward the bottom), the boxes plain light grey */
+        g_rtop = RGB(96, 98, 104); g_rbot = RGB(24, 25, 28); g_rflat = 1;
     } else if (g_rad && theme_pal == PAL_SKY) {   /* SKY RAD: turned over, an off-white touched with blue at the top, the blue at the bottom */
         g_rtop = RGB(238, 243, 250); g_rbot = g_mix(kc[KC_BG], kc[KC_LIME], 110); g_rcell = RGB(214, 228, 246);
     } else if (g_rad && theme_pal == 2u) {      /* SYNTHWAVE RAD: violet into a very dark blue-violet, the line yellow to orange to light red */
-        g_rtop = RGB(74, 22, 110); g_rbot = RGB(10, 6, 30); g_rcell = RGB(20, 10, 46);
+        g_rtop = RGB(96, 34, 140); g_rbot = RGB(6, 4, 20); g_rcell = RGB(20, 10, 46);
         kc[KC_WAVE] = RGB(255, 140, 20); g_wgrad = 1;
     }
     if (g_con && theme_pal != PAL_SKY) {        /* (the cards stay apart from the background) */
