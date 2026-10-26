@@ -48,7 +48,6 @@ footer{margin-top:50px;border-top:1px solid var(--rule);padding-top:18px;color:v
 .fab:hover{filter:brightness(1.1);color:#1b0e02}
 .dbar{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;justify-content:center;background:linear-gradient(90deg,#3a2208,#241a0e 60%,#3a2208);border:1px solid #7a4a18;border-radius:14px;padding:12px 16px;margin:14px 0;color:#ffe2bf;font-size:.98rem;text-align:center}
 .dbar a{background:#f08c3c;color:#1b0e02;font-weight:800;text-decoration:none;border-radius:10px;padding:8px 16px}
-.banner{margin:18px 0}.banner img{width:100%;border-radius:14px;display:block}.banner ol{list-style:none;counter-reset:bp;display:grid;grid-template-columns:repeat(4,1fr);gap:6px 18px;margin:16px 0 0;padding:0}.banner ol li{counter-increment:bp;position:relative;padding:6px 0 6px 38px;font-weight:700;font-size:1.02rem;line-height:1.3;display:flex;align-items:center}.banner ol li::before{content:counter(bp);position:absolute;left:0;top:50%;transform:translateY(-50%);font:800 1.7rem var(--mono);color:var(--lime);opacity:.35}@media(max-width:820px){.banner ol{grid-template-columns:repeat(2,1fr)}}@media(max-width:480px){.banner ol{grid-template-columns:1fr}}
 .news{list-style:none;padding:0;margin:12px 0 0;display:grid;gap:6px}.news li{display:grid;grid-template-columns:62px 1fr;gap:4px 12px;align-items:start;padding:8px 12px;background:var(--panel);border:1px solid var(--rule);border-radius:10px;font-size:.92rem;line-height:1.45}.news .v{font:700 .85rem var(--mono);color:var(--lime);padding-top:1px}.news ul{margin:0;padding-left:16px}.news ul li{display:list-item;padding:0;border:0;background:none;font-size:inherit}.news.old li{padding:5px 12px;font-size:.86rem;color:var(--mut)}.news.old .v{color:var(--mut)}details.olds{margin-top:8px}details.olds summary{cursor:pointer;color:var(--cyan);font-size:.92rem;padding:6px 2px}@media(max-width:520px){.news li{grid-template-columns:1fr}}
 </style></head><body><main>
 <nav class="bar"><span class="logo">K-WA<b>SUB</b></span><span class="sp"></span><a href="#try">Try it</a><a href="#install">Install</a><a href="manual.html">Manual</a><a href="data.html"><b>Data</b></a><a href="#news">What's new</a><a href="#don">Support</a><a href="https://github.com/Guizmoh/K-WASUB_Firmware_for_FM1">GitHub</a><span class="lang"><b>EN</b> · <a href="fr/index.html" hreflang="fr">FR</a></span></nav>
@@ -58,16 +57,6 @@ footer{margin-top:50px;border-top:1px solid var(--rule);padding-top:18px;color:v
 <p class="lead">K-WASUB is a free firmware for the M-VAVE FM-1. It is made to build and play <b>DnB, dub, dubstep and techno basses</b>: growling reeses, deep subs, 808s, and above all a <b>wobble you shape live</b> with the knobs and the keys.</p>
 <div class="cta"><a class="btn p" href="#try">▶ Try it in the browser</a><a class="btn" href="#install">⬇ Install on the FM-1</a><a class="btn" href="manual.html">📖 Read the manual</a></div></section>
 
-<section class="sec banner"><img src="docs/img/promo-banner.png" alt="K-WASUB: the WOBBLE 01 preset on HOME, the EQ in CLASSIC GLOW, OSC A in TECH CYBER, SHIFT mode"><ol>
-<li>4 or 8 engines</li>
-<li>A wobble you shape live</li>
-<li>CLASSIC or SHIFT</li>
-<li>MORPH X/Y and A/B</li>
-<li>SEQ BASS up to 64 steps</li>
-<li>4-band EQ</li>
-<li>7 themes</li>
-<li>Free &amp; open source</li>
-</ol></section>
 
 <section class="sec"><h2>What is it for?</h2>
 <div class="cards">
@@ -104,13 +93,14 @@ footer{margin-top:50px;border-top:1px solid var(--rule);padding-top:18px;color:v
 <section class="sec" id="news"><h2>Latest updates</h2>
 <!-- news: newest first; the first four in full -->
 <ol class="news">
+<li><span class="v">0.9.49</span><ul><li><b>OSC C</b> (SAMPLE): the level goes twice as loud, the sample is heard over the rest</li></ul></li>
 <li><span class="v">0.9.48</span><ul><li><b>AUDIO CORES</b>: two cores no longer fall back to one for good after a power off or when core 1 is too slow once; SYSTEM and the start screen say why core 1 is not running</li></ul></li>
 <li><span class="v">0.9.47</span><ul><li><b>SEQ BASS</b>: patterns of up to <b>64 steps</b> (LENGTH 32, 64), a <b>PROBABILITY</b> (%) and a <b>TRIG CONDITION</b> on every step: 1/2, 2/2, 1/4…4/4, START, NOT START, IF BEFORE, IF AFTER</li></ul></li>
 <li><span class="v">0.9.46</span><ul><li><b>LANGUAGE</b> (SYSTEM, English by default): English, Français or Español translate the view titles at the top of every screen</li><li>a Spanish README (<code>es/README.md</code>)</li></ul></li>
-<li><span class="v">0.9.45</span><ul><li><b>FX PADS</b>: <b>QUANTIZE</b> on ALGO (OFF, 1 BAR, 1/2, 1/4, 1/8, 1/16, 1/24, 1/32, 1/64): a key waits for the next division, the wobble changes land on time</li><li>the knobs: K1 CUTOFF, K2 RESONANCE, K3 FILTER TYPE, K4 MORPH A/B</li></ul></li>
 </ol>
-<details class="olds"><summary>Older versions (34)</summary>
+<details class="olds"><summary>Older versions (35)</summary>
 <ol class="news old">
+<li><span class="v">0.9.45</span><div><b>FX PADS</b>: <b>QUANTIZE</b> on ALGO (OFF, 1 BAR, 1/2, 1/4, 1/8, 1/16, 1/24, 1/32, 1/64): a key waits for the next division, the wobble changes land on time · the knobs: K1 CUTOFF, K2 RESONANCE, K3 FILTER TYPE, K4 MORPH A/B</div></li>
 <li><span class="v">0.9.44</span><div><b>A/B MIX</b> as a destination (LFO, matrix, quick assign) · LFO held: <b>LFO 2</b> on the knobs; with <b>OCT−</b> held too, in either order: <b>LFO 1</b> (by default on the cutoff) · <b>HOME</b> held: <b>A + B</b>, the two oscillators together · <b>REC</b> held: <b>PANIC</b></div></li>
 <li><span class="v">0.9.43</span><div><b>EMBER</b> lighter; EMBER and <b>ICE NEON</b> (RIBBON's own) now keep their lighter navy grounds (DEEP BLACK no longer turns them black)</div></li>
 <li><span class="v">0.9.42</span><div>Palettes retouched: <b>ICE NEON</b> lighter · <b>SYNTHWAVE</b> a light pink from the bottom · <b>FLUO</b> a yellow glow at the top · <b>PINK</b> synthwave (fluo pink edges, darker pale pink inside, blue around) · <b>SKY</b> a blue-grey, navy second blue · RAD: ICE NEON (cyan into a pale dark blue-green), SYNTHWAVE (lighter top, darker bottom), BLACK / WHITE (dark top, lighter bottom), INVERTED (the gradient outside, plain light grey boxes, black text)</div></li>

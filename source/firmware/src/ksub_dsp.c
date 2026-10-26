@@ -754,7 +754,7 @@ static void voice_block(voice_t *v, int32_t *acc)
                 ix = v->sm_pos >> 16; f = (v->sm_pos >> 1) & 32767u;
                 a = KS_MULAW[d[ix]];
                 b = ix + 1u < len ? KS_MULAW[d[ix + 1u]] : a;
-                smb[i] = mul15(a + mul15(b - a, (int32_t)f), lv) >> 1;
+                smb[i] = mul15(a + mul15(b - a, (int32_t)f), lv);
                 v->sm_pos += st;
                 continue;
             }
@@ -774,7 +774,7 @@ static void voice_block(voice_t *v, int32_t *acc)
                 v->sm_g[h] += st;
                 v->sm_age[h]++;
             }
-            smb[i] = mul15(acc, lv) >> 1;
+            smb[i] = mul15(acc, lv);
             v->sm_pos += (uint32_t)(((uint64_t)st * sp) >> 8);
         }
         if (v->age == vage) sm_show = v->sm_pos;

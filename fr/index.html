@@ -48,7 +48,6 @@ footer{margin-top:50px;border-top:1px solid var(--rule);padding-top:18px;color:v
 .fab:hover{filter:brightness(1.1);color:#1b0e02}
 .dbar{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;justify-content:center;background:linear-gradient(90deg,#3a2208,#241a0e 60%,#3a2208);border:1px solid #7a4a18;border-radius:14px;padding:12px 16px;margin:14px 0;color:#ffe2bf;font-size:.98rem;text-align:center}
 .dbar a{background:#f08c3c;color:#1b0e02;font-weight:800;text-decoration:none;border-radius:10px;padding:8px 16px}
-.banner{margin:18px 0}.banner img{width:100%;border-radius:14px;display:block}.banner ol{list-style:none;counter-reset:bp;display:grid;grid-template-columns:repeat(4,1fr);gap:6px 18px;margin:16px 0 0;padding:0}.banner ol li{counter-increment:bp;position:relative;padding:6px 0 6px 38px;font-weight:700;font-size:1.02rem;line-height:1.3;display:flex;align-items:center}.banner ol li::before{content:counter(bp);position:absolute;left:0;top:50%;transform:translateY(-50%);font:800 1.7rem var(--mono);color:var(--lime);opacity:.35}@media(max-width:820px){.banner ol{grid-template-columns:repeat(2,1fr)}}@media(max-width:480px){.banner ol{grid-template-columns:1fr}}
 .news{list-style:none;padding:0;margin:12px 0 0;display:grid;gap:6px}.news li{display:grid;grid-template-columns:62px 1fr;gap:4px 12px;align-items:start;padding:8px 12px;background:var(--panel);border:1px solid var(--rule);border-radius:10px;font-size:.92rem;line-height:1.45}.news .v{font:700 .85rem var(--mono);color:var(--lime);padding-top:1px}.news ul{margin:0;padding-left:16px}.news ul li{display:list-item;padding:0;border:0;background:none;font-size:inherit}.news.old li{padding:5px 12px;font-size:.86rem;color:var(--mut)}.news.old .v{color:var(--mut)}details.olds{margin-top:8px}details.olds summary{cursor:pointer;color:var(--cyan);font-size:.92rem;padding:6px 2px}@media(max-width:520px){.news li{grid-template-columns:1fr}}
 </style></head><body><main>
 <nav class="bar"><span class="logo">K-WA<b>SUB</b></span><span class="sp"></span><a href="#essayer">Essayer</a><a href="#installer">Installer</a><a href="manual.html">Manuel</a><a href="../data.html?lang=fr"><b>Données</b></a><a href="#nouveautes">Nouveautés</a><a href="#don">Soutenir</a><a href="https://github.com/Guizmoh/K-WASUB_Firmware_for_FM1">GitHub</a><span class="lang"><a href="../index.html" hreflang="en">EN</a> · <b>FR</b></span></nav>
@@ -58,16 +57,6 @@ footer{margin-top:50px;border-top:1px solid var(--rule);padding-top:18px;color:v
 <p class="lead">K-WASUB est un firmware gratuit pour le M-VAVE FM-1. Il sert à fabriquer et jouer des <b>basses de DnB, dub, dubstep et techno</b> : reese qui grognent, subs profonds, 808, et surtout un <b>wobble que tu modules en direct</b> avec les potards et les touches.</p>
 <div class="cta"><a class="btn p" href="#essayer">▶ Essayer dans le navigateur</a><a class="btn" href="#installer">⬇ Installer sur le FM-1</a><a class="btn" href="manual.html">📖 Lire le manuel</a></div></section>
 
-<section class="sec banner"><img src="../docs/img/promo-banner.png" alt="K-WASUB : le preset WOBBLE 01 sur HOME, l'EQ en CLASSIC GLOW, OSC A en TECH CYBER, le mode SHIFT"><ol>
-<li>4 ou 8 moteurs</li>
-<li>Un wobble modulé en direct</li>
-<li>CLASSIC ou SHIFT</li>
-<li>MORPH X/Y et A/B</li>
-<li>SEQ BASS jusqu'à 64 pas</li>
-<li>EQ 4 bandes</li>
-<li>7 thèmes</li>
-<li>Gratuit et libre</li>
-</ol></section>
 
 <section class="sec"><h2>À quoi ça sert ?</h2>
 <div class="cards">
@@ -104,13 +93,14 @@ footer{margin-top:50px;border-top:1px solid var(--rule);padding-top:18px;color:v
 <section class="sec" id="nouveautes"><h2>Dernières mises à jour</h2>
 <!-- news: newest first; the first four in full -->
 <ol class="news">
+<li><span class="v">0.9.49</span><ul><li><b>OSC C</b> (SAMPLE) : le niveau monte deux fois plus fort, le sample s'entend par-dessus le reste</li></ul></li>
 <li><span class="v">0.9.48</span><ul><li><b>AUDIO CORES</b> : les deux cœurs ne repassent plus définitivement à un seul après une extinction ou quand le cœur 1 est trop lent une fois ; SYSTEM et l'écran de démarrage disent pourquoi le cœur 1 ne tourne pas</li></ul></li>
 <li><span class="v">0.9.47</span><ul><li><b>SEQ BASS</b> : patterns jusqu'à <b>64 pas</b> (LENGTH 32, 64), une <b>PROBABILITY</b> (%) et une <b>TRIG CONDITION</b> sur chaque pas : 1/2, 2/2, 1/4…4/4, START, NOT START, IF BEFORE, IF AFTER</li></ul></li>
 <li><span class="v">0.9.46</span><ul><li><b>LANGUAGE</b> (SYSTEM, anglais par défaut) : English, Français ou Español traduisent les titres de vue en haut de chaque écran</li><li>un README en espagnol (<code>es/README.md</code>)</li></ul></li>
-<li><span class="v">0.9.45</span><ul><li><b>FX PADS</b> : <b>QUANTISATION</b> sur ALGO (OFF, 1 BAR, 1/2, 1/4, 1/8, 1/16, 1/24, 1/32, 1/64) : une touche attend la prochaine division, les changements de wobble tombent en rythme</li><li>les potards : K1 CUTOFF, K2 RÉSONANCE, K3 TYPE DE FILTRE, K4 MORPH A/B</li></ul></li>
 </ol>
-<details class="olds"><summary>Versions précédentes (35)</summary>
+<details class="olds"><summary>Versions précédentes (36)</summary>
 <ol class="news old">
+<li><span class="v">0.9.45</span><div><b>FX PADS</b> : <b>QUANTISATION</b> sur ALGO (OFF, 1 BAR, 1/2, 1/4, 1/8, 1/16, 1/24, 1/32, 1/64) : une touche attend la prochaine division, les changements de wobble tombent en rythme · les potards : K1 CUTOFF, K2 RÉSONANCE, K3 TYPE DE FILTRE, K4 MORPH A/B</div></li>
 <li><span class="v">0.9.44</span><div><b>A/B MIX</b> en destination (LFO, matrice, assignation rapide) · LFO maintenu : <b>LFO 2</b> sur les potards ; avec <b>OCT−</b> maintenu aussi, dans n'importe quel ordre : <b>LFO 1</b> (par défaut sur le cutoff) · <b>HOME</b> maintenu : <b>A + B</b>, les deux oscillateurs ensemble · <b>REC</b> maintenu : <b>PANIC</b></div></li>
 <li><span class="v">0.9.43</span><div><b>EMBER</b> plus clair ; EMBER et <b>ICE NEON</b> (les palettes de RIBBON) gardent maintenant leur fond bleu nuit plus clair (DEEP BLACK ne les remet plus au noir)</div></li>
 <li><span class="v">0.9.42</span><div>Palettes retouchées : <b>ICE NEON</b> plus clair · <b>SYNTHWAVE</b> un rose clair en bas · <b>FLUO</b> une lueur jaune en haut · <b>PINK</b> synthwave (contours rose fluo, intérieur rose pâle plus foncé, du bleu autour) · <b>SKY</b> gris bleuté, second bleu marine · RAD : ICE NEON (bleu cyan vers bleu-vert foncé pâle), SYNTHWAVE (plus clair en haut, plus foncé en bas), BLACK / WHITE (foncé en haut, plus clair en bas), INVERTED (le dégradé dehors, cases gris clair unies, texte noir)</div></li>

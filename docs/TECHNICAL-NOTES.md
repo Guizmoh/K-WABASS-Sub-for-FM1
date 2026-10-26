@@ -18,8 +18,8 @@ M-VAVE FM-1: JieLi AC79, two cores, no FPU, code run in place from flash. Rules 
 
 There is one block of latency (5.8 ms). The start of core 1 follows the JieLi SDK sequence (`EnableOtherCpu`, `cpu1_start`; see `source/firmware/hal/fm1_cpu1.h`) with safeguards:
 - if core 1 does not answer, everything runs on core 0 (same sound);
-- if core 1 cannot keep up (6 late or cut blocks out of the last 32, about 0.2 s), core 0 takes the voices back, `CORE 1 TOO SLOW: 1 CORE` shows; for this session only (0.9.48: the next start tries two cores again);
-- if the FM-1 crashes (crash, watchdog, low voltage) within 10 s of a two-core start, the next start uses one core; `SYSTEM › AUDIO CORES` lets you try again (0.9.48: a power off or a restart asked for no longer counts);
+- if core 1 cannot keep up (6 late or cut blocks out of the last 32, about 0.2 s), core 0 takes the voices back, `CORE 1 TOO SLOW: 1 CORE` shows; for this session only (0.9.49: the next start tries two cores again);
+- if the FM-1 crashes (crash, watchdog, low voltage) within 10 s of a two-core start, the next start uses one core; `SYSTEM › AUDIO CORES` lets you try again (0.9.49: a power off or a restart asked for no longer counts);
 - `SYSTEM › AUDIO CORES` says why two cores do not run: `AT NEXT START`, `CORE 1 SILENT` (it did not answer at the start), `STOPPED: TOO SLOW`, `STOPPED: FLASH` (it did not wait for a flash write), `SAFE (CRASH)`; the start screen too;
 - before an update, UBOOT mode or a crash, core 1 is put back in reset.
 
@@ -50,8 +50,8 @@ OSC C plays 8-bit mu-law sounds from flash (`KS_SMP`, 10 sounds at 22.05 kHz and
 
 ```sh
 cd source
-./build.sh --release 0.9.48                 # build/k-wasub-0.9.48.fwsc   (X.Y, X.Y.Z or X.Y.Z-suffix; identity FM-1_97Y)
-APP_VER=0.9.48 bash web/make_emulator.sh    # ../emulator/index.html  
+./build.sh --release 0.9.49                 # build/k-wasub-0.9.49.fwsc   (X.Y, X.Y.Z or X.Y.Z-suffix; identity FM-1_97Y)
+APP_VER=0.9.49 bash web/make_emulator.sh    # ../emulator/index.html  
 bash web/make_installer.sh                  # ../installer.html with the newest install/k-wasub-*.fwsc
 sh web/make_data.sh                         # ../data.html (backup, WAV export, samples) with web/kwlink.js
 node tests/link.mjs                         # the Data link against the emulator
