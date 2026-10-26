@@ -1900,6 +1900,18 @@ static void ask_done(uint32_t sel)
     toast(sel ? "SHIFT MODE" : "CLASSIC MODE");
     g_force = 1;
 }
+/* DIM: 2 minutes untouched, the screen goes to its lowest brightness; the next touch wakes it (a button or a knob only
+ * wakes it, a key wakes it and plays) */
+static uint32_t idle_ms;
+static uint8_t dimmed;
+static void dim_set(int on)
+{
+    if (dimmed == (uint8_t)on) return;
+    dimmed = (uint8_t)on;
+    g_bri = on ? 0u : set.bri;
+    theme_set(set.theme, set.pal);
+    g_force = 1;
+}
 static void ui_input(void)
 {
     uint32_t rel, pr = fm1_input_edges(&rel), b, k, now = fm1_in.notes, ne = fm1_input_note_edges();
@@ -1917,6 +1929,7 @@ static void ui_input(void)
         else if (fm1_ms - ask_ms > 20000u) ask_done(ask_sel);   /* (no answer: the one shown) */
         pr = 0;
     }
+    if (pr || ne) { idle_ms = fm1_ms; if (dimmed) { dim_set(0); pr = 0; } }   /* (the touch that wakes the screen does nothing else) */
     for (b = 0; b < 14u; b++) {
         if (!(pr & (1u << b))) continue;
         splash_until = 0;
@@ -1960,6 +1973,8 @@ static void ui_input(void)
         }
     }
     for (b = 0; b < 7u; b++) if ((d = fm1_enc_take(b)) != 0) {
+        idle_ms = fm1_ms;
+        if (dimmed) { dim_set(0); continue; }
         if (cmp_on) continue;                   /* (comparing: nothing changes) */
         if (hb.b <= BTN_OCT_UP && b >= ENC_KNOB1 && b <= ENC_KNOB4) hb.used = 1;   /* (SHIFT: no octave on release) */
         if (hb.b != 0xFF && (hb.b == BTN_LFO || hb.b == BTN_ENV) && ((b >= ENC_KNOB1 && b <= ENC_KNOB4) || b == ENC_ALGORITHM)) {
@@ -2208,6 +2223,7 @@ static void app_step(void)
         settings_write();
     }
     link_service();
+    if (!dimmed && fm1_ms - idle_ms > 120000u) dim_set(1);
 #if KS_DUAL
     if (c1_failed) {                            /* core 1 stalled (no sound, frozen LFOs): one core, kept */
         c1_failed = 0;

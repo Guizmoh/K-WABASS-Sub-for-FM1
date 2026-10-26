@@ -1769,7 +1769,22 @@ static void draw_all(void)
     }
     {                                           /* the value turned, big: before -> now (below the picture, when there is one) */
         int32_t vy = VZ_OF[vidx()] ? 146 : 72;   /* (below the picture, the scope included) */
-        if (vpop_ms && !dpop_ms && !pend_on && !C3_ON && !win && g_vis(vy, 66)) {
+        if (vpop_ms && vpop_id == G_FONT) {     /* FONT: the ones around, each in itself */
+            if (!dpop_ms && !pend_on && !win && g_vis(60, 112)) {
+                static const char *const FN[4] = {"SANS  Aa 123", "MONO  Aa 123", "HYPER  Aa 123", "PIXEL  Aa 123"};
+                int32_t cur = (int32_t)(set.font & 3u), i, y;
+                uint8_t bold = g_bold;
+                g_box(20, 60, 200, 112, K_PANEL, K_LIME);
+                g_text_c(T_XS, 120, 64, "FONT", K_GREY);
+                for (i = cur - 2, y = 78; i <= cur + 2; i++, y += 18) {
+                    if (i < 0 || i > 3) continue;
+                    if (i == cur) g_box(26, y - 2, 188, 18, K_LIMED, K_LIME);
+                    g_bold = i == 2;
+                    g_text_c(FAMS[i][1], 120, y + 1, FN[i], i == cur ? K_WHITE : K_GREY);
+                }
+                g_bold = bold;
+            }
+        } else if (vpop_ms && !dpop_ms && !pend_on && !C3_ON && !win && g_vis(vy, 66)) {
             char now[24], t[40];
             str_cat(str_cat(t, vpop_pre), item_name(vpop_id));
             item_text(vpop_id, now);
