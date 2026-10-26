@@ -56,6 +56,7 @@ sh web/make_data.sh                         # ../data.html (backup, WAV export, 
 node tests/link.mjs                         # the Data link against the emulator
 bash tests/run_stress.sh                    # 13 000 parameter runs under UBSan
 python3 tests/manual_shots.py               # every screen of the manual -> docs/img
+python3 tools/make_manual.py                # (from the repo root) manual.html and fr/manual.html, short, from one text
 ```
 Toolchain and SDK: see [`source/BUILDING.md`](../source/BUILDING.md). The build checks the memory map, that no register address appears outside `hal/`, and that the package fits the loader's limits.
 
