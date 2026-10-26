@@ -93,10 +93,10 @@ def build(L):
                   + '<div><ul class="tight">' + "".join(f'<li>{key(b)} {t(v)}</li>' for b, v in pages) + '</ul></div></div>'
                   + '<ul class="tight">' + t(T(
                       '<li><b>EQ</b>: SELECT a band; K1 FREQ, K2 GAIN, K3 Q, K4 SHAPE.</li>'
-                      '<li><b>RESAMPLE</b> (OSC C): records 2–4 s of the output, OSC C plays it back (loop, speed, keys). Kept until power-off.</li>'
+                      '<li><b>OSC C · SAMPLE</b>: 18 sounds (808, kick, snare, vox, reese, growl, pluck, bell, metal, brass; attacks PICK, MALLET, CHIFF, HAMMER, ZAP, SLAP, CLICK, SCRATCH) and 9 textures (vinyl, tape hiss, rain, wind, data, SHIMMER, DARK PAD, BUBBLES, MACHINE). K3 <b>START</b> and K4 <b>END</b> cut the beginning and the end (the cut parts dim on the picture); <b>SPEED</b> 25 %–400 %, the pitch kept (right: slower, left: faster); <b>DIR</b> FORWARD, REVERSE or PING-PONG; PLAY AUTO / LOOP / ONCE.</li>''<li><b>RESAMPLE</b> (OSC C): records 2–4 s of the output, OSC C plays it back (loop, speed, keys). Kept until power-off.</li>'
                       '<li>Almost anything is a <b>destination</b> (LFOs, matrix, quick assign), MORPH X / Y / A-B and A/B MIX included.</li>',
                       '<li><b>EQ</b> : SELECT une bande ; K1 FREQ, K2 GAIN, K3 Q, K4 SHAPE.</li>'
-                      '<li><b>RESAMPLE</b> (OSC C) : enregistre 2 à 4 s de la sortie, OSC C la rejoue (boucle, vitesse, touches). Gardé jusqu’à l’extinction.</li>'
+                      '<li><b>OSC C · SAMPLE</b> : 18 sons (808, kick, snare, voix, reese, growl, pluck, cloche, métal, cuivre ; attaques PICK, MALLET, CHIFF, HAMMER, ZAP, SLAP, CLICK, SCRATCH) et 9 textures (vinyle, souffle de bande, pluie, vent, data, SHIMMER, DARK PAD, BUBBLES, MACHINE). K3 <b>START</b> et K4 <b>END</b> coupent le début et la fin (les parties coupées s’assombrissent sur l’image) ; <b>SPEED</b> de 25 % à 400 %, à hauteur égale (à droite : plus lent, à gauche : plus rapide) ; <b>DIR</b> FORWARD, REVERSE ou PING-PONG ; PLAY AUTO / LOOP / ONCE.</li>''<li><b>RESAMPLE</b> (OSC C) : enregistre 2 à 4 s de la sortie, OSC C la rejoue (boucle, vitesse, touches). Gardé jusqu’à l’extinction.</li>'
                       '<li>Presque tout peut être une <b>destination</b> (LFO, matrice, assignation rapide), y compris MORPH X / Y / A-B et A/B MIX.</li>')) + '</ul>'))
 
     # 4 SEL -- one picture (MORPH X/Y, the one that needs a picture: a point dragged in a square); the rest as text

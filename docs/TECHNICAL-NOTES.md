@@ -37,11 +37,12 @@ There is one block of latency (5.8 ms). The start of core 1 follows the JieLi SD
 
 ## Patches and storage
 
-- A patch has 130 parameters (`NP`), 140 at most (`NP_MAX`). A user slot keeps `NP_STORE` = 112 bytes in the first flash sector and the rest in `uext` (28 bytes a slot) in the second sector, at `UX_AT` (0x400), after `perf` (SEQ BASS, ARP, MACROS, MIDI CC map, EQ, MORPH choices). Static asserts keep `perf` under `UX_AT` and `uext` inside the sector.
+- A patch has 138 parameters (`NP`, 0.9.55: OSC C's `SM_START`, `SM_END`, `SM_DIR`), 140 at most (`NP_MAX`). A user slot keeps `NP_STORE` = 112 bytes in the first flash sector and the rest in `uext` (28 bytes a slot) in the second sector, at `UX_AT` (0x400), after `perf` (SEQ BASS, ARP, MACROS, MIDI CC map, EQ, MORPH choices). Static asserts keep `perf` under `UX_AT` and `uext` inside the sector.
 - `UX_MAGIC` marks the layout (0x58: 16 bytes a slot, 0x59: 20, 0x5A: 28); `ux_migrate` converts older ones and gives new parameters their defaults.
 - The 48 steps past 16 of each SEQ BASS pattern (`sqx`) take the third sector; the DRUMS (`dk`: 8 patterns of up to 64 steps, the kit, the track sounds) the fourth and fifth (0x9A000–0x9BFFF, `STORE_HI` 0x9C000), with a magic and a sum (`dk_mark`). A step's `cond` byte: the trig condition in its low nibble, the note length (`SQ_GL`, 0 = half a step as before, 15 = HOLD) in its high nibble. A drum step's chance (`DK_PROB`) is the high nibble of `pc`, its condition the low one. The drums are synthesised (`dk_start` / `dk_voice`, no samples; four kits, `DK_TMIN` / `DK_TRIM` per kit; DUB TECHNO sends snare, clap, toms, chord and open hats (`DK_SEND`) to its own echo, `dk_echo`: a dotted eighth at 11 kHz in a 6144-sample buffer, low-passed and fading) and mixed after AUTO LEVEL, before MASTER and the limiter; hits are placed at the 16-sample chunk (`sq_at`) where the step falls.
 - Settings (`set`) are one sector with a CRC; fields are only ever appended, and older saves load with the new fields at their defaults (see the `LEN` list in `app_init`).
-- Item ids are `uint8_t` (`I_L1RATE` = 136 …); a static assert (`ids_fit`) keeps them under 255.
+- Item ids are `uint8_t` (`I_L1RATE` = 140 …, 136 before 0.9.55); static asserts keep them under 255 (`ids_fit`) and the patch under them (`np_fits`). MIDI LEARN stores item ids: a CC map saved before 0.9.55 (`cc_magic` 0x43) has its ids from 136 moved up 4 when loaded (0x44).
+- OSC C's samples: SAMPLE keeps 16 for RESAMPLE; the samples added in 0.9.55 are 17–28 (`sm_desc`), the knob steps through them in order with RESAMPLE last. A voice reads its sample between START and END in either direction (`sm_adv`); at any SPEED but 100 % two grains read at the pitch while the play moves slower or faster (up to 4x).
 - Destinations are stored in patches: append only (`D_MORPHX/Y/MORPH` come after the phaser's).
 
 ## Sample layer
@@ -56,8 +57,8 @@ OSC C plays 8-bit mu-law sounds from flash (`KS_SMP`, 10 sounds at 22.05 kHz and
 
 ```sh
 cd source
-./build.sh --release 0.9.54                 # build/k-wasub-0.9.54.fwsc   (X.Y, X.Y.Z or X.Y.Z-suffix; identity FM-1_97Y)
-APP_VER=0.9.54 bash web/make_emulator.sh    # ../emulator/index.html  
+./build.sh --release 0.9.55                 # build/k-wasub-0.9.55.fwsc   (X.Y, X.Y.Z or X.Y.Z-suffix; identity FM-1_97Y)
+APP_VER=0.9.55 bash web/make_emulator.sh    # ../emulator/index.html  
 bash web/make_installer.sh                  # ../installer.html with the newest install/k-wasub-*.fwsc
 sh web/make_data.sh                         # ../data.html (backup, WAV export, samples) with web/kwlink.js
 node tests/link.mjs                         # the Data link against the emulator

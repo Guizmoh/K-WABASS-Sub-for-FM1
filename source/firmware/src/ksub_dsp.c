@@ -111,6 +111,8 @@ static volatile int32_t meter_pk, meter_gr;     /* the output's peak and the glu
 #define RS_MAX (4u * RS_RATE)
 static uint8_t rs_buf[RS_MAX] POOL;
 static ks_smp_t rs_desc = {"RESAMPLE", 0u, 0u, 0u, 5523423u, 0};   /* (len 0: nothing yet; k: 11025 Hz, played as it was at C3) */
+#define SM_RS 16                                /* SAMPLE's value for the RAM one (RESAMPLE); the samples added in 0.9.55 come after it */
+static const ks_smp_t *sm_desc(int32_t sel) { return sel == SM_RS ? &rs_desc : &KS_SMP[(uint32_t)(sel < SM_RS ? sel - 1 : sel - 2) % KS_NSMP]; }
 static volatile uint32_t rs_want, rs_pos;       /* recording: how many samples, how many so far (0: not recording) */
 static int32_t rs_acc;
 static uint32_t rs_n;
@@ -483,6 +485,7 @@ static void lfo_run(uint32_t k, uint32_t beats)
 typedef struct {
     uint8_t on, note, vel, gate, slide;         /* slide: the SEQ BASS glides into this note */
     uint32_t sm_pos, sm_g[2], sm_age[2];        /* OSC C: where in its sample (Q16); SPEED: its two grains, their age */
+    int8_t sm_d, sm_gd[2];                      /* ... which way it reads (1, -1; 0: not started, 2: over), each grain's way (0: silent) */
     int32_t pitch, target;                      /* Q8 semitones (glide) */
     osc_t oa, ob;
     uint32_t phs;
@@ -498,6 +501,23 @@ static voice_t vo[NVOICE];
 static uint8_t held[16], nheld;                 /* the keys held, the last on top (mono) */
 static uint32_t vage;
 #define SM_GRAIN 1024u                          /* SPEED: a grain, in samples played (two, half a grain apart) */
+static inline int32_t sm_read(const uint8_t *d, uint32_t pos, uint32_t e)   /* OSC C: the sample at pos (Q16), between two */
+{
+    uint32_t ix = pos >> 16;
+    int32_t a = KS_MULAW[d[ix]], b = ix + 1u < e ? KS_MULAW[d[ix + 1u]] : a;
+    return a + mul15(b - a, (int32_t)((pos >> 1) & 32767u));
+}
+static int sm_adv(uint32_t *g, int32_t dir, uint32_t inc, uint32_t S, uint32_t E, uint32_t L, int loop)   /* a read position on, either way, inside [S, E) (Q16): 0 when over */
+{
+    if (dir > 0) {
+        *g += inc;
+        if (*g >= E) { if (!loop) return 0; *g = L + (*g - E) % (E - L); }
+    } else if (*g < S + inc) {
+        if (!loop) return 0;
+        *g = E - 1u - (S + inc - *g) % (E - S);
+    } else *g -= inc;
+    return 1;
+}
 static uint8_t ks_slide;                        /* (SEQ BASS) the next note_on slides: no new attack, a glide */
 static int32_t glide_from = -1;                 /* the last note started (Q8): where the next one glides from */
 
@@ -529,6 +549,7 @@ static void voice_start(voice_t *v, uint32_t note, uint32_t vel, int legato)
     v->sm_g[0] = v->sm_g[1] = 0;
     v->sm_age[0] = 0;
     v->sm_age[1] = SM_GRAIN / 2u;
+    v->sm_d = 0;
     v->on = 1;
     v->gate = 1;
     v->rand = ((int32_t)(rnd() >> 17) - 16384) * 2;
@@ -752,48 +773,50 @@ static void voice_block(voice_t *v, int32_t *acc)
         }
     }
     for (i = 0; i < (int32_t)KS_CB; i++) smb[i] = 0;
-    if (P[SM_SEL] && P[SM_LVL] && (P[SM_SEL] <= (int8_t)KS_NSMP || rs_desc.len)) {   /* OSC C: the sample (after the filter, as the sub), from the keys (C3 as made) or fixed */
-        const ks_smp_t *sm = P[SM_SEL] > (int8_t)KS_NSMP ? &rs_desc : &KS_SMP[(uint32_t)(P[SM_SEL] - 1) % KS_NSMP];
-        const uint8_t *d = P[SM_SEL] > (int8_t)KS_NSMP ? rs_buf : KS_SMP_DATA + sm->off;
+    if (P[SM_SEL] && P[SM_LVL] && (P[SM_SEL] != SM_RS || rs_desc.len)) {   /* OSC C: the sample (after the filter, as the sub), from the keys (C3 as made) or fixed */
+        const ks_smp_t *sm = sm_desc(P[SM_SEL]);
+        const uint8_t *d = P[SM_SEL] == SM_RS ? rs_buf : KS_SMP_DATA + sm->off;
         int keys = P[SM_KEY] == 1 || (P[SM_KEY] == 0 && sm->keys);
         uint32_t st = (uint32_t)(((uint64_t)pitch_inc((keys ? p : 48 * 256) + P[SM_TUNE] * 256) * sm->k) >> 32);
-        uint32_t len = sm->len, lp = P[SM_MODE] == 1 ? (sm->loop < len ? sm->loop : 0u) : P[SM_MODE] == 2 ? len : sm->loop;   /* (lp = len: once) */
-        uint32_t sp = 256u - (uint32_t)P[SM_SPEED] * 230u / 127u;   /* SPEED, Q8: 1 .. 0.1 */
+        uint32_t len = sm->len, s0, e0, l0, S, E, L, hinc, sp, dir = (uint32_t)P[SM_DIR] % 3u;
+        int loop = P[SM_MODE] == 1 || (P[SM_MODE] == 0 && sm->loop < len);
         int32_t lv = lvl15(pv(P[SM_LVL], 0) >> 8);
+        s0 = (uint32_t)P[SM_START] * len >> 7;  /* START / END: the part played */
+        e0 = len - ((uint32_t)P[SM_END] * len >> 7);
+        if (e0 < s0 + 32u) e0 = s0 + 32u < len ? s0 + 32u : len;
+        if (s0 + 32u > e0) s0 = e0 > 32u ? e0 - 32u : 0u;
+        l0 = sm->loop < len ? sm->loop : 0u;    /* (the loop: from the sample's loop point, inside the part) */
+        if (l0 < s0 || l0 >= e0) l0 = s0;
+        S = s0 << 16; E = e0 << 16; L = l0 << 16;
+        sp = P[SM_SPEED] >= 0 ? 256u - (uint32_t)P[SM_SPEED] * 230u / 127u : 256u + (uint32_t)(-P[SM_SPEED]) * 12u;   /* SPEED, Q8: 0.1 .. 1 .. 4 (the same pitch) */
         if (st > (8u << 16)) st = 8u << 16;
-        for (i = 0; i < (int32_t)KS_CB; i++) {
-            uint32_t ix, f, h;
-            int32_t a, b, acc = 0;
-            if ((v->sm_pos >> 16) >= len) {     /* the end: again from the loop, or silence */
-                if (lp >= len) break;
-                v->sm_pos -= (len - lp) << 16;
-            }
-            if (sp >= 256u) {                   /* (full speed: read straight) */
-                ix = v->sm_pos >> 16; f = (v->sm_pos >> 1) & 32767u;
-                a = KS_MULAW[d[ix]];
-                b = ix + 1u < len ? KS_MULAW[d[ix + 1u]] : a;
-                smb[i] = mul15(a + mul15(b - a, (int32_t)f), lv);
-                v->sm_pos += st;
-                continue;
-            }
-            for (h = 0; h < 2u; h++) {          /* slower: two grains read at the pitch, each restarting where the play is */
-                uint32_t age = v->sm_age[h];
-                if (age >= SM_GRAIN) { v->sm_age[h] = age = 0; v->sm_g[h] = v->sm_pos; }
-                ix = v->sm_g[h] >> 16;
-                if (ix >= len) {
-                    if (lp >= len) { v->sm_age[h]++; continue; }
-                    ix = lp + (ix - lp) % (len - lp);
-                    v->sm_g[h] = ix << 16 | (v->sm_g[h] & 0xFFFFu);
+        hinc = sp == 256u ? st : (uint32_t)(((uint64_t)st * sp) >> 8);
+        if (!v->sm_d) { v->sm_d = dir == 1u ? -1 : 1; v->sm_pos = v->sm_g[0] = v->sm_g[1] = dir == 1u ? E - 1u : S; v->sm_gd[0] = v->sm_gd[1] = v->sm_d; }   /* (the grain half way in: the attack at once) */
+        for (i = 0; i < (int32_t)KS_CB && v->sm_d != 2; i++) {
+            uint32_t h;
+            int32_t acc = 0;
+            if (v->sm_pos < S || v->sm_pos >= E) v->sm_pos = v->sm_d < 0 ? E - 1u : S;   /* (START / END turned while it plays) */
+            if (sp == 256u) smb[i] = mul15(sm_read(d, v->sm_pos, e0), lv);   /* (full speed: read straight) */
+            else {
+                for (h = 0; h < 2u; h++) {      /* slower or faster: two grains read at the pitch, each restarting where the play is */
+                    uint32_t age = v->sm_age[h];
+                    if (age >= SM_GRAIN) { v->sm_age[h] = age = 0; v->sm_g[h] = v->sm_pos; v->sm_gd[h] = v->sm_d; }
+                    v->sm_age[h]++;
+                    if (!v->sm_gd[h]) continue;
+                    acc += mul15(sm_read(d, v->sm_g[h], e0), (int32_t)((age < SM_GRAIN / 2u ? age : SM_GRAIN - age) << 6));   /* (a triangle) */
+                    if (!sm_adv(&v->sm_g[h], v->sm_gd[h], st, S, E, v->sm_gd[h] > 0 ? L : S, loop && dir != 2u)) v->sm_gd[h] = 0;
                 }
-                f = (v->sm_g[h] >> 1) & 32767u;
-                a = KS_MULAW[d[ix]];
-                b = ix + 1u < len ? KS_MULAW[d[ix + 1u]] : a;
-                acc += mul15(a + mul15(b - a, (int32_t)f), (int32_t)((age < SM_GRAIN / 2u ? age : SM_GRAIN - age) << 6));   /* (a triangle) */
-                v->sm_g[h] += st;
-                v->sm_age[h]++;
+                smb[i] = mul15(acc, lv);
             }
-            smb[i] = mul15(acc, lv);
-            v->sm_pos += (uint32_t)(((uint64_t)st * sp) >> 8);
+            if (dir == 2u) {                    /* PING-PONG: there and back (ONCE: one round) */
+                if (v->sm_d > 0) {
+                    v->sm_pos += hinc;
+                    if (v->sm_pos >= E) { v->sm_pos = E - 1u - (v->sm_pos - E) % (E - S); v->sm_d = -1; }
+                } else if (v->sm_pos < S + hinc) {
+                    if (!loop) v->sm_d = 2;
+                    else { v->sm_pos = S + (S + hinc - v->sm_pos) % (E - S); v->sm_d = 1; }
+                } else v->sm_pos -= hinc;
+            } else if (!sm_adv(&v->sm_pos, v->sm_d, hinc, S, E, dir == 1u ? S : L, loop)) v->sm_d = 2;
         }
         if (v->age == vage) sm_show = v->sm_pos;
     }

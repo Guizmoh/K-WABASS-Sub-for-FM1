@@ -213,7 +213,7 @@ static void link_service(void)                  /* the main loop: a restore aske
         rs_desc.name = "MY SAMPLE";
         rs_desc.len = lk_smp_want;
         lk_smp_want = 0; lk_smp_done = 0;
-        patch[SM_SEL] = (int8_t)(KS_NSMP + 1u);
+        patch[SM_SEL] = SM_RS;
         if (!patch[SM_LVL]) patch[SM_LVL] = 90;
         prev_dirty = 1; g_force = 1;
         toast("SAMPLE LOADED \xB7 OSC C");

@@ -2,7 +2,7 @@
 
 [English](SPECIFICATIONS.md) · [Français](fr/CAHIER-DES-CHARGES.md)
 
-A modern bass synth for the M-VAVE FM-1 (JieLi AC79, two cores, no FPU). Last update: **0.9.54**.
+A modern bass synth for the M-VAVE FM-1 (JieLi AC79, two cores, no FPU). Last update: **0.9.55**.
 This document says where the project stands: what is done, what has to be checked, what is left, and ideas to go further.
 
 ## 1. Vision
@@ -17,7 +17,7 @@ This document says where the project stands: what is done, what has to be checke
 | Area | Detail | Version |
 |---|---|---|
 | Engines | 8 engines per oscillator (analog, super/reese, wavetable, FM, phase dist, wavefolder, sync, vocal); `SYSTEM › ENGINES` picks the first 4 (ESSENTIAL, default) or all 8 | ≤ 0.9, 0.9.19 |
-| Oscillators | A + B (ADD, RING, X-MOD, SYNC), sub, noise, **OSC C sample** (10 sounds, 5 textures, loop / once, speed) | 0.9.9-4 |
+| Oscillators | A + B (ADD, RING, X-MOD, SYNC), sub, noise, **OSC C sample** (18 sounds including 8 attacks, 9 textures; START / END cut, speed 25–400 % at the same pitch, forward / reverse / ping-pong, loop / once; 0.9.55) | 0.9.9-4 |
 | Filter | 7 characters (LP24, LP12, BAND, HIGH, NOTCH, VOWEL, COMB), drive, mod by envelope, keyboard, velocity | ≤ 0.9 |
 | Modulation | 3 envelopes, 2 LFOs locked to the tempo (round grid option), STEP FX (16 patterns), 4-slot matrix, 4 MACROS × 4 targets | ≤ 0.9 |
 | Effects | Saturation, compressor + PUMP, bitcrush, chorus, phaser, delay (4 types), reverb (4 types), glue, sub boost, **4-band EQ** | 0.9.3 → 0.9.9-3 |
@@ -129,7 +129,7 @@ Nothing has been tried on the device since 0.9.9-4. To look at first:
 ## 6. Technical constraints (to keep in mind)
 
 - Integers only, no 64-bit division (the processor has no FPU); the audio interrupt must stay short (256-sample blocks, 5.8 ms).
-- RAM 54 KB of 96, pool 330 KB of 344, image 499 KB of 581: there is room, but not for big samples.
+- RAM 78 KB of 96, pool 342 KB of 344, image 554 KB of 581 (0.9.55): the flash is nearly full; little room is left for samples.
 - Patches have 140 parameters at most; user patches keep 112 bytes in the first sector and the rest in the second. Item ids fit in one byte (static assert).
 - A flash write stops the sound for a few tens of ms (so only in silence); core 1 then waits in RAM.
 - Any change of the save format must stay readable by older saves (fields added at the end).

@@ -23,7 +23,7 @@
 4. **Ventanas SEL**: PERFORM, MORPH, FX LIVE, MACROS.
 5. **Morph A/B**: mezcla dos sonidos en vivo.
 6. Una **página de LFO** en vivo para remodelar tus graves wobble mientras tocas.
-7. **SEQ BASS** (hasta 64 pasos, probabilidad, condiciones de disparo y duración de nota por paso, 30 presets, REC en directo), **DRUMS** (kits 808 / 909 / dub techno / acústico, 8 pistas de colores, presets de ritmo: techno, dub, dnb…), **ARP**, **MIDI**.
+7. **SEQ BASS** (hasta 64 pasos, probabilidad, condiciones de disparo y duración de nota por paso, 30 presets, REC en directo), samples **OSC C** (ataques, texturas; inicio / fin recortados, más rápido o más lento, al revés, ping-pong), **DRUMS** (kits 808 / 909 / dub techno / acústico, 8 pistas de colores, presets de ritmo: techno, dub, dnb…), **ARP**, **MIDI**.
 8. El sonido: motores, filtros, efectos, master, y **FX PADS**.
 9. Visuales de osciladores animados, en vivo.
 10. Un **EQ** visual.
@@ -43,8 +43,8 @@ Puedes volver a KAWA (`install/kawa-0.5.fwsc`) o al firmware de fábrica (M-UPGR
 
 ```sh
 cd source
-./build.sh --release 0.9.54          # -> build/k-wasub-0.9.54.fwsc
-APP_VER=0.9.54 bash web/make_emulator.sh      # emulador
+./build.sh --release 0.9.55          # -> build/k-wasub-0.9.55.fwsc
+APP_VER=0.9.55 bash web/make_emulator.sh      # emulador
 bash web/make_installer.sh                    # installer.html con el último paquete
 bash tests/run_stress.sh                      # pruebas de carga (UBSan)
 python3 tests/manual_shots.py                 # capturas del manual (docs/img)

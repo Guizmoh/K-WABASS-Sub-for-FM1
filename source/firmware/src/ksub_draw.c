@@ -389,14 +389,21 @@ static void vis_smp(int32_t x, int32_t y, int32_t w, int32_t h)   /* OSC C: the 
     int32_t W = w - 8, cy = y + h / 2, H = h / 2 - 3, i;
     uint32_t at, lp;
     if (!patch[SM_SEL]) { g_text_c(T_XS, x + w / 2, cy - 4, "OFF \xB7 TURN SAMPLE", K_GREY); return; }
-    if (patch[SM_SEL] > (int8_t)KS_NSMP && !rs_desc.len) { g_text_c(T_XS, x + w / 2, cy - 4, rs_want ? "RECORDING THE OUTPUT..." : "EMPTY \xB7 RESAMPLE: TURN +", rs_want ? K_LIME : K_GREY); return; }
-    sm = patch[SM_SEL] > (int8_t)KS_NSMP ? &rs_desc : &KS_SMP[(uint32_t)(patch[SM_SEL] - 1) % KS_NSMP];
+    if (patch[SM_SEL] == SM_RS && !rs_desc.len) { g_text_c(T_XS, x + w / 2, cy - 4, rs_want ? "RECORDING THE OUTPUT..." : "EMPTY \xB7 RESAMPLE: TURN +", rs_want ? K_LIME : K_GREY); return; }
+    sm = sm_desc(patch[SM_SEL]);
     lp = patch[SM_MODE] == 1 ? (sm->loop < sm->len ? sm->loop : 0u) : patch[SM_MODE] == 2 ? sm->len : sm->loop;
-    for (i = 0; i < W; i++) {                   /* its peaks, column by column (the looped part brighter) */
-        uint32_t a = (uint32_t)i * sm->len / (uint32_t)W, b = (uint32_t)(i + 1) * sm->len / (uint32_t)W, j;
-        int32_t pk = 0;
-        for (j = a; j < b; j += 4u) { int32_t v = KS_MULAW[sm == &rs_desc ? rs_buf[j] : KS_SMP_DATA[sm->off + j]]; if (v < 0) v = -v; if (v > pk) pk = v; }
-        g_rect(x + 4 + i, cy - pk * H / 32768, 1, 1 + 2 * (pk * H / 32768), lp < sm->len && a >= lp ? K_WAVE : g_mix(K_LINE, K_WAVE, 170));
+    {
+        uint32_t s0 = (uint32_t)patch[SM_START] * sm->len >> 7, e0 = sm->len - ((uint32_t)patch[SM_END] * sm->len >> 7);
+        for (i = 0; i < W; i++) {               /* its peaks, column by column (the looped part brighter; START / END: what is cut, dim) */
+            uint32_t a = (uint32_t)i * sm->len / (uint32_t)W, b = (uint32_t)(i + 1) * sm->len / (uint32_t)W, j;
+            int32_t pk = 0;
+            uint16_t c = lp < sm->len && a >= lp ? K_WAVE : g_mix(K_LINE, K_WAVE, 170);
+            for (j = a; j < b; j += 4u) { int32_t v = KS_MULAW[sm == &rs_desc ? rs_buf[j] : KS_SMP_DATA[sm->off + j]]; if (v < 0) v = -v; if (v > pk) pk = v; }
+            if (a < s0 || a >= e0) c = g_mix(K_PANEL, K_LINE, 120);
+            g_rect(x + 4 + i, cy - pk * H / 32768, 1, 1 + 2 * (pk * H / 32768), c);
+        }
+        if (s0) g_rect(x + 4 + (int32_t)(s0 * (uint32_t)W / sm->len), y + 2, 1, h - 4, K_ORANGE);   /* (the cuts) */
+        if (e0 < sm->len) g_rect(x + 4 + (int32_t)(e0 * (uint32_t)W / sm->len) - 1, y + 2, 1, h - 4, K_ORANGE);
     }
     if (ks_sounding) {                          /* (the newest note) */
         at = (sm_show >> 16) % sm->len;
@@ -654,15 +661,16 @@ static const char *view_title(uint32_t vi, char *t, char *sub)
     }
     if (page == PG_BASS && vi <= 3u && vi >= 2u) { uint32_t e = (uint32_t)patch[vi == 2u ? A_ENG : B_ENG] & 7u; str_cat(sub, ENG_SUB[e]); return ENG_TITLE[e]; }
     if (page == PG_BASS && vi == V_SMP) {       /* OSC C: the sample, how it plays */
-        if (!patch[SM_SEL]) { str_cat(sub, "10 SOUNDS \xB7 5 TEXTURES \xB7 RESAMPLE"); return "NO SAMPLE"; }
-        if (patch[SM_SEL] > (int8_t)KS_NSMP && !rs_desc.len) { str_cat(sub, "THE OUTPUT, 2 .. 4 s, INTO OSC C"); return "RESAMPLE"; }
+        if (!patch[SM_SEL]) { str_cat(sub, "18 SOUNDS \xB7 9 TEXTURES \xB7 RESAMPLE"); return "NO SAMPLE"; }
+        if (patch[SM_SEL] == SM_RS && !rs_desc.len) { str_cat(sub, "THE OUTPUT, 2 .. 4 s, INTO OSC C"); return "RESAMPLE"; }
         {
-            const ks_smp_t *sm = patch[SM_SEL] > (int8_t)KS_NSMP ? &rs_desc : &KS_SMP[(uint32_t)(patch[SM_SEL] - 1) % KS_NSMP];
+            const ks_smp_t *sm = sm_desc(patch[SM_SEL]);
             int keys = patch[SM_KEY] == 1 || (patch[SM_KEY] == 0 && sm->keys);
             int loops = patch[SM_MODE] == 1 || (patch[SM_MODE] == 0 && sm->loop < sm->len);
             p = str_cat(sub, sm->keys ? "SOUND" : "TEXTURE");
             p = str_cat(p, loops ? " \xB7 LOOP" : " \xB7 ONCE");
-            if (patch[SM_SPEED]) p = str_cat(p, " \xB7 SLOW");
+            if (patch[SM_DIR]) p = str_cat(p, patch[SM_DIR] == 1 ? " \xB7 REVERSE" : " \xB7 PING-PONG");
+            if (patch[SM_SPEED]) p = str_cat(p, patch[SM_SPEED] > 0 ? " \xB7 SLOW" : " \xB7 FAST");
             str_cat(p, keys ? " \xB7 FROM THE KEYS" : " \xB7 FIXED PITCH");
             return sm->name;
         }
@@ -1064,7 +1072,7 @@ static void th_studio(const view_t *v, uint32_t vi)
     else if (v->lay == LY_SAVE) save_g(6, 98, 228, 70);
     else if (v->lay == LY_SYS || !v->n || vi == PAGE_V0[PG_LFO] + 3u) rows_g(v, 3, 70, 230, 22, 26, 5, T_S);
     else {                                      /* the items in cells of four, a page of eight round the row */
-        uint32_t per = v->n <= 4u || vi == V_DRUM || vi == V_SEQ ? 4u : v->n <= 8u ? 8u : v->n <= 12u ? 12u : 8u, first = (c / per) * per;   /* (SEQ BASS, DRUMS: four, the pattern big) */
+        uint32_t per = v->n <= 4u || vi == V_DRUM || vi == V_SEQ || vi == V_SMP ? 4u : v->n <= 8u ? 8u : v->n <= 12u ? 12u : 8u, first = (c / per) * per;   /* (SEQ BASS, DRUMS, OSC C: four, the pattern or the sample big) */
         int32_t ch = per == 12u ? 44 : 56, cs = per == 12u ? 47 : 60;   /* (up to twelve: three short rows, nothing else on the page) */
         for (i = 0; i < per && first + i < v->n; i++)
             draw_cell(v, 3 + (int32_t)(i & 3u) * 59, 70 + (int32_t)(i >> 2) * cs, 56, ch, v->it[first + i], first + i == c);
@@ -1647,7 +1655,7 @@ static const char *mx_label(uint32_t id, char *t)   /* a setting with its sectio
                     id >= CP_ON && id <= CP_PRATE ? "COMP" : id >= PH_ON && id <= PH_MIX ? "PHASER" : id >= ST_ON && id <= ST_SMO ? "STEP" :
                     id >= L1_SHP && id < L2_SHP ? "LFO1" : id >= L2_SHP && id < M1_SRC ? "LFO2" : id >= F_TYPE && id <= F_VEL ? "FILT" :
                     id >= AE_A && id <= AE_R ? "AMP" : id >= FE_A && id <= FE_R ? "F.ENV" : id >= ME_A && id <= ME_DST ? "M.ENV" :
-                    id >= SM_SEL && id <= SM_SPEED ? "SMP" : 0;
+                    (id >= SM_SEL && id <= SM_SPEED) || (id >= SM_START && id <= SM_DIR) ? "SMP" : 0;
     const char *n = item_name(id);
     char *p = t;
     if (n[0] >= '0' && n[0] <= '9' && n[2] == ' ') n += 3;   /* (01 ATTACK) */

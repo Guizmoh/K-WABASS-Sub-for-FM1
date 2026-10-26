@@ -24,7 +24,7 @@
 4. **Fenêtres SEL** : PERFORM, MORPH, FX LIVE, MACROS.
 5. **Morph A/B** : fondu entre deux sons en direct.
 6. Une **page LFO** en direct pour retravailler tes basses wobble en jouant.
-7. **SEQ BASS** (jusqu'à 64 pas, probabilité, conditions de déclenchement et durée de note par pas, 30 presets, REC en direct), **DRUMS** (kits 808 / 909 / dub techno / acoustique, 8 pistes colorées, presets de rythmes : techno, dub, dnb…), **ARP**, **MIDI**.
+7. **SEQ BASS** (jusqu'à 64 pas, probabilité, conditions de déclenchement et durée de note par pas, 30 presets, REC en direct), samples **OSC C** (attaques, textures ; début / fin coupés, plus rapide ou plus lent, inversé, ping-pong), **DRUMS** (kits 808 / 909 / dub techno / acoustique, 8 pistes colorées, presets de rythmes : techno, dub, dnb…), **ARP**, **MIDI**.
 8. Le son : moteurs, filtres, effets, master, et **FX PADS**.
 9. Visuels d'oscillateur animés, en direct.
 10. Un **EQ** visuel.
@@ -44,8 +44,8 @@ Retour à KAWA (`install/kawa-0.5.fwsc`) ou au firmware officiel (M-UPGRADE) pos
 
 ```sh
 cd source
-./build.sh --release 0.9.54          # -> build/k-wasub-0.9.54.fwsc
-APP_VER=0.9.54 bash web/make_emulator.sh      # émulateur
+./build.sh --release 0.9.55          # -> build/k-wasub-0.9.55.fwsc
+APP_VER=0.9.55 bash web/make_emulator.sh      # émulateur
 bash web/make_installer.sh                    # installer.html avec le dernier paquet
 bash tests/run_stress.sh                      # tests de charge (UBSan)
 python3 tests/manual_shots.py                 # captures du manuel (docs/img)

@@ -26,6 +26,7 @@ enum {
     SM_MODE, SM_SPEED,                                           /* ... looped or once, slower (the same pitch) */
     OT_AMT, OT_LOW, OT_HIGH,                                     /* MULTIBAND (OTT): 3 bands squeezed up and down; the low and high bands' level */
     MB_MONO, S_LOCK,                                             /* MONO BASS under a frequency; the sub locked on OSC A (its pitch, its phase) */
+    SM_START, SM_END, SM_DIR,                                    /* OSC C: its start and end cut, FORWARD / REVERSE / PING-PONG (0.9.55) */
     NP
 };
 #define NP_MAX 140u                             /* a patch in memory */
@@ -98,8 +99,11 @@ static const char *const L_DRT[] = {"SOFT", "TUBE", "HARD", "FOLD"};
 static const char *const L_PRATE[] = {"1/4", "1/8", "1/2", "1 BAR"};
 static const char *const L_RVT[] = {"ROOM", "HALL", "PLATE", "SPRING"};
 static const char *const L_DLT[] = {"PING-PONG", "TAPE", "DIGITAL", "DUB"};
-static const char *const L_SMP[17] = {"OFF", "808 BOOM", "KICK", "SNARE", "OI VOX", "REESE LOOP", "GROWL LOOP", "PLUCK", "FM BELL",
-                                      "METAL HIT", "BRASS STAB", "VINYL", "TAPE HISS", "RAIN", "WIND", "DATA", "RESAMPLE"};   /* (KS_SMP's; 16: the RAM one) */
+static const char *const L_SMP[29] = {"OFF", "808 BOOM", "KICK", "SNARE", "OI VOX", "REESE LOOP", "GROWL LOOP", "PLUCK", "FM BELL",
+                                      "METAL HIT", "BRASS STAB", "VINYL", "TAPE HISS", "RAIN", "WIND", "DATA", "RESAMPLE",
+                                      "PICK", "MALLET", "CHIFF", "HAMMER", "ZAP", "SLAP", "CLICK", "SCRATCH",
+                                      "SHIMMER", "DARK PAD", "BUBBLES", "MACHINE"};   /* (KS_SMP's; 16: the RAM one, the ones after it from 0.9.55) */
+static const char *const L_SMD[3] = {"FORWARD", "REVERSE", "PING-PONG"};
 static const char *const L_SMK[3] = {"AUTO", "KEYS", "FIXED"};
 static const char *const L_MONO[7] = {"OFF", "60 Hz", "80 Hz", "100 Hz", "120 Hz", "150 Hz", "200 Hz"};
 static const char *const L_SMM[3] = {"AUTO", "LOOP", "ONCE"};
@@ -193,11 +197,12 @@ static const pdesc_t PD[NP] = {
     {"EFFECT", "ON", 0, 1, 0, FM_LIST, L_ONOFF}, {"RATE", "RATE", 0, 127, 40, FM_LFOHZ, 0},
     {"DEPTH", "DEPTH", 0, 127, 80, FM_PCT, 0}, {"FEEDBACK", "FDBK", 0, 127, 50, FM_PCT, 0},
     {"MIX", "MIX", 0, 127, 64, FM_PCT, 0},
-    {"SAMPLE", "SAMPLE", 0, 16, 0, FM_LIST, L_SMP}, {"LEVEL", "LEVEL", 0, 127, 90, FM_PCT, 0},
+    {"SAMPLE", "SAMPLE", 0, 28, 0, FM_LIST, L_SMP}, {"LEVEL", "LEVEL", 0, 127, 90, FM_PCT, 0},
     {"TUNE", "TUNE", -24, 24, 0, FM_SEMI, 0}, {"PITCH", "PITCH", 0, 2, 0, FM_LIST, L_SMK},
-    {"PLAY", "PLAY", 0, 2, 0, FM_LIST, L_SMM}, {"SPEED", "SPEED", 0, 127, 0, FM_PCT, 0},
+    {"PLAY", "PLAY", 0, 2, 0, FM_LIST, L_SMM}, {"SPEED", "SPEED", -64, 127, 0, FM_PCT, 0},
     {"AMOUNT", "OTT", 0, 127, 0, FM_PCT, 0}, {"LOW BAND", "LOW", -64, 63, 0, FM_BIP, 0}, {"HIGH BAND", "HIGH", -64, 63, 0, FM_BIP, 0},
     {"MONO BASS", "MONO", 0, 6, 4, FM_LIST, L_MONO}, {"SUB LOCK", "LOCK", 0, 1, 1, FM_LIST, L_ONOFF},
+    {"START", "START", 0, 127, 0, FM_PCT, 0}, {"END", "END", 0, 127, 0, FM_PCT, 0}, {"DIRECTION", "DIR", 0, 2, 0, FM_LIST, L_SMD},
 };
 
 /* ---- the factory presets: the defaults, then (parameter, value) pairs, -1 ends */

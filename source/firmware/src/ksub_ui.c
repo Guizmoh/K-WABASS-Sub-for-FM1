@@ -14,7 +14,7 @@
 enum { PG_PLAY, PG_BASS, PG_ENV, PG_FILT, PG_LFO, PG_FX, PG_PRE, PG_SYS, NPAGE };
 static const uint8_t PAGE_BTN[NPAGE] = {BTN_HOME, BTN_EDIT, BTN_ENV, BTN_SEQ, BTN_LFO, BTN_FX, BTN_ARP, BTN_GLO};
 enum { LY_PLAY, LY_LIST, LY_BOX, LY_STEP, LY_LFO, LY_PRESET, LY_SAVE, LY_SYS, LY_EQ };
-enum { I_L1RATE = 136, I_L2RATE, I_ABMIX, G_MIDICH, G_BPM, G_CLOCK, G_OCT, G_CORES, G_CPU, G_FW, G_THEME, G_PAL, G_FONT, G_GRID, G_BROWSE, G_ACCEL, G_C3COL, G_UI, G_ASK, G_ZOOM, G_MLEARN, G_MMAP, G_MSTART, G_MPROG, G_MCLK,
+enum { I_L1RATE = 140, I_L2RATE, I_ABMIX, G_MIDICH, G_BPM, G_CLOCK, G_OCT, G_CORES, G_CPU, G_FW, G_THEME, G_PAL, G_FONT, G_GRID, G_BROWSE, G_ACCEL, G_C3COL, G_UI, G_ASK, G_ZOOM, G_MLEARN, G_MMAP, G_MSTART, G_MPROG, G_MCLK,
        G_SQ_STEP, G_SQ_NOTE, G_SQ_TYPE, G_SQ_PAT, G_SQ_LEN, G_SQ_RATE, G_SQ_SWING,   /* SEQ BASS */
        G_AR_ON, G_AR_MODE, G_AR_RATE, G_AR_OCT, G_AR_GATE,                          /* ARP */
        G_LV_FLT, G_LV_PUMP, G_LV_STUT, G_LV_TAPE, G_LV_PRATE, G_LV_FRES,             /* SEL: FX LIVE */
@@ -43,7 +43,7 @@ static const view_t VIEWS[] = {
     OSCV("A", A), OSCV("B", B),
     {LY_LIST, "SUB + NOISE", 7, {S_LVL, S_OCT, S_WAVE, N_LVL, S_LOCK, N_COL, S_ROUTE}, "EDIT"},
     {LY_LIST, "COMBINE A + B", 13, {I_ABMIX, X_MODE, X_AMT, B_ENG, A_ENG, A_LVL, B_LVL, A_OCT, B_OCT, B_SEMI, B_FINE, X_DRIFT, X_RESET}, "EDIT"},   /* (HOME held opens it: the two oscillators together) */
-    {LY_LIST, "OSCILLATOR C \xB7 SAMPLE", 8, {SM_SEL, SM_LVL, SM_MODE, SM_SPEED, G_RS_GO, G_RS_LEN, SM_TUNE, SM_KEY}, "EDIT"},
+    {LY_LIST, "OSCILLATOR C \xB7 SAMPLE", 11, {SM_SEL, SM_LVL, SM_START, SM_END, G_RS_GO, G_RS_LEN, SM_SPEED, SM_DIR, SM_MODE, SM_TUNE, SM_KEY}, "EDIT"},
     {LY_BOX, "AMP ENVELOPE", 4, {AE_A, AE_D, AE_S, AE_R}, "ENV"},
     {LY_BOX, "FILTER ENVELOPE", 4, {FE_A, FE_D, FE_S, FE_R}, "ENV"},
     {LY_BOX, "MOD ENVELOPE", 4, {ME_A, ME_D, ME_AMT, ME_DST}, "ENV"},
@@ -105,6 +105,8 @@ static struct {                                 /* the user slots' settings past
     int8_t p[NUSER][NP_MAX - NP_STORE];
 } uext;
 typedef char ids_fit[G_DK_SWING < I_NONE ? 1 : -1];
+typedef char np_fits[NP <= I_L1RATE && NP <= NP_MAX ? 1 : -1];   /* (the patch's ids under the others') */
+#define CC_MAGIC 0x44u                          /* (0x43: before 0.9.55, the ids past the patch 4 lower) */
 #define WK_AT 0xC00u                            /* (the 2nd sector, after the slots' rest: the sound being made, AUTOSAVE) */
 static struct {
     uint8_t magic, sum, bank, idx;
@@ -503,7 +505,7 @@ static void rst_read(void)
 #endif
 }
 static uint8_t ml_state, ml_id;                 /* MIDI LEARN: 1 waits for a setting, 2 for a CC; the setting */
-static uint32_t cc_count(void) { uint32_t k, n = 0; if (perf.cc_magic == 0x43u) for (k = 0; k < 16u; k++) n += perf.cc_num[k] != 0xFFu; return n; }
+static uint32_t cc_count(void) { uint32_t k, n = 0; if (perf.cc_magic == CC_MAGIC) for (k = 0; k < 16u; k++) n += perf.cc_num[k] != 0xFFu; return n; }
 static uint8_t first_run;                       /* no settings yet: the very first start (it asks CLASSIC or SHIFT, once) */
 static uint8_t rs_secs = 1, rs_rec_on;          /* RESAMPLE: its length - 2 (s); a recording was started (its end selects it) */
 static uint8_t win, win_cur, mc_pos;            /* the window, its row (FX LIVE), the target being edited (MACROS: 0..31) */
@@ -996,7 +998,7 @@ static void mx_open(void)                       /* a MORPH window opens: a fresh
 }
 static uint32_t mx_part(uint32_t i)             /* A/B's PARTS: 1 OSC, 2 FILTER, 3 ENV, 4 MOD, 5 FX (6: ALL only) */
 {
-    if (i <= X_RESET || (i >= SM_SEL && i <= SM_SPEED)) return 1;
+    if (i <= X_RESET || (i >= SM_SEL && i <= SM_SPEED) || (i >= SM_START && i <= SM_DIR)) return 1;
     if (i >= F_TYPE && i <= F_VEL) return 2;
     if (i >= AE_A && i <= ME_DST) return 3;
     if ((i >= L1_SHP && i <= M4_AMT) || (i >= ST_ON && i <= ST_SMO)) return 4;
@@ -1784,7 +1786,16 @@ static void item_text(uint32_t id, char *b)
         }
         return;
     }
-    if (rid == SM_SPEED) { b = fmt_u(b, (256u - (uint32_t)v * 230u / 127u) * 100u / 256u, 0); str_cat(b, v ? "% (SLOWER)" : "%"); return; }
+    if (rid == SM_SPEED) {                      /* (turned left past 100 %: faster, up to 400 %) */
+        b = fmt_u(b, (v >= 0 ? 256u - (uint32_t)v * 230u / 127u : 256u + (uint32_t)(-v) * 12u) * 100u / 256u, 0);
+        str_cat(b, v > 0 ? "% (SLOWER)" : v < 0 ? "% (FASTER)" : "%");
+        return;
+    }
+    if (rid == SM_START || rid == SM_END) {     /* (where it starts, where it ends, in % of the sample) */
+        b = fmt_u(b, rid == SM_START ? (uint32_t)v * 100u / 128u : 100u - (uint32_t)v * 100u / 128u, 0);
+        str_cat(b, "%");
+        return;
+    }
     switch (PD[rid].fmt) {
     case FM_PCT: b = fmt_u(b, (uint32_t)v * 100u / 127u, 0); str_cat(b, "%"); break;
     case FM_BIP: b = v ? fmt_s(b, v * 100 / 64) : fmt_u(b, 0, 0); str_cat(b, "%"); break;
@@ -1987,6 +1998,13 @@ static void edit_item(uint32_t id, int32_t d)
     }
     if (id != G_CPU && (vpop_id != (uint8_t)id || !vpop_ms)) { item_text(id, vpop_before); vpop_id = (uint8_t)id; }
     vpop_ms = fm1_ms | 1u;
+    if (id == SM_SEL) {                         /* SAMPLE: the samples in order, RESAMPLE (its value kept: 16) last */
+        int32_t i, at = 0;
+        static const int8_t ORD[29] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 16};
+        for (i = 0; i < 29; i++) if (ORD[i] == v) at = i;
+        item_set(id, ORD[clampi(at + d, 0, 28)]);
+        return;
+    }
     item_range(id, &lo, &hi);
     if (id != turn_id || fm1_ms - last_turn_ms > 150u) turn_start_ms = fm1_ms;   /* (a turn that goes on: ULTRA speeds it up) */
     if (set.accel && hi - lo > 24 && id == turn_id) {   /* ACCEL: the faster the turn, the bigger the step */
@@ -2500,7 +2518,7 @@ static uint32_t clk_last, clk_per, clk_n;
 static int midi_learnt(uint32_t cc, uint32_t v)  /* 1: a CC learnt (it moves its setting) */
 {
     uint32_t k;
-    if (perf.cc_magic != 0x43u) return 0;
+    if (perf.cc_magic != CC_MAGIC) return 0;
     if (ml_state == 2u) {                       /* (learning: this CC goes to the setting turned) */
         char t[24], *p;
         for (k = 0; k < 16u && perf.cc_num[k] != cc && perf.cc_num[k] != 0xFFu; k++) {}
@@ -2606,7 +2624,12 @@ static void store_fixup(void)                   /* the store as read (or restore
     if (dk.magic != DK_MAGIC || dk.sum != dk_sum()) { dk_defaults(); perf_touch(); }
     perf.ar_on = 0;                             /* (the ARP starts off: a key does what it says) */
     if (perf.mc_magic != MC_MAGIC) mc_defaults();
-    if (perf.cc_magic != 0x43u) { memset(perf.cc_num, 0xFF, sizeof perf.cc_num); perf.cc_magic = 0x43u; }
+    if (perf.cc_magic == 0x43u) {               /* (learnt before 0.9.55: the ids past the patch moved up 4, for OSC C's START, END, DIRECTION) */
+        for (i = 0; i < 16u; i++) if (perf.cc_id[i] >= 136u && perf.cc_id[i] < I_NONE - 4u) perf.cc_id[i] = (uint8_t)(perf.cc_id[i] + 4u);
+        perf.cc_magic = CC_MAGIC;
+        perf_touch();
+    }
+    if (perf.cc_magic != CC_MAGIC) { memset(perf.cc_num, 0xFF, sizeof perf.cc_num); perf.cc_magic = CC_MAGIC; }
     if (perf.eq_magic != 0x45u) eq_defaults();
     if (perf.mx_magic != MX_MAGIC) {
         if (perf.mx_magic != 0x59u) for (i = 0; i < 16u; i++) if (perf.cc_id[i] >= I_L1RATE) perf.cc_num[i] = 0xFF;
@@ -2699,7 +2722,7 @@ static void app_step(void)
     if (rs_rec_on && !rs_want) {                /* RESAMPLE done: OSC C plays it */
         rs_rec_on = 0;
         undo_mark(0xFFF3u);
-        patch[SM_SEL] = (int8_t)(KS_NSMP + 1u);
+        patch[SM_SEL] = SM_RS;
         if (!patch[SM_LVL]) patch[SM_LVL] = 90;
         toast("RESAMPLED \xB7 OSC C PLAYS IT");
     }
