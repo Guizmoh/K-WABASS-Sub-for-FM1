@@ -2186,7 +2186,7 @@ static void app_init(void)
     set.grid = set.grid ? 1u : 0u;
     ks_straight = set.grid;
     set.bpm10 = (uint16_t)clampi(set.bpm10, 600, 2400);
-    set.oct = (uint8_t)(int8_t)clampi(OCT, -3, 3);
+    set.oct = 0xFF;                             /* (every session starts at octave -1; OCT- / OCT+ move it as before) */
     ks_bpm10 = set.bpm10;
     store_load();
     store_fixup();
