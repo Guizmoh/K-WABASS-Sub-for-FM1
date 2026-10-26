@@ -2173,6 +2173,7 @@ static void draw_all(void)
             g_text_c(T_XS, 120, 220, b, RGB(255, 255, 255));
             if (rst_bad) { str_cat(str_cat(b, "LAST STOP: "), rst_why); g_text_c(T_XS, 120, 231, b, RGB(255, 150, 60)); }
             else g_text_c(T_XS, 120, 231, dual_on ? "TWO CORES \xB7 PRESS ANY BUTTON OR KEY" : dual_why == DW_SILENT ? "CORE 1 SILENT \xB7 ONE CORE" : dual_why == DW_SAFE ? "ONE CORE (SAFE) \xB7 PRESS A KEY" : "PRESS ANY BUTTON OR KEY", RGB(150, 150, 150));
+            g_text_r(T_XS, 238, 232, "BETA 0.9", RGB(95, 100, 102));
         }
     }
     if (toast_ms && g_vis(196, 22)) {

@@ -18,8 +18,8 @@ M-VAVE FM-1 : JieLi AC79, deux cœurs, pas de FPU, code exécuté depuis la flas
 
 Il y a un bloc de latence (5,8 ms). Le démarrage du cœur 1 suit la séquence du SDK JieLi (`EnableOtherCpu`, `cpu1_start`, voir `source/firmware/hal/fm1_cpu1.h`), avec des sécurités :
 - si le cœur 1 ne répond pas, tout tourne sur le cœur 0 (même son) ;
-- s'il ne suit pas (6 blocs en retard ou coupés sur les 32 derniers, environ 0,2 s), le cœur 0 reprend les voix, `CORE 1 TOO SLOW: 1 CORE` s'affiche ; pour cette session seulement (0.9.49 : le démarrage suivant réessaie deux cœurs) ;
-- si le FM-1 plante (crash, watchdog, tension basse) dans les 10 s d'un démarrage à deux cœurs, le démarrage suivant se fait sur un seul cœur ; `SYSTEM › AUDIO CORES` permet de réessayer (0.9.49 : une extinction ou un redémarrage voulu ne compte plus) ;
+- s'il ne suit pas (6 blocs en retard ou coupés sur les 32 derniers, environ 0,2 s), le cœur 0 reprend les voix, `CORE 1 TOO SLOW: 1 CORE` s'affiche ; pour cette session seulement (0.9.50 : le démarrage suivant réessaie deux cœurs) ;
+- si le FM-1 plante (crash, watchdog, tension basse) dans les 10 s d'un démarrage à deux cœurs, le démarrage suivant se fait sur un seul cœur ; `SYSTEM › AUDIO CORES` permet de réessayer (0.9.50 : une extinction ou un redémarrage voulu ne compte plus) ;
 - `SYSTEM › AUDIO CORES` dit pourquoi les deux cœurs ne tournent pas : `AT NEXT START`, `CORE 1 SILENT` (pas de réponse au démarrage), `STOPPED: TOO SLOW`, `STOPPED: FLASH` (il n'a pas attendu une écriture flash), `SAFE (CRASH)` ; l'écran de démarrage aussi ;
 - avant une mise à jour, le mode UBOOT ou un plantage, le cœur 1 est remis en reset.
 
@@ -50,8 +50,8 @@ OSC C joue des sons µ-law 8 bits depuis la flash (`KS_SMP`, 10 sons à 22,05 kH
 
 ```sh
 cd source
-./build.sh --release 0.9.49                 # build/k-wasub-0.9.49.fwsc   (X.Y, X.Y.Z ou X.Y.Z-suffixe ; identité FM-1_97Y)
-APP_VER=0.9.49 bash web/make_emulator.sh    # ../emulator/index.html  
+./build.sh --release 0.9.50                 # build/k-wasub-0.9.50.fwsc   (X.Y, X.Y.Z ou X.Y.Z-suffixe ; identité FM-1_97Y)
+APP_VER=0.9.50 bash web/make_emulator.sh    # ../emulator/index.html  
 sh web/make_data.sh                         # ../data.html (sauvegarde, export WAV, samples)
 node tests/link.mjs                         # le lien Données contre l'émulateur
 bash web/make_installer.sh                  # ../installer.html avec le dernier install/k-wasub-*.fwsc
