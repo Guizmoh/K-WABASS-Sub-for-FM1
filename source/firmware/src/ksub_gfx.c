@@ -49,7 +49,7 @@ static const uint16_t PALS[25][KC_N] = {
     {C3(210,222,236), C3(240,244,250), C3(160,182,208), C3(18,108,210), C3(198,216,240), C3(28,62,142), C3(8,22,44), C3(64,84,110), C3(190,206,226), C3(226,104,16), C3(28,62,142), C3(255,255,255), C3(120,76,206)},   /* (SKY: a blue-grey, its second blue navy) */
     {C3(0,0,0), C3(22,22,24), C3(72,72,76), C3(255,112,0), C3(70,30,0), C3(170,170,176), C3(255,255,255), C3(176,176,182), C3(46,46,50), C3(255,60,40), C3(255,128,0), C3(0,0,0), C3(255,176,64)},
     /* RIBBON (its own two): EMBER (orange, a cyan beside it, yellow, violet: on a deep navy), ICE NEON (cyan, magenta beside it) */
-    {C3(6,8,14), C3(18,22,34), C3(44,52,72), C3(255,112,30), C3(70,34,16), C3(60,200,255), C3(245,248,255), C3(130,140,160), C3(30,36,52), C3(255,190,40), C3(255,112,30), C3(6,8,14), C3(180,120,255)},
+    {C3(28,32,46), C3(46,52,72), C3(86,98,126), C3(255,128,48), C3(104,52,26), C3(90,214,255), C3(250,251,255), C3(164,174,194), C3(58,66,88), C3(255,200,64), C3(255,128,48), C3(20,22,32), C3(196,144,255)},   /* (EMBER: a little lighter) */
     {C3(14,22,38), C3(28,40,60), C3(62,82,112), C3(80,210,255), C3(20,60,82), C3(255,96,180), C3(244,250,255), C3(140,158,182), C3(38,50,70), C3(255,200,60), C3(80,210,255), C3(14,22,38), C3(170,130,255)},   /* (ICE NEON: a little lighter) */
 };
 static const char *const PAL_NAME[7][2] = {{"FLUO GREEN", "TOXIC"}, {"STUDIO", "OCEAN"}, {"PURE", "PURE RED"}, {"RACK", "MAGMA"}, {"VOLT", "CYBER"}, {"EMBER", "ICE NEON"}, {"EMBER", "ICE NEON"}};
@@ -89,12 +89,13 @@ static void lum_gap(uint32_t k, uint32_t min)   /* a text colour too close to th
 }
 static void theme_set(uint32_t t, uint32_t pal)
 {
-    uint32_t i, k;
+    uint32_t i, k, con;
     theme = (uint8_t)(t < 7u ? t : 0u);
     g_rad = (uint8_t)(pal >= NPAL_BASE && pal < 2u * NPAL_BASE);
     theme_pal = (uint8_t)(pal < NPAL_BASE ? pal : pal < 2u * NPAL_BASE ? pal - NPAL_BASE : 0u);
     k = theme_pal < 2u ? (theme == 0u ? 15u : theme < 4u ? theme * 2u : theme == 4u ? 19u : 23u) + theme_pal : theme_pal < 9u ? 6u + theme_pal : theme_pal < 11u ? 8u + theme_pal : 10u + theme_pal;   /* (rows: 4 themes x 2, 7 for all, GLOW's 2, 2 more for all, TECH's 2, SKY and BLAZE) */
-    for (i = 0; i < KC_N; i++) kc[i] = g_con && theme_pal != PAL_SKY ? con_px(PALS[k][i], PALS[k][KC_BG], PALS[k][KC_WHITE]) : PALS[k][i];   /* (SKY keeps its pale blue) */
+    con = g_con && theme_pal != PAL_SKY && !(theme >= 5u && theme_pal < 2u);   /* (SKY, and RIBBON's EMBER and ICE NEON, keep their own lighter grounds) */
+    for (i = 0; i < KC_N; i++) kc[i] = con ? con_px(PALS[k][i], PALS[k][KC_BG], PALS[k][KC_WHITE]) : PALS[k][i];   /* (SKY keeps its pale blue) */
     g_rtop = g_mix(kc[KC_BG], kc[KC_LIME], 110); g_rbot = g_mix(kc[KC_BG], kc[KC_CYAN], 110); g_rcell = g_mix(kc[KC_BG], kc[KC_CYAN], 60);
     g_wgrad = 0;
     g_rflat = 0;
@@ -114,7 +115,7 @@ static void theme_set(uint32_t t, uint32_t pal)
         g_rtop = RGB(96, 34, 140); g_rbot = RGB(6, 4, 20); g_rcell = RGB(20, 10, 46);
         kc[KC_WAVE] = RGB(255, 140, 20); g_wgrad = 1;
     }
-    if (g_con && theme_pal != PAL_SKY) {        /* (the cards stay apart from the background) */
+    if (con) {                                  /* (the cards stay apart from the background) */
         kc[KC_PANEL] = g_mix(kc[KC_PANEL], PALS[k][KC_PANEL], 128u);
     }
     lum_gap(KC_WHITE, 120u); lum_gap(KC_GREY, 70u); lum_gap(KC_LIME, 70u);   /* (the text always stands off its background) */
