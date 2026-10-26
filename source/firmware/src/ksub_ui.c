@@ -1903,7 +1903,7 @@ static void ask_done(uint32_t sel)
 {
     ask_on = 0;
     splash_until = 0;
-    if (set.ui != sel || first_run) { set.ui = (uint8_t)sel; set_dirty = 1; set_ms = fm1_ms; first_run = 0; }
+    if (set.ui != sel || first_run || set.askv < 2u) { set.ui = (uint8_t)sel; set.askv = 2; set_dirty = 1; set_ms = fm1_ms; first_run = 0; }
     toast(sel ? "SHIFT MODE" : "CLASSIC MODE");
     g_force = 1;
 }
@@ -2096,7 +2096,7 @@ static void app_init(void)
                                  (uint32_t)((uint8_t *)&set.ui - (uint8_t *)&set), (uint32_t)((uint8_t *)&set.accel - (uint8_t *)&set)};
         for (ok = 0, i = 0; i < 9u && !ok; i++) ok = !settings_load(&set, LEN[i]) && set.ver == 6u;
     }
-    first_run = !ok;
+    first_run = !ok || set.askv < 2u;           /* (the very first start, or a save from before 0.9.17: the question once) */
     if (!ok) {
         set.theme = set.pal = set.font = set.grid = set.browse = 0;
         memset(set.fav, 0, sizeof set.fav);
