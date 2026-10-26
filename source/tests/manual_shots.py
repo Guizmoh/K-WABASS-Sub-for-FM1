@@ -31,7 +31,7 @@ def finish(s, tag):
     print(tag, len(s.names), "screens")
 
 # 1. the pages, the views, the windows (CLASSIC, NEON)
-s = S(); s.shot("x-ask", 300); s.btn(SEL, 400); look(s, 0, 0)   # (the first start's question: SEL = CLASSIC; then CLASSIC, NEON)
+s = S(); s.shot("x-splash", 300); s.shot("x-ask", 2800); s.btn(SEL, 400); look(s, 0, 0)   # (the first start's question: SEL = CLASSIC; then CLASSIC, NEON)
 s.c("on 12", 300); s.c("on 14", 10); s.shot("p-home", 300); s.c("off 12", 50); s.c("off 14", 50)
 def views(page_btn, names):
     s.btn(page_btn, 200)

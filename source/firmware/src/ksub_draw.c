@@ -1656,7 +1656,7 @@ static void draw_all(void)
         g_vgrad(0, 0, 240, 130, g_mix(K_BG, K_LIME, 40), K_BG);
         g_vgrad(0, 130, 240, 110, K_BG, g_mix(K_BG, K_CYAN, 44));
     }
-    if (ask_on) { draw_ask(); return; }
+    if (ask_on && !(splash_until && (int32_t)(splash_until - fm1_ms) > 0)) { draw_ask(); return; }   /* (the picture first) */
     if (win == 3u) draw_eq();
     else if (win) draw_win();
     else if (C3_ON) draw_c3();
@@ -1759,42 +1759,25 @@ static void draw_all(void)
         g_text_r(T_S, 222, 156, r, redo_n ? K_WHITE : K_GREY);
         g_text_c(T_XS, 120, 174, "RELEASE SAVE: DONE", K_GREY);
     }
-    if (splash_until && (int32_t)(splash_until - fm1_ms) > 0) {   /* the start: the last patch, the cores */
+    if (splash_until && (int32_t)(splash_until - fm1_ms) > 0) {   /* the start: the picture (216 x 216, 16 greys), the patch and the cores beneath */
         char b[40], *p;
-        g_rect(0, g_y0, 240, (int32_t)BAND_H, K_BG);
-        g_text_c(T_L, 120, 2, "K-WASUB", K_LIME);
-        g_text_c(T_XS, 120, 30, "MODERN BASS SYNTH \xB7 V" APP_VER, K_GREY);
-        {                                       /* the FM-1, seen from the front: screen, knobs, buttons, the 27 keys (lit as they go down) */
-            static const uint8_t BLK_AFTER[15] = {1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 0, 1, 1, 0, 0};
-            int32_t i, bi = 0, x;
-            if (g_vis(48, 118)) {
-                g_box(10, 48, 220, 114, K_PANEL, K_LINE);
-                g_box(78, 54, 84, 38, K_BG, K_LIME);                       /* the screen, a wave on it */
-                for (i = 0; i < 76; i++) { int32_t t = i % 38, v = (t < 19 ? t : 38 - t) - 9; g_rect(82 + i, 73 + v, 1, 2, K_LIME); }
-                for (i = 0; i < 3; i++) g_box(18 + i * 18, 60, 12, 12, K_BG, K_GREY);                       /* SELECT, ALGO, PRESETS */
-                for (i = 0; i < 4; i++) g_box(172 + (i & 1) * 28 - 0, 54 + (i >> 1) * 20, 14, 14, K_BG, KNOB_RGB[i]);   /* K1..K4 */
-                for (i = 0; i < 14; i++) g_rect(16 + i * 15, 98, 11, 4, i == 12 ? K_ORANGE : K_LINE);      /* the 14 buttons */
-                for (i = 0; i < 16; i++) {                                 /* the keys */
-                    uint32_t on = (fm1_in.notes >> PK_WHITE[i]) & 1u;
-                    x = 15 + i * 13;
-                    g_rect(x, 108, 12, 50, on ? K_LIME : K_WHITE);
-                }
-                for (i = 0; i < 15; i++) {
-                    if (!BLK_AFTER[i]) continue;
-                    x = 15 + (i + 1) * 13 - 4;
-                    g_rect(x, 108, 8, 30, (fm1_in.notes >> PK_BLACK[bi]) & 1u ? K_ORANGE : K_BG);
-                    bi++;
-                }
-            }
+        uint16_t lut[16];
+        int32_t y, x, y1 = g_y0 + (int32_t)BAND_H;
+        for (x = 0; x < 16; x++) lut[x] = g_mix(0x0000u, 0xFFFFu, (uint32_t)x * 17u);
+        g_rect(0, g_y0, 240, (int32_t)BAND_H, 0x0000u);               /* (black, whatever the palette) */
+        for (y = g_y0; y < y1 && y < (int32_t)KS_LOGO_N; y++) {
+            const uint8_t *row = KS_LOGO + (uint32_t)y * (KS_LOGO_N / 2u);
+            uint16_t *d = &g_buf[(uint32_t)(y - g_y0) * 240u + 12u];
+            for (x = 0; x < (int32_t)KS_LOGO_N / 2; x++) { d[2 * x] = lut[row[x] >> 4]; d[2 * x + 1] = lut[row[x] & 15u]; }
         }
-        g_text_c(T_B, 120, 166, pname, K_WHITE);
-        p = str_cat(b, L_STYLE[clampi(patch[P_STYLE], 0, NSTYLE - 1)]);
+        p = str_cat(b, pname);
         p = str_cat(p, " \xB7 ");
         eng_str(p, patch);
-        g_text_c(T_XS, 120, 190, b, K_CYAN);
-        g_text_c(T_XS, 120, 204, dual_on ? "TWO CORES \xB7 VOICES ON CORE 1" : KS_DUAL && set.cores ? "ONE CORE (CORE 1 OFF)" : "ONE CORE", dual_on ? K_LIME : K_ORANGE);
-        if (rst_bad) { str_cat(str_cat(b, "LAST STOP: "), rst_why); g_text_c(T_XS, 120, 216, b, K_ORANGE); }
-        else g_text_c(T_XS, 120, 218, "ANY BUTTON TO START", K_GREY);
+        if (g_vis(218, 22)) {
+            g_text_c(T_XS, 120, 220, b, RGB(255, 255, 255));
+            if (rst_bad) { str_cat(str_cat(b, "LAST STOP: "), rst_why); g_text_c(T_XS, 120, 231, b, RGB(255, 150, 60)); }
+            else g_text_c(T_XS, 120, 231, dual_on ? "TWO CORES \xB7 ANY BUTTON TO START" : "ANY BUTTON TO START", RGB(150, 150, 150));
+        }
     }
     if (toast_ms && g_vis(196, 22)) {
         g_box(30, 196, 180, 22, K_PANEL, K_LIME);

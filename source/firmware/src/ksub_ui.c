@@ -31,7 +31,7 @@ typedef struct {
     uint8_t n, it[24];                          /* the rows, in the order shown: K1..K4 are the first four */
     const char *tag;
 } view_t;
-#define OSCV(L, X) {LY_LIST, "OSCILLATOR " L, 8, {X##_ENG, X##_P1, X##_P2, X##_P3, X##_LVL, X##_OCT, X##_SEMI, X##_FINE}, "EDIT"}
+#define OSCV(L, X) {LY_LIST, "OSCILLATOR " L, 10, {X##_ENG, X##_P1, X##_P2, X##_P3, X##_LVL, X##_OCT, X##_SEMI, X##_FINE, V_MODE, V_GLIDE}, "EDIT"}   /* (the voice mode and the glide at the bottom: one voice plays both oscillators) */
 #define FXV(...) {LY_LIST, "FX RACK", 4, {__VA_ARGS__}, "FX"}
 static const view_t VIEWS[] = {
     {LY_PLAY, "CURRENT PATCH", 4, {F_CUT, I_L1RATE, L1_DEP, F_RES}, "HOME"},
@@ -1920,7 +1920,12 @@ static void ui_input(void)
 {
     uint32_t rel, pr = fm1_input_edges(&rel), b, k, now = fm1_in.notes, ne = fm1_input_note_edges();
     int32_t d;
-    if (ask_on) {                               /* the start's question: OCT- CLASSIC, OCT+ SHIFT, a knob turns, SEL says yes */
+    if (ask_on && splash_until && (int32_t)(splash_until - fm1_ms) > 0) {   /* the picture first; a button skips it, then the question */
+        if (pr) splash_until = 0;
+        for (b = 0; b < 7u; b++) fm1_enc_take(b);
+        ask_ms = fm1_ms;
+        pr = 0;
+    } else if (ask_on) {                        /* the start's question: OCT- CLASSIC, OCT+ SHIFT, a knob turns, SEL says yes */
         for (b = 0; b < 7u; b++) if ((d = fm1_enc_take(b)) != 0) ask_sel = (uint8_t)(d > 0);
         if (pr & (1u << BTN_OCT_DOWN)) ask_done(0);
         else if (pr & (1u << BTN_OCT_UP)) ask_done(1);
