@@ -279,7 +279,7 @@ static void vis_drum(int32_t x, int32_t y, int32_t w, int32_t h)
     if (rh < 3) rh = 3;
     for (t = 0; t < (int32_t)NDK; t++) {
         int32_t ry = y + 3 + t * rh, mute = dk.mute >> t & 1u, sel = t == (int32_t)dk_trk;
-        uint16_t col = mute ? K_GREY : DK_COL[t];
+        uint16_t col = mute ? g_mix(K_BG, K_GREY, 150) : PAL_BW ? g_mix(K_BG, K_WHITE, (uint32_t)(255 - t * 18)) : DK_COL[t];   /* (BLACK / WHITE: shades of its white) */
         if (!g_vis(ry, rh)) continue;
         if (sel) g_rect(x + 2, ry, w - 4, rh, g_mix(K_BG, col, 40));
         g_rect(x + 4, ry + 1, sel ? 18 : 10, rh - 2, col);   /* (the track's colour, wider when chosen) */
@@ -903,6 +903,7 @@ static void glow_vis(uint32_t vz, int32_t x, int32_t y, int32_t w, int32_t h)
     g_vgrad(x + 1, y + 1, w - 2, h - 2, g_mix(K_PANEL, K_LIME, 30), K_BG);
     draw_visual(vz, x, y, w, h, 0);
 }
+static int big_vis(uint32_t vi) { return vi == V_DRUM || vi == V_SEQ || vi == V_SMP; }   /* (the views whose picture is what you play: a pattern, a sample) */
 static void th_glow(const view_t *v, uint32_t vi)
 {
     char t[32], sub[48], n[8], fb[64], *p;
@@ -933,6 +934,9 @@ static void th_glow(const view_t *v, uint32_t vi)
     else if (v->lay == LY_BOX) {
         glow_vis(vz, 6, 60, 228, 58);
         for (i = 0; i < 4u; i++) draw_vbox(i & 1u ? 123 : 6, 122 + (int32_t)(i >> 1) * 50, 111, 46, v->it[i], i == c, 0);
+    } else if (vz && big_vis(vi)) {
+        glow_vis(vz, 6, 60, 228, 100);
+        rows_g(v, 6, 164, 228, 23, 26, 2, T_S);
     } else if (vz) {
         glow_vis(vz, 6, 60, 228, 50);
         rows_g(v, 6, 114, 228, 23, 26, 4, T_S);
@@ -978,9 +982,13 @@ static void th_tech(const view_t *v, uint32_t vi)
         else rows_g(v, 4, 36, 232, 24, 28, 6, T_S);
         goto foot;
     }
-    ph = vz && v->n > 4u ? 62 : 126;            /* the picture: small when the page has rows to show under the tiles */
+    ph = vz && v->n > 4u && !big_vis(vi) ? 62 : 126;   /* the picture: small when the page has rows to show under the tiles */
     tech_win(4, 18, 232, ph, 0, K_LIME, 0);
-    if (vz) {
+    if (vz && big_vis(vi)) {                    /* (a pattern, a sample: the title above it, not on it) */
+        g_text(T_S, 10, 22, ti, K_WHITE);
+        if (g_text_w(T_S, ti) + g_text_w(T_XS, sub) < 214) g_text(T_XS, 18 + g_text_w(T_S, ti), 25, sub, K_GREY);
+        draw_visual(vz, 5, 38, 230, ph - 21, 0);
+    } else if (vz) {
         draw_visual(vz, 5, 19, 230, ph - 2, 0);
         g_text(T_S, 10, 22, ti, K_WHITE);
         if (g_text_w(T_S, ti) + g_text_w(T_XS, sub) < 214) g_text(T_XS, 18 + g_text_w(T_S, ti), 25, sub, K_GREY);
@@ -1008,7 +1016,7 @@ static void th_tech(const view_t *v, uint32_t vi)
         g_text(g_fit(T_M, b, 48), x + 5, y + 19, b, on ? K_LIME : K_WHITE);
         g_vbar(x + 5, y + 44, 46, 4, item_frac(id), on ? K_LIME : K_CYAN);
     }
-    if (vz && v->n > 4u) rows_g(v, 4, ph + 80, 232, 24, 26, 3, T_S);   /* (the small picture leaves room for the rows) */
+    if (vz && v->n > 4u && !big_vis(vi)) rows_g(v, 4, ph + 80, 232, 24, 26, 3, T_S);   /* (the small picture leaves room for the rows) */
     else if (v->n > 4u && g_vis(206, 17)) {     /* the row SELECT is on, and its value (ALGO) */
         uint32_t id = v->it[c];
         tech_win(4, 206, 232, 17, 3, K_CYAN, 0);
@@ -1223,14 +1231,15 @@ static int32_t rb_content(const view_t *v, uint32_t vi, int32_t x, int32_t y0, i
     int32_t y = y0;
     char b[24], lab[48];
     *sel_y = 0;
-    if (vz) {                                   /* the picture */
-        if (draw && g_vis(y + 4, 58)) {
+    if (vz) {                                   /* the picture (a pattern, a sample: taller) */
+        int32_t ph = big_vis(vi) ? 96 : 58;
+        if (draw && g_vis(y + 4, ph)) {
             int32_t k;
-            rb_rrect(x + 4, y + 4, w - 8, 58, 6, g_mix(K_BG, K_PANEL, 90), g_mix(K_BG, K_PANEL, 90));
-            for (k = 1; k < 4; k++) g_rect(x + 4 + (w - 8) * k / 4, y + 6, 1, 54, g_mix(K_BG, K_LINE, 110));
-            draw_visual(vz, x + 6, y + 6, w - 12, 54, 0);
+            rb_rrect(x + 4, y + 4, w - 8, ph, 6, g_mix(K_BG, K_PANEL, 90), g_mix(K_BG, K_PANEL, 90));
+            if (!big_vis(vi)) for (k = 1; k < 4; k++) g_rect(x + 4 + (w - 8) * k / 4, y + 6, 1, ph - 4, g_mix(K_BG, K_LINE, 110));
+            draw_visual(vz, x + 6, y + 6, w - 12, ph - 4, 0);
         }
-        y += 66;
+        y += ph + 8;
     }
     if (n) {                                    /* the first four: dials, each in its colour */
         uint32_t m = n < 4u ? n : 4u;
@@ -1409,9 +1418,10 @@ static void th_ribbon(const view_t *v, uint32_t vi, int classic)
         int32_t ry = cy0 + 2;
         uint32_t vz = VZ_OF[vi];
         if (vz) {
-            rb_rrect(wx + 6, ry, ww - 12, 58, 6, g_mix(K_BG, K_PANEL, 90), g_mix(K_BG, K_PANEL, 90));
-            draw_visual(vz, wx + 8, ry + 2, ww - 16, 54, 0);
-            ry += 64;
+            int32_t ph = big_vis(vi) ? 100 : 58;
+            rb_rrect(wx + 6, ry, ww - 12, ph, 6, g_mix(K_BG, K_PANEL, 90), g_mix(K_BG, K_PANEL, 90));
+            draw_visual(vz, wx + 8, ry + 2, ww - 16, ph - 4, 0);
+            ry += ph + 6;
         }
         rows_g(v, wx + 6, ry, ww - 18, 22, 25, (uint32_t)((cy1 - ry) / 25), T_S);
     }
@@ -1459,7 +1469,10 @@ static void th_rack(const view_t *v, uint32_t vi)
         }
     } else if (v->lay == LY_PRESET) presets_g(vi - PAGE_V0[PG_PRE], 35, 51, 199, 31, 34, 5, T_M);
     else if (v->lay == LY_SAVE) save_g(37, 70, 199, 17);
-    else if (vz) {
+    else if (vz && big_vis(vi)) {
+        draw_visual(vz, 35, 51, 201, 100, 1);
+        rows_g(v, 35, 155, 197, 24, 26, 2, T_M);
+    } else if (vz) {
         draw_visual(vz, 35, 51, 201, 36, 1);
         rows_g(v, 35, 91, 197, 24, 26, 5, T_M);
     } else

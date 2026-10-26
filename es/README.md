@@ -18,18 +18,19 @@
 ## Funciones clave
 
 1. **4 motores eficientes** para graves modernos, o **8 motores** para bajo, pads y leads (`SYSTEM › ENGINES`).
-2. **LFO learn**: mantén `LFO` y gira cualquier potenciómetro, el LFO 2 se asigna a ese ajuste en un gesto.
-3. Modo **CLASSIC** o **SHIFT** (`OCT−` / `OCT+`) para ir más rápido, a elegir en las opciones.
-4. **Ventanas SEL**: PERFORM, MORPH, FX LIVE, MACROS.
-5. **Morph A/B**: mezcla dos sonidos en vivo.
-6. Una **página de LFO** en vivo para remodelar tus graves wobble mientras tocas.
-7. **SEQ BASS** (hasta 64 pasos, probabilidad, condiciones de disparo y duración de nota por paso, 30 presets, REC en directo), samples **OSC C** (ataques, texturas; inicio / fin recortados, más rápido o más lento, al revés, ping-pong), **DRUMS** (kits 808 / 909 / dub techno / acústico, 8 pistas de colores, presets de ritmo: techno, dub, dnb…), **ARP**, **MIDI**.
-8. El sonido: motores, filtros, efectos, master, y **FX PADS**.
-9. Visuales de osciladores animados, en vivo.
-10. Un **EQ** visual.
-11. **Temas** totalmente distintos, para adaptarse a tu forma de tocar.
-12. **Brillo**, contraste, tipografías y tamaño.
-13. **Idioma del firmware** (`SYSTEM › LANGUAGE`): English, Français o Español, inglés por defecto.
+2. **Secuenciador de batería con condiciones y pads**: 8 pistas de colores (kits 808, 909, dub techno, acústico), probabilidad y condiciones en cada paso, teclas negras para el instrumento, teclas blancas (pads) para sus pasos, OCT−/OCT+ para las páginas; REC en directo; salida sync para Pocket Operator y Volca.
+3. **LFO learn**: mantén `LFO` y gira cualquier potenciómetro, el LFO 2 se asigna a ese ajuste en un gesto.
+4. Modo **CLASSIC** o **SHIFT** (`OCT−` / `OCT+`) para ir más rápido, a elegir en las opciones.
+5. **Ventanas SEL**: PERFORM, MORPH, FX LIVE, MACROS.
+6. **Morph A/B**: mezcla dos sonidos en vivo.
+7. Una **página de LFO** en vivo para remodelar tus graves wobble mientras tocas.
+8. **SEQ BASS** (hasta 64 pasos, probabilidad, condiciones de disparo y duración de nota por paso, 30 presets, REC en directo), samples **OSC C** (ataques, texturas; inicio / fin recortados, más rápido o más lento, al revés, ping-pong), **DRUMS** (kits 808 / 909 / dub techno / acústico, 8 pistas de colores, presets de ritmo: techno, dub, dnb…), **ARP**, **MIDI**.
+9. El sonido: motores, filtros, efectos, master, y **FX PADS**.
+10. Visuales de osciladores animados, en vivo.
+11. Un **EQ** visual.
+12. **Temas** totalmente distintos, para adaptarse a tu forma de tocar.
+13. **Brillo**, contraste, tipografías y tamaño.
+14. **Idioma del firmware** (`SYSTEM › LANGUAGE`): English, Français o Español, inglés por defecto.
 
 ## Instalar
 
@@ -43,8 +44,8 @@ Puedes volver a KAWA (`install/kawa-0.5.fwsc`) o al firmware de fábrica (M-UPGR
 
 ```sh
 cd source
-./build.sh --release 0.9.55          # -> build/k-wasub-0.9.55.fwsc
-APP_VER=0.9.55 bash web/make_emulator.sh      # emulador
+./build.sh --release 0.9.56          # -> build/k-wasub-0.9.56.fwsc
+APP_VER=0.9.56 bash web/make_emulator.sh      # emulador
 bash web/make_installer.sh                    # installer.html con el último paquete
 bash tests/run_stress.sh                      # pruebas de carga (UBSan)
 python3 tests/manual_shots.py                 # capturas del manual (docs/img)

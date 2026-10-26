@@ -110,6 +110,19 @@ s.btn(ARP, 300); s.shot("rb-presets", 300)
 look(s, 6, 0); s.shot("rbc-home", 1300); s.btn(EDIT, 300); s.shot("rbc-osc", 300); s.btn(ENV, 300); s.shot("rbc-env", 300); s.btn(LFO, 300); s.shot("rbc-lfo", 300)
 finish(s, "m5b")
 
+# 5c. the sequencers: DRUMS (TECHNO, then DUB TECHNO on its kit), SEQ BASS, OSC C's START / END
+s = S(); s.t += 2800; s.btn(HOME, 300); s.btn(SEL, 400)
+for _ in range(4): s.btn(SEQ, 200)
+s.enc(0, 10, 100); s.enc(1, 1, 100); s.btn(PLAY, 200); s.shot("d-drums", 2400)
+s.c("on 3", 60); s.c("off 3", 300); s.shot("d-drums-snare", 1600)
+s.enc(1, 42, 100); s.enc(0, 2, 100); s.enc(1, 2, 100); s.shot("d-drums-dub", 2400)
+s.btn(PLAY, 300); s.enc(1, -2, 100)
+for _ in range(3): s.btn(SEQ, 200)
+s.enc(0, 7, 100); s.enc(1, 1, 100); s.btn(PLAY, 200); s.shot("d-seq", 2400); s.btn(PLAY, 300)
+for _ in range(5): s.btn(EDIT, 150)
+s.enc(2, 19, 100); s.enc(4, 25, 100); s.enc(5, 40, 100); s.c("on 12", 100); s.shot("v-sample-cut", 1800); s.c("off 12", 100)
+finish(s, "m5c")
+
 # 6. BRIGHTNESS: the same screen in the four steps
 s = S(); s.t += 2800; s.btn(HOME, 300); s.btn(SEL, 400); look(s, 0, 0); s.btn(GLO, 200); s.enc(0, -30, 100); s.enc(0, 7, 100)
 for lv, nm in ((0, "eco"), (1, "normal"), (2, "bright"), (3, "max")):

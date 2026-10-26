@@ -20,18 +20,19 @@
 ## Key features
 
 1. **4 efficient engines** for modern basses, or **8 engines** for bass, pads & leads (`SYSTEM › ENGINES`).
-2. **LFO learn**: hold `LFO` and turn any knob, LFO 2 is assigned to that setting in one gesture.
-3. **CLASSIC** or **SHIFT** mode (`OCT−` / `OCT+`) for a faster workflow, chosen in the options.
-4. **SEL windows**: PERFORM, MORPH, FX LIVE, MACROS.
-5. **A/B morph**: blend two sounds live.
-6. A live **LFO page** to reshape your wobble basses while you play.
-7. **SEQ BASS** (up to 64 steps, probability, trig conditions and note length per step, 30 presets, live REC), **OSC C** samples (attacks, textures; start / end cut, faster or slower, reverse, ping-pong), **DRUMS** (808 / 909 / dub techno / acoustic kits, 8 coloured tracks, rhythm presets: techno, dub, dnb…), **ARP**, **MIDI**.
-8. The sound: engines, filters, effects, master, and **FX PADS**.
-9. Animated oscillator visuals, live.
-10. A visual **EQ**.
-11. Totally different **themes**, to fit the way you work.
-12. **Brightness**, contrast, fonts and size.
-13. **Firmware language** (`SYSTEM › LANGUAGE`): English, Français or Español; English by default.
+2. **Drum sequencer with conditions & pads**: 8 coloured tracks (808, 909, dub techno, acoustic kits), chance and trig conditions on every step, black keys choose the instrument, white keys (pads) place its steps, OCT−/OCT+ turn the pages; live REC; sync out for Pocket Operators and Volcas.
+3. **LFO learn**: hold `LFO` and turn any knob, LFO 2 is assigned to that setting in one gesture.
+4. **CLASSIC** or **SHIFT** mode (`OCT−` / `OCT+`) for a faster workflow, chosen in the options.
+5. **SEL windows**: PERFORM, MORPH, FX LIVE, MACROS.
+6. **A/B morph**: blend two sounds live.
+7. A live **LFO page** to reshape your wobble basses while you play.
+8. **SEQ BASS** (up to 64 steps, probability, trig conditions and note length per step, 30 presets, live REC), **OSC C** samples (attacks, textures; start / end cut, faster or slower, reverse, ping-pong), **DRUMS** (808 / 909 / dub techno / acoustic kits, 8 coloured tracks, rhythm presets: techno, dub, dnb…), **ARP**, **MIDI**.
+9. The sound: engines, filters, effects, master, and **FX PADS**.
+10. Animated oscillator visuals, live.
+11. A visual **EQ**.
+12. Totally different **themes**, to fit the way you work.
+13. **Brightness**, contrast, fonts and size.
+14. **Firmware language** (`SYSTEM › LANGUAGE`): English, Français or Español; English by default.
 
 ## Install
 
@@ -45,8 +46,8 @@ You can go back to KAWA (`install/kawa-0.5.fwsc`) or to the stock firmware (M-UP
 
 ```sh
 cd source
-./build.sh --release 0.9.55          # -> build/k-wasub-0.9.55.fwsc
-APP_VER=0.9.55 bash web/make_emulator.sh      # emulator
+./build.sh --release 0.9.56          # -> build/k-wasub-0.9.56.fwsc
+APP_VER=0.9.56 bash web/make_emulator.sh      # emulator
 bash web/make_installer.sh                    # installer.html with the newest package
 bash tests/run_stress.sh                      # load tests (UBSan)
 python3 tests/manual_shots.py                 # the manual's screenshots (docs/img)

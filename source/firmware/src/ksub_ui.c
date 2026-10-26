@@ -27,6 +27,7 @@ enum { I_L1RATE = 140, I_L2RATE, I_ABMIX, G_MIDICH, G_BPM, G_CLOCK, G_OCT, G_COR
        G_SQ_GATE, G_SQ_PRESET,                                                       /* SEQ BASS: the step's note length; a pattern from the library */
        G_DK_LVL, G_DK_TUNE, G_DK_DEC, G_DK_TONE, G_DK_TRK, G_DK_STEP, G_DK_HIT, G_DK_PROB, G_DK_COND,   /* DRUMS: the track's sound; the step */
        G_DK_PAT, G_DK_PRE, G_DK_LEN, G_DK_KIT, G_DK_VOL, G_DK_MODE, G_DK_SWING,       /* DRUMS: the pattern, the kit */
+       G_SYNC,                                                                       /* SYNC OUT (POCKET OPERATOR, VOLCA) */
        I_NONE = 255 };
 
 typedef struct {
@@ -72,7 +73,7 @@ static const view_t VIEWS[] = {
     {LY_LIST, "ARPEGGIATOR", 5, {G_AR_ON, G_AR_MODE, G_AR_RATE, G_AR_OCT, G_AR_GATE}, "ARP"},
     {LY_SYS, "GLOBAL SETUP", 24, {G_BPM, V_MODE, G_UI, G_THEME, G_PAL, V_GLIDE, G_QLFO, G_BRI, G_ASAVE, G_LANG, G_ENG8, G_DEEP, G_NORM, G_ACCEL, G_GRID, V_BEND, V_VEL,
                                   G_FONT, G_ZOOM, G_C3COL, G_BROWSE, G_ASK, G_CPU, G_RST}, "SYSTEM"},
-    {LY_SYS, "MIDI", 7, {G_MLEARN, G_MMAP, G_MIDICH, G_CLOCK, G_MSTART, G_MPROG, G_MCLK}, "SYSTEM"},
+    {LY_SYS, "MIDI", 8, {G_MLEARN, G_MMAP, G_MIDICH, G_CLOCK, G_MSTART, G_MPROG, G_MCLK, G_SYNC}, "SYSTEM"},
 };
 /* what K1..K4 turn: the first four rows (the preset lists and SAVE have their own) */
 static uint32_t vknob(const view_t *v, uint32_t i) { return v->lay == LY_PRESET || v->lay == LY_SAVE || i >= v->n ? I_NONE : v->it[i]; }
@@ -104,7 +105,7 @@ static struct {                                 /* the user slots' settings past
     uint8_t magic, sum;
     int8_t p[NUSER][NP_MAX - NP_STORE];
 } uext;
-typedef char ids_fit[G_DK_SWING < I_NONE ? 1 : -1];
+typedef char ids_fit[G_SYNC < I_NONE ? 1 : -1];
 typedef char np_fits[NP <= I_L1RATE && NP <= NP_MAX ? 1 : -1];   /* (the patch's ids under the others') */
 #define CC_MAGIC 0x44u                          /* (0x43: before 0.9.55, the ids past the patch 4 lower) */
 #define WK_AT 0xC00u                            /* (the 2nd sector, after the slots' rest: the sound being made, AUTOSAVE) */
@@ -154,6 +155,7 @@ static struct {
     uint8_t asave;                              /* AUTOSAVE: the sound being made kept every minute (back at the next start) */
     uint8_t pquant;                             /* FX PADS: the keys wait for the next 0 OFF, 1 BAR, 1/2, 1/4, 1/8, 1/16, 1/24, 1/32, 1/64 */
     uint8_t lang;                               /* LANGUAGE: 0 ENGLISH, 1 FRANCAIS, 2 ESPANOL (the view titles; the rest stays in English) */
+    uint8_t sync;                               /* SYNC OUT: 1 a pulse every eighth on the left (POCKET OPERATOR SY, VOLCA), the sound in mono on the right */
 } set = {6, 0, 0, 0xFF, 1400, 0, 0, 1, 0, 0, 0, 0, 0, {0}, 1, 0, 0, 1, 0, 1, 1, 0, 1, 1, 1, 0, 3, 1, 0, 1, 0, 0};
 static char pname[14];
 static uint8_t page, vcur[NPAGE], cursor[sizeof VIEWS / sizeof VIEWS[0]], pre_cur[2], save_slot, save_pos, hold;
@@ -1242,7 +1244,7 @@ static void item_range(uint32_t id, int32_t *lo, int32_t *hi)
         return;
     }
     *lo = 0;
-    *hi = id == G_MIDICH ? 16 : id == G_BPM ? 2400 : id == G_CLOCK || id == G_QLFO || id == G_ENG8 || id == G_ASAVE || id == G_LANG || id == G_NORM || id == G_RS_GO || id == G_GRID || id == G_BROWSE || id == G_C3COL || id == G_UI || id == G_ASK || id == G_ZOOM || id == G_MLEARN || id == G_MSTART || id == G_MPROG || id == G_MCLK ? 1 : id == G_MMAP ? 16 : id == I_ABMIX ? 127 : id == G_BRI ? 3 : id == G_ACCEL || id == G_CON || id == G_DEEP || id == G_RS_LEN ? 2 : id == G_THEME ? 6 : id == G_FONT ? (int32_t)NFONT - 1 : id == G_PAL ? (int32_t)(2u * NPAL_BASE - 1u) : id == G_OCT ? 6 : 0;
+    *hi = id == G_MIDICH ? 16 : id == G_BPM ? 2400 : id == G_CLOCK || id == G_QLFO || id == G_ENG8 || id == G_ASAVE || id == G_LANG || id == G_NORM || id == G_RS_GO || id == G_GRID || id == G_BROWSE || id == G_C3COL || id == G_UI || id == G_ASK || id == G_ZOOM || id == G_MLEARN || id == G_MSTART || id == G_MPROG || id == G_MCLK || id == G_SYNC ? 1 : id == G_MMAP ? 16 : id == I_ABMIX ? 127 : id == G_BRI ? 3 : id == G_ACCEL || id == G_CON || id == G_DEEP || id == G_RS_LEN ? 2 : id == G_THEME ? 6 : id == G_FONT ? (int32_t)NFONT - 1 : id == G_PAL ? (int32_t)(2u * NPAL_BASE - 1u) : id == G_OCT ? 6 : 0;
     if (id == G_ACCEL) *hi = 3;                 /* (OFF, ON, FAST, ULTRA) */
     if (id == G_LANG) *hi = 2;                  /* (ENGLISH, FRANCAIS, ESPANOL) */
     if (id == G_BPM) *lo = 600;
@@ -1280,6 +1282,7 @@ static int32_t item_get(uint32_t id)
     case G_MIDICH: return set.midich;
     case G_BPM: return set.bpm10;
     case G_CLOCK: return set.clock;
+    case G_SYNC: return set.sync;
     case G_OCT: return OCT + 3;
     case G_THEME: return set.theme;
     case G_PAL: return set.pal;
@@ -1462,6 +1465,7 @@ static void item_set(uint32_t id, int32_t v)
     case G_MIDICH: set.midich = (uint8_t)v; break;
     case G_BPM: set.bpm10 = (uint16_t)v; ks_bpm10 = (uint32_t)v; break;
     case G_CLOCK: set.clock = (uint8_t)v; break;
+    case G_SYNC: set.sync = (uint8_t)v; ks_sync = (uint8_t)v; break;
     case G_OCT: set.oct = (uint8_t)(int8_t)(v - 3); break;
     case G_THEME: set.theme = (uint8_t)v; theme_set(set.theme, set.pal); g_force = 1; break;
     case G_PAL:
@@ -1524,6 +1528,7 @@ static const char *item_name(uint32_t id)
     case G_MIDICH: return "MIDI CHANNEL";
     case G_BPM: return "TEMPO";
     case G_CLOCK: return "CLOCK";
+    case G_SYNC: return "SYNC OUT";
     case G_OCT: return "KEYS OCTAVE";
     case G_CPU: return "CPU LOAD";
     case G_THEME: return "THEME";
@@ -1687,6 +1692,7 @@ static void item_text(uint32_t id, char *b)
         case G_MIDICH: if (v) fmt_u(b, (uint32_t)v, 2); else str_cat(b, "OMNI"); break;
         case G_BPM: b = fmt_u(b, (uint32_t)v / 10u, 0); *b++ = '.'; b = fmt_u(b, (uint32_t)v % 10u, 0); str_cat(b, " BPM"); break;
         case G_CLOCK: str_cat(b, v ? "MIDI" : "INTERNAL"); break;
+        case G_SYNC: str_cat(b, v ? "PO / VOLCA (LEFT)" : "OFF"); break;
         case G_OCT: fmt_s(b, v - 3); break;
         case G_THEME: { static const char *const TN[7] = {"CLASSIC GLOW", "STUDIO", "PURE", "RACK", "TECH", "RIBBON", "RIBBON CLASSIC"}; str_cat(b, TN[(uint32_t)v % 7u]); break; }
         case G_PAL: { static const char *const PN[11] = {"SYNTHWAVE", "MINT", "BLACK / WHITE", "INVERTED", "RED", "ICE", "FLUO", "PINK", "GOLD", "SKY", "BLAZE"}; int32_t q = v >= (int32_t)NPAL_BASE ? v - (int32_t)NPAL_BASE : v; str_cat(b, q < 2 ? PAL_NAME[set.theme % 7u][q] : PN[(q - 2) % 11]); if (v >= (int32_t)NPAL_BASE) str_cat(b, " RAD"); break; }
@@ -2380,7 +2386,7 @@ static void ask_done(uint32_t sel)
 {
     ask_on = 0;
     splash_until = 0;
-    if (set.ui != sel || first_run || set.askv < 2u) { set.ui = (uint8_t)sel; set.askv = 4; set_dirty = 1; set_ms = fm1_ms; first_run = 0; }
+    if (set.ui != sel || first_run || set.askv < 2u) { set.ui = (uint8_t)sel; set.askv = 5; set_dirty = 1; set_ms = fm1_ms; first_run = 0; }
     toast(sel ? "SHIFT MODE" : "CLASSIC MODE");
     g_force = 1;
 }
@@ -2643,15 +2649,15 @@ static void app_init(void)
     uint32_t i;
     int ok;
     {                                           /* (a save from before a field was added: the fields it has, the rest as is) */
-        const uint32_t LEN[13] = {sizeof set, (uint32_t)((uint8_t *)&set.lang - (uint8_t *)&set), (uint32_t)((uint8_t *)&set.pquant - (uint8_t *)&set), (uint32_t)((uint8_t *)&set.asave - (uint8_t *)&set), (uint32_t)((uint8_t *)&set.eng8 - (uint8_t *)&set), (uint32_t)((uint8_t *)&set.qlfo - (uint8_t *)&set), (uint32_t)((uint8_t *)&set.bri - (uint8_t *)&set), (uint32_t)((uint8_t *)&set.norm - (uint8_t *)&set), (uint32_t)((uint8_t *)&set.contrast - (uint8_t *)&set), (uint32_t)((uint8_t *)&set.mstart - (uint8_t *)&set), (uint32_t)((uint8_t *)&set.zoom - (uint8_t *)&set),
+        const uint32_t LEN[14] = {sizeof set, (uint32_t)((uint8_t *)&set.sync - (uint8_t *)&set), (uint32_t)((uint8_t *)&set.lang - (uint8_t *)&set), (uint32_t)((uint8_t *)&set.pquant - (uint8_t *)&set), (uint32_t)((uint8_t *)&set.asave - (uint8_t *)&set), (uint32_t)((uint8_t *)&set.eng8 - (uint8_t *)&set), (uint32_t)((uint8_t *)&set.qlfo - (uint8_t *)&set), (uint32_t)((uint8_t *)&set.bri - (uint8_t *)&set), (uint32_t)((uint8_t *)&set.norm - (uint8_t *)&set), (uint32_t)((uint8_t *)&set.contrast - (uint8_t *)&set), (uint32_t)((uint8_t *)&set.mstart - (uint8_t *)&set), (uint32_t)((uint8_t *)&set.zoom - (uint8_t *)&set),
                                  (uint32_t)((uint8_t *)&set.ui - (uint8_t *)&set), (uint32_t)((uint8_t *)&set.accel - (uint8_t *)&set)};
-        for (ok = 0, i = 0; i < 13u && !ok; i++) ok = !settings_load(&set, LEN[i]) && set.ver == 6u;
+        for (ok = 0, i = 0; i < 14u && !ok; i++) ok = !settings_load(&set, LEN[i]) && set.ver == 6u;
     }
     first_run = !ok || set.askv < 2u;           /* (the very first start, or a save from before 0.9.17: the question once) */
     if (!ok) {
-        set.font = set.grid = set.browse = 0; set.theme = 1; set.pal = 6;   /* (STUDIO, RED) */
+        set.grid = set.browse = 0; set.font = 4; set.theme = 1; set.pal = 6;   /* (STUDIO, RED, OUTFIT) */
         memset(set.fav, 0, sizeof set.fav);
-        set.ver = 6; set.midich = 0; set.clock = 0; set.oct = 0xFF; set.bpm10 = 1400; set.bank = 0; set.idx = 0; set.cores = 1; set.accel = 1; set.c3col = 0; set.ui = 0; set.ask = 0; set.zoom = 1; set.mstart = 1; set.mprog = 1; set.mclk = 0; set.contrast = 1; set.norm = 1; set.deep = 1; set.askv = 1; set.bri = 3; set.qlfo = 1; set.eng8 = 0; set.asave = 1; set.lang = 0;
+        set.ver = 6; set.midich = 0; set.clock = 0; set.oct = 0xFF; set.bpm10 = 1400; set.bank = 0; set.idx = 0; set.cores = 1; set.accel = 1; set.c3col = 0; set.ui = 0; set.ask = 0; set.zoom = 1; set.mstart = 1; set.mprog = 1; set.mclk = 0; set.contrast = 1; set.norm = 1; set.deep = 1; set.bri = 3; set.qlfo = 1; set.eng8 = 0; set.asave = 1; set.lang = 0; set.askv = 5;
     }
     set.eng8 = set.eng8 ? 1u : 0u;
     set.qlfo = set.qlfo ? 1u : 0u;
@@ -2663,8 +2669,10 @@ static void app_init(void)
         set.zoom = 1; set.askv = 4; set.qlfo = 1; set_dirty = 1; set_ms = fm1_ms;
         if (set.pal >= 11u && set.pal < 22u) set.pal = (uint8_t)(set.pal + 2u);
     }   /* (0.10: no more question at each start; SYSTEM > ASK brings it back) */
+    if (set.askv == 4u) { set.font = 4; set.zoom = 1; set.askv = 5; set_dirty = 1; set_ms = fm1_ms; }   /* (0.9.56: OUTFIT and LOUPE, once) */
     set.norm = set.norm ? 1u : 0u; set.deep = set.deep < 3u ? set.deep : 1u;
     ks_norm = set.norm; ks_deep = set.deep;
+    set.sync = set.sync ? 1u : 0u; ks_sync = set.sync;
     set.contrast = 2;                           /* no CONTRAST setting any more: always MAX (DEEP BLACK), the one look that shows right on the FM-1 */
     g_con = 2; lcd_contrast(2);
     set.cores = set.cores ? 1u : 0u;

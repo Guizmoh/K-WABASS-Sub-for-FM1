@@ -40,7 +40,7 @@ def build(L):
     def key(k): return f'<span class="key k">{k}</span>'
 
     nav = [("start", T("Start", "Démarrer")), ("panel", T("Buttons", "Boutons")), ("pages", T("Pages", "Pages")),
-           ("sel", T("SEL · PERFORM", "SEL · PERFORM")), ("pads", "FX PADS"), ("looks", T("Themes", "Thèmes")),
+           ("sel", T("SEL · PERFORM", "SEL · PERFORM")), ("pads", "FX PADS"), ("seq", "SEQ · DRUMS"), ("looks", T("Themes", "Thèmes")),
            ("sound", T("Sound", "Son")), ("data", T("Data", "Données")), ("help", T("Help", "Aide"))]
 
     chaps = []  # (id, title, html) -- each becomes its own <section class="chap">, searched and listed in the TOC
@@ -124,9 +124,47 @@ def build(L):
                         '<tr><td>Noires 1–4</td><td>stutter (tenu)</td></tr><tr><td>Noires 5–11</td><td>tape stop, filtres DJ, pump, saturation, phaser, crush</td></tr>'))
                   + f'</table><p>{t(T("K1 CUTOFF · K2 RESONANCE · K3 FILTER TYPE · K4 MORPH A/B · <b>ALGO: QUANTIZE</b> (OFF to 1/64): a key waits for the next division, so it lands on time.", "K1 CUTOFF · K2 RÉSONANCE · K3 TYPE DE FILTRE · K4 MORPH A/B · <b>ALGO : QUANTISATION</b> (OFF à 1/64) : une touche attend la prochaine division, elle tombe en rythme."))}</p></div></div>'))
 
+    # 6 sequencers -- the drums' grid and the keys that fill it
+    chaps.append(("seq", t(T("6 · SEQ BASS and DRUMS", "6 · SEQ BASS et DRUMS")),
+                  grid([("d-drums", "DRUMS · TECHNO"), ("d-drums-dub", T("DUB TECHNO kit", "kit DUB TECHNO")), ("d-seq", "SEQ BASS"), ("v-sample-cut", T("OSC C: START / END", "OSC C : START / END"))])
+                  + t(T('<p><b>PLAY</b> starts both sequencers (SEQ BASS and DRUMS) on the tempo; <b>REC</b> on their views records: stopped, step by step; playing, live. '
+                        'DRUMS is the 4th view of SEQ (press SEQ until it shows).</p>'
+                        '<table><tr><td>Black keys 1–8</td><td>choose the instrument and play it (REC + PLAY: record it now)</td></tr>'
+                        '<tr><td>Black key 9 · 10</td><td>mute the instrument · clear its track</td></tr>'
+                        '<tr><td>White keys 1–16</td><td>its steps on the page shown (on / off)</td></tr>'
+                        '<tr><td>OCT− · OCT+</td><td>previous · next page of 16 steps (32 and 64-step patterns)</td></tr>'
+                        '<tr><td>K1–K4</td><td>LEVEL, TUNE, DECAY, TONE of the instrument</td></tr>'
+                        '<tr><td>SELECT · ALGO</td><td>a row, its value: STEP, HIT (on / accent), PROB (chance), COND, PAT (8 patterns), PRESET, STEPS, KIT, VOL, PLAYS, SWING</td></tr></table>'
+                        '<p><b>Colours</b>: kick red, snare green, clap pink, closed hat yellow, open hat orange, tom blue, perc violet, cymbal cyan (shades of white with the BLACK / WHITE palette). '
+                        'A dot on a step: it has a chance or a condition. The white column is the step playing.</p>'
+                        '<p><b>Conditions</b> (per step, SEQ BASS too): 1/2, 2/2, 1/4…4/4 (that time round), START / NOT START (the first time round), IF BEFORE (the step before played), IF AFTER (the next one plays). '
+                        '<b>Kits</b>: 808, 909, DUB TECHNO (deep kick, chord stab on PERC, its own dub echo), ACOUSTIC (beater kick, snare wires, toms, conga, ride). '
+                        '<b>Presets</b>: 18 rhythms (TECHNO, HOUSE, DUB, DNB, JUNGLE, DUBSTEP, BREAKBEAT, UK GARAGE, ELECTRO, MINIMAL, HALFTIME, TRAP, ROLLING HATS, FOUR FLOOR, DUB TECHNO, ROCK, FUNK, JAZZ RIDE) in 16, 32 and 64 steps; MY PATTERN brings yours back. '
+                        '<b>PLAYS</b>: bass + drums, drums only, bass only.</p>'
+                        '<p><b>SEQ BASS</b>: per step a note, a NOTE LEN (1/8 step to 64 steps, or HOLD), a type (accent, slide), a chance and a condition; 30 basslines in 16, 32, 64 steps.</p>'
+                        '<p><b>Sync</b>: SYSTEM › MIDI › SYNC OUT = PO / VOLCA puts a pulse every eighth note on the left output while it plays, the sound in mono on the right: '
+                        'a stereo-to-two-mono cable to a Pocket Operator (SY mode that follows) or a Volca\'s SYNC IN. MIDI clock in / out is in the same view.</p>',
+                        '<p><b>PLAY</b> lance les deux séquenceurs (SEQ BASS et DRUMS) sur le tempo ; <b>REC</b> sur leurs vues enregistre : à l’arrêt pas à pas, en lecture en direct. '
+                        'DRUMS est la 4e vue de SEQ (appuyer sur SEQ jusqu’à la voir).</p>'
+                        '<table><tr><td>Noires 1–8</td><td>choisir l’instrument et le jouer (REC + PLAY : l’enregistrer à l’instant)</td></tr>'
+                        '<tr><td>Noire 9 · 10</td><td>couper l’instrument · effacer sa piste</td></tr>'
+                        '<tr><td>Blanches 1–16</td><td>ses pas sur la page affichée (on / off)</td></tr>'
+                        '<tr><td>OCT− · OCT+</td><td>page de 16 pas précédente · suivante (patterns de 32 et 64 pas)</td></tr>'
+                        '<tr><td>K1–K4</td><td>LEVEL, TUNE, DECAY, TONE de l’instrument</td></tr>'
+                        '<tr><td>SELECT · ALGO</td><td>une ligne, sa valeur : STEP, HIT (on / accent), PROB (chance), COND, PAT (8 patterns), PRESET, STEPS, KIT, VOL, PLAYS, SWING</td></tr></table>'
+                        '<p><b>Couleurs</b> : kick rouge, snare vert, clap rose, charley fermé jaune, charley ouvert orange, tom bleu, percu violet, cymbale cyan (nuances de blanc avec la palette BLACK / WHITE). '
+                        'Un point sur un pas : il a une chance ou une condition. La colonne blanche est le pas joué.</p>'
+                        '<p><b>Conditions</b> (par pas, SEQ BASS aussi) : 1/2, 2/2, 1/4…4/4 (ce tour-là), START / NOT START (le premier tour), IF BEFORE (le pas d’avant a joué), IF AFTER (le suivant joue). '
+                        '<b>Kits</b> : 808, 909, DUB TECHNO (kick profond, accord sur PERC, son propre écho dub), ACOUSTIC (kick à batte, caisse claire à timbre, toms, conga, ride). '
+                        '<b>Presets</b> : 18 rythmes (TECHNO, HOUSE, DUB, DNB, JUNGLE, DUBSTEP, BREAKBEAT, UK GARAGE, ELECTRO, MINIMAL, HALFTIME, TRAP, ROLLING HATS, FOUR FLOOR, DUB TECHNO, ROCK, FUNK, JAZZ RIDE) en 16, 32 et 64 pas ; MY PATTERN ramène le tien. '
+                        '<b>PLAYS</b> : basse + batterie, batterie seule, basse seule.</p>'
+                        '<p><b>SEQ BASS</b> : par pas une note, une NOTE LEN (1/8 de pas à 64 pas, ou HOLD), un type (accent, slide), une chance et une condition ; 30 lignes de basse en 16, 32, 64 pas.</p>'
+                        '<p><b>Synchro</b> : SYSTEM › MIDI › SYNC OUT = PO / VOLCA met une impulsion par croche sur la sortie gauche pendant la lecture, le son en mono à droite : '
+                        'un câble stéréo vers deux mono jusqu’à un Pocket Operator (mode SY qui suit) ou le SYNC IN d’une Volca. L’horloge MIDI in / out est dans la même vue.</p>'))))
+
     # 6 looks -- pictures are the point here (what a palette looks like cannot be said in words): kept
-    chaps.append(("looks", t(T("6 · Themes, palettes, fonts", "6 · Thèmes, palettes, polices")),
-                  f'<p>{t(T("SYSTEM › THEME, PALETTE (13, then their RAD gradient versions), FONT (9), LOUPE, BRIGHTNESS. Two modes: CLASSIC (lists) and SHIFT (3 columns, OCT− / OCT+ held for the middle and right ones).", "SYSTEM › THEME, PALETTE (13, puis leurs versions dégradé RAD), FONT (9), LOUPE, BRIGHTNESS. Deux modes : CLASSIC (listes) et SHIFT (3 colonnes, OCT− / OCT+ maintenus pour celles du milieu et de droite)."))}</p>'
+    chaps.append(("looks", t(T("7 · Themes, palettes, fonts", "7 · Thèmes, palettes, polices")),
+                  f'<p>{t(T("SYSTEM › THEME, PALETTE (13, then their RAD gradient versions), FONT (9; OUTFIT by default), LOUPE (on by default), BRIGHTNESS. Two modes: CLASSIC (lists) and SHIFT (3 columns, OCT− / OCT+ held for the middle and right ones).", "SYSTEM › THEME, PALETTE (13, puis leurs versions dégradé RAD), FONT (9 ; OUTFIT par défaut), LOUPE (active par défaut), BRIGHTNESS. Deux modes : CLASSIC (listes) et SHIFT (3 colonnes, OCT− / OCT+ maintenus pour celles du milieu et de droite)."))}</p>'
                   + grid([("t-glow-green", "CLASSIC GLOW"), ("t-studio", "STUDIO"), ("t-pure", "PURE"), ("t-rack", "RACK"), ("t-tech-volt", "TECH"),
                           ("rb-osc", "RIBBON"), ("rbc-osc", "RIBBON CLASSIC"), ("s-osc", "SHIFT")])
                   + grid([("t-red", "RED"), ("t-gold", "GOLD"), ("t-synthwave", "SYNTHWAVE"), ("t-fluo", "FLUO"), ("t-pink", "PINK"), ("t-ice", "ICE"),
@@ -134,7 +172,7 @@ def build(L):
                           ("t-ribbon-ice", "ICE NEON"), ("t-rad-red", "RED RAD"), ("t-rad-synthwave", "SYNTHWAVE RAD"), ("t-rad-glow-green", "FLUO GREEN RAD"), ("t-rad-sky", "SKY RAD")])))
 
     # 7 sound
-    chaps.append(("sound", t(T("7 · The sound", "7 · Le son")),
+    chaps.append(("sound", t(T("8 · The sound", "8 · Le son")),
                   '<ul class="tight">' + t(T(
                       '<li><b>Engines</b>: ANALOG, SUPER / REESE, WAVE, FM (ESSENTIAL) + PHASE, FOLD, SYNC, VOCAL (SYSTEM › ENGINES › ALL). A and B: add, ring, X-mod, sync.</li>'
                       '<li><b>Filter</b>: LP 24, LP 12, BAND, HIGH, NOTCH, VOWEL, COMB.</li>'
@@ -153,13 +191,13 @@ def build(L):
 
     # 8 data
     data = "../data.html?lang=fr" if fr else "data.html"
-    chaps.append(("data", t(T("8 · Data page (USB)", "8 · Page Données (USB)")),
+    chaps.append(("data", t(T("9 · Data page (USB)", "9 · Page Données (USB)")),
                   '<p>' + t(T(
                       f'<a href="{data}"><b>Data</b></a> (Chrome / Edge): back up and restore your sounds (<code>.kwsub</code>), save a RESAMPLE recording as WAV, send a sound file of yours to OSC C (until power-off).',
                       f'<a href="{data}"><b>Données</b></a> (Chrome / Edge) : sauvegarder et recharger tes sons (<code>.kwsub</code>), enregistrer un RESAMPLE en WAV, envoyer un fichier son à toi vers OSC C (jusqu’à l’extinction).')) + '</p>'))
 
     # 9 help
-    chaps.append(("help", t(T("9 · Help", "9 · Aide")),
+    chaps.append(("help", t(T("10 · Help", "10 · Aide")),
                   '<div class="card warn">' + t(T(
                       '<b>It switched off or restarted?</b> The reason shows at the next start (<code>LAST STOP</code>): WATCHDOG = overloaded, LOW VOLTAGE = power (battery, cable), CRASH + address = send it to me. '
                       '<b>No sound?</b> Check MASTER. <b>Stuck notes?</b> REC held (PANIC). <b>Rescue:</b> OCT− held at power-on, the installer always works.',

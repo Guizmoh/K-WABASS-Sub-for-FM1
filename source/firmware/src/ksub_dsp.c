@@ -1430,7 +1430,15 @@ static struct {
     int32_t mb[2][2];                           /* MONO BASS: two lows a side */
     int32_t ot_l[2][2], ot_h[2], ot_g[3];       /* MULTIBAND: the low band's two poles, the high split's, each band's gain (Q12) */
 } fx;
-static volatile uint8_t ks_norm = 1, ks_deep = 1;
+static volatile uint8_t ks_norm = 1, ks_deep = 1, ks_sync;
+static uint32_t sy_e8, sy_n;                    /* SYNC OUT: the eighth now, what is left of its pulse */
+#if defined(KAWA_WASM)
+#define KS_SYNC_AMP clampi((int32_t)(30000 * 4096 / (w_master > 256 ? w_master : 256)), 0, 400000)
+#elif defined(DINGHY_HOST)
+#define KS_SYNC_AMP 30000
+#else
+#define KS_SYNC_AMP clampi((int32_t)(30000 * 4096 / (master_q12 > 256 ? master_q12 : 256)), 0, 400000)   /* (full scale whatever the MASTER knob: the platform scales after) */
+#endif
 static volatile int32_t meter_cp = 32767;       /* the compressor's gain (the COMPRESSOR view) */
 /* PUMP: the dip on the tempo, deepest at the beat, a curve back up (rate 0 1/4, 1 1/8, 2 1/2, 3 a bar); Q15 gain */
 static int32_t pump_gain(uint32_t pos, uint32_t rate, int32_t depth)
@@ -1757,8 +1765,15 @@ static void fx_render(const int32_t *in, int32_t *out, uint32_t n)
             L = sat15(mul15(L, lg));
             R = sat15(mul15(R, lg));
         }
-        out[2u * i] += L;
-        out[2u * i + 1u] += R;
+        if (ks_sync) {                          /* SYNC OUT: the left a pulse every eighth while it plays (POCKET OPERATOR, VOLCA: 2 a beat), the right the sound in mono */
+            uint32_t e8 = ((pb + BEATS_WRAP - pinc * (n - (uint32_t)i)) >> 23) % 96u;   /* (pb: the clock after this block's voices) */
+            if (e8 != sy_e8) { sy_e8 = e8; if (sq_play) sy_n = 110u; }   /* (2.5 ms) */
+            out[2u * i] += sy_n ? (sy_n--, KS_SYNC_AMP) : 0;
+            out[2u * i + 1u] += (L + R) >> 1;
+        } else {
+            out[2u * i] += L;
+            out[2u * i + 1u] += R;
+        }
         if (rs_want) {                          /* RESAMPLE: 4 samples averaged, one kept */
             rs_acc += (L + R) >> 1;
             if (++rs_n == 4u) {
