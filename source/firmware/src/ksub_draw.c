@@ -605,6 +605,7 @@ static const char *view_title(uint32_t vi, char *t, char *sub)
 
 /* ---------------------------------------------------------------- rows, cells, boxes */
 static void draw_row(int32_t y, const char *lab, const char *val, int sel, uint16_t valc);
+static void rb_frame(int32_t x, int32_t y, int32_t w, int32_t h, int32_t r, uint16_t edge, uint16_t c0, uint16_t c1);
 static void row_g(int32_t x, int32_t y, int32_t w, int32_t h, const char *lab, const char *val, int sel, uint16_t valc, const ks_font_t *f)
 {
     int32_t ty, room;
@@ -613,7 +614,8 @@ static void row_g(int32_t x, int32_t y, int32_t w, int32_t h, const char *lab, c
     if (theme == TH_GLOW || g_rad) {            /* GLOW (and the RAD palettes): the row chosen lit from the left, the others only a line */
         if (sel) { g_box(x, y, w, h, K_PANEL, K_LIME); g_hgrad(x + 1, y + 1, w - 2, h - 2, g_mix(K_PANEL, K_LIME, 120), K_PANEL); }
         else g_hgrad(x + 4, y + h - 1, w - 8, 1, g_mix(K_BG, K_LIME, 90), K_BG);
-    } else g_box(x, y, w, h, sel ? K_LIMED : K_PANEL, sel ? K_LIME : K_LINE);
+    } else if (theme == TH_RACK) rb_frame(x, y, w, h, 6, sel ? K_LIME : K_LINE, sel ? K_LIMED : K_PANEL, sel ? K_LIMED : K_PANEL);   /* (RACK: rounder) */
+    else g_box(x, y, w, h, sel ? K_LIMED : K_PANEL, sel ? K_LIME : K_LINE);
     room = w - 16 - 8 - g_text_w(fl, lab);      /* (the label, a gap, the value: smaller if they would touch) */
     fv = g_fit(f, val, room);
     if (g_text_w(fv, val) > room) { fl = fv = g_fit(f, lab, w / 2); fv = g_fit(fv, val, w - 24 - g_text_w(fl, lab)); }
@@ -1315,7 +1317,7 @@ static void th_rack(const view_t *v, uint32_t vi)
             int32_t y = 3 + (int32_t)i * 29;
             char nb[3];
             if (!g_vis(y, 27)) continue;
-            if (i == page) g_box(2, y, 27, 26, K_LIME, K_LIME);
+            if (i == page) rb_frame(2, y, 27, 26, 7, K_LIME, K_LIME, K_LIME);   /* (the page: a rounded block) */
             fmt_u(nb, i + 1u, 0);
             g_text_c(T_XS, 15, y + 3, nb, i == page ? K_INK : K_GREY);
             g_text_c(T_XS, 15, y + 14, PAGE_SHORT[i], i == page ? K_INK : K_WHITE);

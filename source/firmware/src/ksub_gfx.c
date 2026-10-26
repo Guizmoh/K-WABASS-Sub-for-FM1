@@ -101,6 +101,8 @@ static void theme_set(uint32_t t, uint32_t pal)
     if (g_rad && theme == 0u && theme_pal == 0u) {   /* CLASSIC GLOW, FLUO GREEN RAD: a deeper, bluer green into a night blue, the line yellow */
         g_rtop = RGB(10, 74, 66); g_rbot = RGB(3, 7, 30); g_rcell = RGB(4, 22, 40);
         kc[KC_WAVE] = RGB(255, 222, 40);
+    } else if (g_rad && theme_pal == PAL_SKY) {   /* SKY RAD: turned over, an off-white touched with blue at the top, the blue at the bottom */
+        g_rtop = RGB(238, 243, 250); g_rbot = g_mix(kc[KC_BG], kc[KC_LIME], 110); g_rcell = RGB(214, 228, 246);
     } else if (g_rad && theme_pal == 2u) {      /* SYNTHWAVE RAD: violet into a very dark blue-violet, the line yellow to orange to light red */
         g_rtop = RGB(74, 22, 110); g_rbot = RGB(10, 6, 30); g_rcell = RGB(20, 10, 46);
         kc[KC_WAVE] = RGB(255, 140, 20); g_wgrad = 1;
