@@ -2194,6 +2194,23 @@ static void view_next(void)                     /* the page's next view (SHIFT: 
     }
     vcur[page] = (uint8_t)((vcur[page] + 1u) % nv);
 }
+static void view_step(int32_t d)               /* the PRESET knob off HOME and PRESETS: the page's views, either way, round (SHIFT: its 3 columns first) */
+{
+    uint32_t nv = (uint32_t)(PAGE_V0[page + 1u] - PAGE_V0[page]), c3 = set.ui && COL3[page].title, n = nv + c3, at;
+    at = c3 ? (c3_show[page] ? 0u : vcur[page] + 1u) : vcur[page];
+    at = (uint32_t)(((int32_t)at + d % (int32_t)n + (int32_t)n) % (int32_t)n);
+    if (c3) { c3_show[page] = (uint8_t)(at == 0u); vcur[page] = (uint8_t)(at ? at - 1u : 0u); }
+    else vcur[page] = (uint8_t)at;
+    vpop_ms = 0; g_force = 1;
+}
+static void win_step(int32_t d)                 /* ... in a SEL window: the windows, round (PERFORM, MORPH, FX LIVE, MACROS, MORPH A/B) */
+{
+    static const uint8_t W[5] = {7, 4, 1, 2, 5};
+    int32_t i, at = 0;
+    for (i = 0; i < 5; i++) if (W[i] == win) at = i;
+    win = W[((at + d % 5) % 5 + 5) % 5];
+    vpop_ms = 0; g_force = 1;
+}
 static void on_button(uint32_t b)
 {
     uint32_t i;
@@ -2342,9 +2359,11 @@ static void on_enc(uint32_t e, int32_t d)
         }
         return;
     }
-    if (e == ENC_PRESETS) {                     /* (on the pages for it only: HOME and PRESETS; not by mistake elsewhere) */
-        if (page == PG_PLAY || page == PG_PRE) preset_step(d);
-        else toast("PRESETS: ON HOME OR PRESETS (ARP)");
+    if (e == ENC_PRESETS) {                     /* HOME and PRESETS: the sounds; a SEL window: the windows; the other pages: their views */
+        if (win == 6u) return;                  /* (FX PADS: nothing) */
+        if (win && win != 3u) win_step(d);
+        else if (page == PG_PLAY || page == PG_PRE) preset_step(d);
+        else view_step(d);
         return;
     }
     if (v->lay == LY_PRESET) {

@@ -51,11 +51,11 @@ def build(L):
                   '<div class="card"><ol>' + t(T(
                       f'<li><b>Install</b>: <a href="{inst}">installer.html</a> in Chrome or Edge, FM-1 plugged in with a USB data cable. Without it: <code>INSTALL-*</code> scripts (Python 3).</li>'
                       '<li><b>First start</b>: CLASSIC (lists) or SHIFT (3 columns)? Asked once. Then the start picture waits for any button or key.</li>'
-                      '<li><b>Play</b>: the keys; <kbd>PRESETS</kbd> changes the sound at once (<kbd>SAVE</kbd> held = UNDO). Each session starts at octave −1.</li>'
+                      '<li><b>Play</b>: the keys; <kbd>PRESETS</kbd> changes the sound at once on HOME and PRESETS (<kbd>SAVE</kbd> held = UNDO); on EDIT, ENV, SEQ, LFO, FX and GLO it turns the page\'s views, in a SEL window it goes from one window to the next. Each session starts at octave −1.</li>'
                       '<li><b>AUTOSAVE</b> keeps the sound you are making every minute; it comes back at the next start. <kbd>SAVE</kbd> keeps it for good in one of 32 slots.</li>',
                       f'<li><b>Installer</b> : <a href="{inst}">installer.html</a> dans Chrome ou Edge, FM-1 branché avec un câble USB de données. Sinon : les scripts <code>INSTALL-*</code> (Python 3).</li>'
                       '<li><b>Premier démarrage</b> : CLASSIC (listes) ou SHIFT (3 colonnes) ? Demandé une fois. Ensuite l’image de départ attend n’importe quel bouton ou touche.</li>'
-                      '<li><b>Jouer</b> : les touches ; <kbd>PRESETS</kbd> change de son tout de suite (<kbd>SAVE</kbd> maintenu = UNDO). Chaque session démarre à l’octave −1.</li>'
+                      '<li><b>Jouer</b> : les touches ; <kbd>PRESETS</kbd> change de son tout de suite sur HOME et PRESETS (<kbd>SAVE</kbd> maintenu = UNDO) ; sur EDIT, ENV, SEQ, LFO, FX et GLO il fait défiler les vues de la page, dans une fenêtre SEL il passe d’une fenêtre à l’autre. Chaque session démarre à l’octave −1.</li>'
                       '<li><b>AUTOSAVE</b> garde le son en cours toutes les minutes ; il revient au démarrage suivant. <kbd>SAVE</kbd> le garde pour de bon dans un des 32 emplacements.</li>'))
                   + '</ol></div>'))
 
