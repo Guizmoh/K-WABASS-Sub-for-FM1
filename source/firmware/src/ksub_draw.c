@@ -1698,7 +1698,7 @@ static void draw_all(void)
         g_vgrad(0, 0, 240, 130, g_mix(K_BG, K_LIME, 40), K_BG);
         g_vgrad(0, 130, 240, 110, K_BG, g_mix(K_BG, K_CYAN, 44));
     }
-    if (ask_on && !(splash_until && (int32_t)(splash_until - fm1_ms) > 0)) { draw_ask(); return; }   /* (the picture first) */
+    if (ask_on && !splash_until) { draw_ask(); return; }   /* (the picture first) */
     if (win == 3u) draw_eq();
     else if (win) draw_win();
     else if (C3_ON) draw_c3();
@@ -1815,7 +1815,7 @@ static void draw_all(void)
         g_text_r(T_S, 222, 156, r, redo_n ? K_WHITE : K_GREY);
         g_text_c(T_XS, 120, 174, "RELEASE SAVE: DONE", K_GREY);
     }
-    if (splash_until && (int32_t)(splash_until - fm1_ms) > 0) {   /* the start: the picture (216 x 216, 16 greys), the patch and the cores beneath */
+    if (splash_until) {                         /* the start: the picture (216 x 216, 16 greys), the patch and the cores beneath */
         char b[40], *p;
         uint16_t lut[16];
         int32_t y, x, y1 = g_y0 + (int32_t)BAND_H;
@@ -1832,7 +1832,7 @@ static void draw_all(void)
         if (g_vis(218, 22)) {
             g_text_c(T_XS, 120, 220, b, RGB(255, 255, 255));
             if (rst_bad) { str_cat(str_cat(b, "LAST STOP: "), rst_why); g_text_c(T_XS, 120, 231, b, RGB(255, 150, 60)); }
-            else g_text_c(T_XS, 120, 231, dual_on ? "TWO CORES \xB7 ANY BUTTON TO START" : "ANY BUTTON TO START", RGB(150, 150, 150));
+            else g_text_c(T_XS, 120, 231, dual_on ? "TWO CORES \xB7 PRESS ANY BUTTON OR KEY" : "PRESS ANY BUTTON OR KEY", RGB(150, 150, 150));
         }
     }
     if (toast_ms && g_vis(196, 22)) {

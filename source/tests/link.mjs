@@ -33,7 +33,7 @@ try { await s.recording(); } catch (e) { bad++; console.log("no recording yet:",
 let ms = 0;
 const run = until => { while (ms < until) { x.ksub_audio(); x.ksub_step(); x.ksub_step(); ms += 256 / 44.1; } };
 const btn = id => { x.ksub_button(id, 1); x.ksub_step(); x.ksub_button(id, 0); };
-run(3000); btn(3); run(3400);                        // (the first start's question: CLASSIC)
+run(3000); btn(8); run(3300); btn(3); run(3700);     // (the start screen: a touch; then the question: CLASSIC)
 for (let i = 0; i < 5; i++) { btn(6); run(ms + 150); }
 x.ksub_keys(1 << 12); run(ms + 200); x.ksub_turn(0, 4); run(ms + 150); x.ksub_turn(1, 1); run(ms + 5000); x.ksub_keys(0); run(ms + 300);
 const r = await s.recording();
