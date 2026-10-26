@@ -58,16 +58,7 @@ enum { VM_MONO, VM_LEGATO, VM_POLY };
 /* formats of the values on the screen */
 enum { FM_PCT, FM_BIP, FM_LIST, FM_INT, FM_SEMI, FM_CENT, FM_TIME, FM_CUT, FM_LFOHZ, FM_DIV, FM_VOL, FM_OSCP, FM_DEST };
 
-#ifndef KS_FOUR
-#define KS_FOUR 0   /* (1: a build with four engines only, for tests; the firmware has all eight and SYSTEM > ENGINES picks 4 or 8) */
-#endif
-#if KS_FOUR   /* version A: four engines, one for each job (the others' patches are moved onto them: eng_b) */
-#define NENG_UI 4
-static const char *const L_ENG[NENG] = {"ANALOG", "REESE", "WAVE", "FM", "FM", "ANALOG", "ANALOG", "WAVE"};
-#else
-#define NENG_UI NENG
 static const char *const L_ENG[NENG] = {"ANALOG", "SUPER", "WAVE", "FM", "PHASE", "FOLD", "SYNC", "VOCAL"};
-#endif
 static const char *const L_SUBW[] = {"SINE", "TRI", "SQUARE", "PULSE"};
 static const char *const L_SUBO[] = {"-2 OCT", "-1 OCT", "0 OCT"};
 static const char *const L_ROUTE[] = {"FILTER", "DIRECT"};
@@ -142,7 +133,7 @@ typedef struct {
 } pdesc_t;
 
 #define OSC_PD(L) \
-    {L "ENGINE", "ENGINE", 0, NENG_UI - 1, 0, FM_LIST, L_ENG}, {L "LEVEL", "LEVEL", 0, 127, 100, FM_PCT, 0}, \
+    {L "ENGINE", "ENGINE", 0, NENG - 1, 0, FM_LIST, L_ENG}, {L "LEVEL", "LEVEL", 0, 127, 100, FM_PCT, 0}, \
     {L "P1", "P1", 0, 127, 85, FM_OSCP, 0}, {L "P2", "P2", 0, 127, 0, FM_OSCP, 0}, {L "P3", "P3", 0, 127, 0, FM_OSCP, 0}, \
     {L "OCTAVE", "OCT", -3, 2, 0, FM_INT, 0}, {L "SEMI", "SEMI", -12, 12, 0, FM_SEMI, 0}, \
     {L "FINE", "FINE", -50, 50, 0, FM_CENT, 0}
@@ -225,13 +216,8 @@ static const preset_t FACTORY[] = {
     PR("NIGHT BUS", P_STYLE, 3, A_ENG, E_WAVE, A_P1, 30, A_P2, 16, B_ENG, E_ANALOG, B_P1, 42, B_LVL, 50, B_OCT, -1,
        F_CUT, 60, F_RES, 50, F_ENV, 40, FE_D, 55, FE_S, 0, AE_D, 60, AE_S, 70, L2_DEP, 20, L2_DST, D_AP1,
        L2_SYNC, 1, L2_DIV, 2, CH_ON, 1, DL_ON, 1, DL_TIME, 8, DL_MIX, 25),
-#if KS_FOUR   /* (version A: on its four engines) */
-    PR("CONCRETE", P_STYLE, 3, A_ENG, E_ANALOG, A_P1, 0, A_P2, 64, S_LVL, 60, F_CUT, 80, F_RES, 30, AE_D, 45, AE_S, 40,
-       ME_AMT, 34, ME_DST, D_DRAMT, ME_D, 45, DR_ON, 1, DR_TYPE, 3, DR_AMT, 70, DR_MIX, 127, MS_GLUE, 60, CP_ON, 1, CP_AMT, 40),
-#else
     PR("CONCRETE", P_STYLE, 3, A_ENG, E_FOLD, A_P1, 40, A_P2, 70, A_P3, 30, S_LVL, 60, F_CUT, 80, F_RES, 30,
        AE_D, 45, AE_S, 40, ME_AMT, 30, ME_DST, D_AP1, ME_D, 45, DR_ON, 1, DR_TYPE, 2, DR_AMT, 50, MS_GLUE, 60),
-#endif
     PR("REESE CLASSIC", P_STYLE, 0, A_ENG, E_SUPER, A_P1, 40, A_P2, 80, A_P3, 0, A_LVL, 100, S_LVL, 70, F_CUT, 75,
        F_RES, 25, L2_DEP, 18, L2_DST, D_AP1, L2_SYNC, 0, L2_RATE, 30, L2_SHP, 1, CH_ON, 1, CH_MIX, 40, X_DRIFT, 30),
     PR("WIDE REESE", P_STYLE, 8, A_ENG, E_SUPER, A_P1, 70, A_P2, 100, A_P3, 127, B_ENG, E_SUPER, B_P1, 50, B_P3, 0,
@@ -240,26 +226,13 @@ static const preset_t FACTORY[] = {
     PR("WOBBLE 01", P_STYLE, 2, A_ENG, E_ANALOG, A_P1, 85, B_ENG, E_ANALOG, B_P1, 127, B_LVL, 70, B_FINE, -10,
        S_LVL, 90, F_CUT, 40, F_RES, 70, F_DRV, 50, L1_SHP, 0, L1_DIV, 9, L1_DEP, 45, L1_DST, D_CUT, L1_TRIG, 1,
        DR_ON, 1, DR_AMT, 50, DR_MIX, 80, M1_SRC, SR_WHEEL, M1_DST, D_WOB, M1_AMT, 40),
-#if KS_FOUR   /* (version A: on its four engines) */
-    PR("YOI TALKER", P_STYLE, 2, A_ENG, E_WAVE, A_P1, 10, A_P2, 56, A_P3, 20, B_ENG, E_ANALOG, B_P1, 85, B_LVL, 60,
-       S_LVL, 80, F_TYPE, FT_VOWEL, F_CUT, 20, F_RES, 80, L1_SHP, 1, L1_DIV, 9, L1_DEP, 50, L1_DST, D_CUT,
-       L1_TRIG, 1, L2_SHP, 1, L2_DIV, 9, L2_DEP, 50, L2_DST, D_AP1, L2_TRIG, 1, DR_ON, 1, DR_AMT, 45),
-#else
     PR("YOI TALKER", P_STYLE, 2, A_ENG, E_VOCAL, A_P1, 10, A_P2, 64, A_P3, 40, B_ENG, E_ANALOG, B_P1, 85, B_LVL, 60,
        S_LVL, 80, F_TYPE, FT_VOWEL, F_CUT, 20, F_RES, 80, L1_SHP, 1, L1_DIV, 9, L1_DEP, 50, L1_DST, D_CUT,
        L1_TRIG, 1, L2_SHP, 1, L2_DIV, 9, L2_DEP, 40, L2_DST, D_AP1, L2_TRIG, 1, DR_ON, 1, DR_AMT, 45),
-#endif
-#if KS_FOUR   /* (version A: on its four engines) */
-    PR("NEURO GROWL", P_STYLE, 8, A_ENG, E_FM, A_P1, 60, A_P2, 48, A_P3, 50, B_ENG, E_ANALOG, B_P1, 0, B_LVL, 60,
-       X_MODE, 2, X_AMT, 34, S_LVL, 80, F_TYPE, FT_COMB, F_CUT, 70, F_RES, 75, F_KEY, 127, L1_SHP, 6, L1_DIV, 11,
-       L1_DEP, 30, L1_DST, D_AP1, L1_TRIG, 1, M1_SRC, SR_LFO1, M1_DST, D_DRAMT, M1_AMT, 25, DR_ON, 1, DR_TYPE, 3,
-       DR_AMT, 55, MS_GLUE, 70, CP_ON, 1, CP_AMT, 50),
-#else
     PR("NEURO GROWL", P_STYLE, 8, A_ENG, E_FM, A_P1, 60, A_P2, 48, A_P3, 50, B_ENG, E_FOLD, B_P1, 50, B_LVL, 60,
        X_MODE, 2, X_AMT, 30, S_LVL, 80, F_TYPE, FT_COMB, F_CUT, 70, F_RES, 75, F_KEY, 127, L1_SHP, 6, L1_DIV, 11,
        L1_DEP, 30, L1_DST, D_AP1, L1_TRIG, 1, M1_SRC, SR_LFO1, M1_DST, D_CUT, M1_AMT, 25, DR_ON, 1, DR_TYPE, 3,
        DR_AMT, 40, MS_GLUE, 70),
-#endif
     PR("METAL FM", P_STYLE, 2, A_ENG, E_FM, A_P1, 80, A_P2, 120, A_P3, 30, S_LVL, 90, F_CUT, 85, F_RES, 40,
        L1_SHP, 4, L1_DIV, 10, L1_DEP, 35, L1_DST, D_AP1, L1_TRIG, 1, L1_SMO, 40, DR_ON, 1, DR_TYPE, 2, DR_AMT, 35),
     PR("808 DROP", P_STYLE, 6, A_ENG, E_ANALOG, A_P1, 0, A_P3, 60, A_LVL, 120, F_CUT, 127, F_RES, 0, AE_D, 85,
@@ -273,21 +246,10 @@ static const preset_t FACTORY[] = {
     PR("ACID LINE", P_STYLE, 3, A_ENG, E_ANALOG, A_P1, 85, S_LVL, 40, F_TYPE, FT_LP24, F_CUT, 35, F_RES, 100,
        F_ENV, 50, FE_D, 45, FE_S, 0, AE_D, 50, AE_S, 80, V_MODE, VM_LEGATO, V_GLIDE, 25, DR_ON, 1, DR_TYPE, 1,
        DR_AMT, 50, DL_ON, 1, DL_TIME, 10, DL_MIX, 20),
-#if KS_FOUR   /* (version A: on its four engines) */
-    PR("PHASE HORN", P_STYLE, 2, A_ENG, E_FM, A_P1, 55, A_P2, 24, A_P3, 30, S_LVL, 80, F_CUT, 95, F_RES, 20,
-       L1_DIV, 10, L1_DEP, 40, L1_DST, D_AP1, L1_TRIG, 1, DR_ON, 1, DR_AMT, 40, PH_ON, 1, PH_RATE, 25, PH_MIX, 50),
-#else
     PR("PHASE HORN", P_STYLE, 2, A_ENG, E_PHASE, A_P1, 70, A_P2, 75, A_P3, 30, S_LVL, 80, F_CUT, 95, F_RES, 20,
        L1_DIV, 10, L1_DEP, 40, L1_DST, D_AP1, L1_TRIG, 1, DR_ON, 1, DR_AMT, 40),
-#endif
-#if KS_FOUR   /* (version A: on its four engines) */
-    PR("SYNC RIPPER", P_STYLE, 8, A_ENG, E_ANALOG, A_P1, 85, A_LVL, 0, B_ENG, E_ANALOG, B_P1, 95, B_P2, 64, B_LVL, 110,
-       X_MODE, 3, X_AMT, 40, S_LVL, 80, F_CUT, 100, F_RES, 25, ME_AMT, 40, ME_DST, D_XMOD, ME_D, 60, L1_DIV, 11,
-       L1_DEP, 30, L1_DST, D_XMOD, DR_ON, 1, DR_TYPE, 2, DR_AMT, 45),
-#else
     PR("SYNC RIPPER", P_STYLE, 8, A_ENG, E_SYNC, A_P1, 40, A_P2, 20, A_P3, 30, S_LVL, 80, F_CUT, 100, F_RES, 25,
        ME_AMT, 40, ME_DST, D_AP1, ME_D, 60, L1_DIV, 11, L1_DEP, 30, L1_DST, D_AP1, DR_ON, 1, DR_TYPE, 2, DR_AMT, 45),
-#endif
     PR("HOLLOW TUBE", P_STYLE, 2, A_ENG, E_WAVE, A_P1, 70, A_P2, 32, A_P3, 30, S_LVL, 90, F_TYPE, FT_NOTCH, F_CUT, 50,
        F_RES, 60, L1_SHP, 0, L1_DIV, 10, L1_DEP, 40, L1_DST, D_CUT, L1_TRIG, 1),
     PR("WUB MACHINE", P_STYLE, 2, A_ENG, E_SUPER, A_P1, 30, A_P3, 64, B_ENG, E_FM, B_P1, 50, B_P2, 16, B_LVL, 60,
@@ -313,26 +275,14 @@ static const preset_t FACTORY[] = {
     PR("RIDDIM SQUARE", P_STYLE, 2, A_ENG, E_ANALOG, A_P1, 127, A_P2, 40, B_ENG, E_ANALOG, B_P1, 127, B_OCT, -1, B_LVL, 60,
        S_LVL, 80, F_CUT, 35, F_RES, 50, L1_SHP, 4, L1_DIV, 10, L1_DEP, 50, L1_DST, D_CUT, L1_TRIG, 1, DR_ON, 1,
        DR_TYPE, 2, DR_AMT, 55),
-#if KS_FOUR   /* (version A: on its four engines) */
-    PR("TEAROUT", P_STYLE, 2, A_ENG, E_FM, A_P1, 90, A_P2, 64, A_P3, 70, B_ENG, E_ANALOG, B_P1, 0, B_LVL, 50, X_MODE, 2,
-       X_AMT, 55, S_LVL, 80, F_TYPE, FT_COMB, F_CUT, 80, F_RES, 80, F_KEY, 127, L1_SHP, 6, L1_DIV, 11, L1_DEP, 40,
-       L1_DST, D_AP1, L1_TRIG, 1, DR_ON, 1, DR_TYPE, 3, DR_AMT, 65, MS_GLUE, 90, CP_ON, 1, CP_AMT, 60),
-#else
     PR("TEAROUT", P_STYLE, 2, A_ENG, E_FM, A_P1, 90, A_P2, 64, A_P3, 70, B_ENG, E_FOLD, B_P1, 60, B_LVL, 50, X_MODE, 2,
        X_AMT, 50, S_LVL, 80, F_TYPE, FT_COMB, F_CUT, 80, F_RES, 80, F_KEY, 127, L1_SHP, 6, L1_DIV, 11, L1_DEP, 40,
        L1_DST, D_AP1, L1_TRIG, 1, DR_ON, 1, DR_TYPE, 3, DR_AMT, 50, MS_GLUE, 90),
-#endif
     PR("BROSTEP SAW", P_STYLE, 2, A_ENG, E_SUPER, A_P1, 60, A_P3, 127, S_LVL, 85, F_CUT, 30, F_RES, 70, F_DRV, 60,
        L1_DIV, 9, L1_DEP, 55, L1_DST, D_CUT, L1_TRIG, 1, DR_ON, 1, DR_AMT, 60),
-#if KS_FOUR   /* (version A: on its four engines) */
-    PR("NEURO STAB", P_STYLE, 8, A_ENG, E_ANALOG, A_P1, 85, A_LVL, 0, B_ENG, E_ANALOG, B_P1, 110, B_LVL, 100, X_MODE, 3,
-       X_AMT, 60, S_LVL, 70, F_CUT, 85, F_RES, 45, ME_AMT, 50, ME_DST, D_XMOD, ME_D, 40, AE_D, 50, AE_S, 30, DR_ON, 1,
-       DR_TYPE, 2, DR_AMT, 50),
-#else
     PR("NEURO STAB", P_STYLE, 8, A_ENG, E_SYNC, A_P1, 70, A_P2, 40, B_ENG, E_FM, B_P1, 50, B_LVL, 60, X_MODE, 1,
        S_LVL, 70, F_CUT, 85, F_RES, 45, ME_AMT, 50, ME_DST, D_AP1, ME_D, 40, AE_D, 50, AE_S, 30, DR_ON, 1, DR_TYPE, 2,
        DR_AMT, 50),
-#endif
     PR("SPEED BASS", P_STYLE, 5, A_ENG, E_ANALOG, A_P1, 100, S_LVL, 60, F_TYPE, FT_LP12, F_CUT, 50, F_RES, 50, F_ENV, 45,
        FE_D, 40, FE_S, 10, AE_D, 55, AE_S, 70, V_MODE, VM_LEGATO, V_GLIDE, 22),
     PR("UKG ORGAN", P_STYLE, 5, MS_VOL, 120, A_LVL, 120, A_ENG, E_WAVE, A_P1, 40, A_P2, 16, B_ENG, E_ANALOG, B_P1, 0, B_OCT, 1, B_LVL, 50,
@@ -353,21 +303,10 @@ static const preset_t FACTORY[] = {
        DL_ON, 1, DL_TIME, 6, DL_FB, 60, DL_MIX, 25, MS_SUB, 70),
     PR("BREAKS HOOVER", P_STYLE, 10, A_ENG, E_SUPER, A_P1, 100, A_P2, 120, A_P3, 127, ME_AMT, -25, ME_DST, D_PITCH,
        ME_A, 30, ME_D, 60, F_CUT, 90, S_LVL, 60, V_GLIDE, 35, CH_ON, 1, CH_MIX, 70),
-#if KS_FOUR   /* (version A: on its four engines) */
-    PR("MINIMAL CLICK", P_STYLE, 11, MS_VOL, 120, A_LVL, 120, A_ENG, E_FM, A_P1, 45, A_P2, 8, S_LVL, 70, AE_D, 35, AE_S, 0, AE_R, 20,
-       F_CUT, 70, F_ENV, 30, FE_D, 25, FE_S, 0, ME_AMT, -40, ME_DST, D_AP1, ME_D, 20, DL_ON, 1, DL_TIME, 10, DL_MIX, 20),
-#else
     PR("MINIMAL CLICK", P_STYLE, 11, MS_VOL, 120, A_LVL, 120, A_ENG, E_PHASE, A_P1, 60, A_P2, 0, S_LVL, 70, AE_D, 35, AE_S, 0, AE_R, 20, F_CUT, 70,
        F_ENV, 30, FE_D, 25, FE_S, 0, DL_ON, 1, DL_TIME, 10, DL_MIX, 20),
-#endif
-#if KS_FOUR   /* (version A: on its four engines) */
-    PR("YOI RIDDIM", P_STYLE, 2, A_ENG, E_WAVE, A_P1, 64, A_P2, 56, S_LVL, 80, F_TYPE, FT_VOWEL, F_CUT, 40, F_RES, 90,
-       L1_SHP, 7, L1_DIV, 10, L1_DEP, 60, L1_DST, D_CUT, L1_TRIG, 1, L2_DIV, 10, L2_DEP, 40, L2_DST, D_AP1, L2_TRIG, 1,
-       DR_ON, 1, DR_AMT, 45),
-#else
     PR("YOI RIDDIM", P_STYLE, 2, A_ENG, E_VOCAL, A_P1, 64, A_P2, 50, S_LVL, 80, F_TYPE, FT_VOWEL, F_CUT, 40, F_RES, 90,
        L1_SHP, 7, L1_DIV, 10, L1_DEP, 60, L1_DST, D_CUT, L1_TRIG, 1, DR_ON, 1, DR_AMT, 45),
-#endif
     PR("INIT", P_STYLE, 0),
     /* (after INIT: the slots before keep their numbers) */
     PR("SYNC SWEEP", P_STYLE, 2, A_ENG, E_ANALOG, A_P1, 85, A_LVL, 0, B_ENG, E_ANALOG, B_P1, 85, B_LVL, 110, X_MODE, 3,
@@ -404,52 +343,10 @@ static void patch_defaults(int8_t *p)
     p[L2_SHP] = 1;
 }
 
-#if KS_FOUR
-static void dst_move(int8_t *p, int32_t from, int32_t to)
-{
-    static const uint8_t DS[] = {L1_DST, L2_DST, ME_DST, ST_DST, M1_DST, M2_DST, M3_DST, M4_DST};
-    uint32_t i;
-    for (i = 0; i < sizeof DS; i++) if (p[DS[i]] == from) p[DS[i]] = (int8_t)to;
-}
-/* PHASE -> FM, FOLD -> ANALOG sine into the FOLD saturation, SYNC -> ANALOG with B synced to A, VOCAL -> the VOCAL
- * wavetable */
-static void eng_b(int8_t *p)
-{
-    uint32_t k;
-    for (k = 0; k < 2u; k++) {
-        int8_t *o = p + k * OSC_B;              /* o[0] the engine, o[2..4] P1..P3 */
-        int32_t dp1 = k ? D_BP1 : D_AP1, r = o[2], w = o[3];
-        switch (o[0]) {
-        case E_PHASE: o[0] = E_FM; o[2] = (int8_t)(r * 3 / 4); o[3] = (int8_t)(w >= 64 ? 28 : 12); o[4] = 20; break;
-        case E_FOLD:
-            o[0] = E_ANALOG; o[2] = 0; o[3] = 64; o[4] = 0;
-            p[DR_ON] = 1; p[DR_TYPE] = 3; p[DR_AMT] = (int8_t)clampi(30 + r / 2, p[DR_AMT], 127); p[DR_MIX] = 127;
-            dst_move(p, dp1, D_DRAMT);
-            break;
-        case E_SYNC:
-            o[0] = E_ANALOG; o[2] = (int8_t)(85 + w * 42 / 127); o[3] = 64; o[4] = 0;
-            if (!k && !p[B_LVL] && !p[X_MODE]) {   /* the synced wave goes to B, A plays silent and leads */
-                p[B_ENG] = E_ANALOG; p[B_P1] = o[2]; p[B_P2] = 64; p[B_P3] = 0; p[B_LVL] = p[A_LVL]; p[A_LVL] = 0;
-                p[B_OCT] = p[A_OCT]; p[B_SEMI] = p[A_SEMI]; p[B_FINE] = p[A_FINE];
-                p[X_MODE] = 3; p[X_AMT] = (int8_t)clampi(r * 3 / 2, 0, 127);
-                dst_move(p, D_AP1, D_XMOD); dst_move(p, D_AP2, D_BP1); dst_move(p, D_ALVL, D_BLVL);
-            } else if (k && !p[X_MODE]) {
-                p[X_MODE] = 3; p[X_AMT] = (int8_t)clampi(r * 3 / 2, 0, 127);
-                dst_move(p, D_BP1, D_XMOD);
-            }
-            break;
-        case E_VOCAL: o[0] = E_WAVE; o[3] = 56; o[4] = 0; break;
-        }
-    }
-}
-#endif
 
 static void patch_sanitize(int8_t *p)
 {
     uint32_t i;
-#if KS_FOUR
-    eng_b(p);
-#endif
     for (i = 0; i < NP; i++)
         p[i] = (int8_t)clampi(p[i], PD[i].lo, PD[i].hi);
 }

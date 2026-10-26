@@ -6,21 +6,20 @@
 set -e
 cd "$(dirname "$0")/.."
 mkdir -p build/web ../emulator
-SFX=""   # (one firmware: all eight engines; SYSTEM > ENGINES picks four or eight)
 clang --target=wasm32 -O2 -nostdlib -ffreestanding -fno-builtin -Wall -Wextra -Wno-unused-parameter -Wno-unused-function \
-    -Wno-sign-compare -DKAWA_WASM -DKS_FOUR=${KS_FOUR:-0} -DAPP_VER="\"${APP_VER:-0.2}${SFX}\"" -Ifirmware/src -Ifirmware/gen \
+    -Wno-sign-compare -DKAWA_WASM -DAPP_VER="\"${APP_VER:-0.2}\"" -Ifirmware/src -Ifirmware/gen \
     -Wl,--no-entry -Wl,--export-dynamic -Wl,--initial-memory=4194304 -Wl,-z,stack-size=262144 \
-    -o build/web/ksub$SFX.wasm firmware/src/ksub.c
-KSUB_VER="${APP_VER:-0.2}${SFX:+-B}" SFX="$SFX" python3 - <<'PY'
+    -o build/web/ksub.wasm firmware/src/ksub.c
+KSUB_VER="${APP_VER:-0.2}" python3 - <<'PY'
 import base64, os
 from pathlib import Path
-b64 = base64.b64encode(Path(f"build/web/ksub{os.environ['SFX']}.wasm").read_bytes()).decode()
+b64 = base64.b64encode(Path(f"build/web/ksub.wasm").read_bytes()).decode()
 body = Path("web/emulator.html").read_text().replace("__KSUB_WASM__", b64).replace("__KSUB_VER__", os.environ["KSUB_VER"])
-Path(f"build/web/ksub-emulator{os.environ['SFX']}.html").write_text(body)          # the page's content alone (to embed or publish)
+Path(f"build/web/ksub-emulator.html").write_text(body)          # the page's content alone (to embed or publish)
 head, rest = body.split("</style>", 1)
 page = ('<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n'
         '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">\n'
         + head + "</style>\n</head>\n<body>" + rest + "</body>\n</html>\n")
-Path("../emulator/" + ("b.html" if os.environ["SFX"] else "index.html")).write_text(page)
-print("wasm", Path(f"build/web/ksub{os.environ['SFX']}.wasm").stat().st_size, "B; page", len(page), "B")
+Path("../emulator/index.html").write_text(page)
+print("wasm", Path(f"build/web/ksub.wasm").stat().st_size, "B; page", len(page), "B")
 PY

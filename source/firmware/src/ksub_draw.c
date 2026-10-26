@@ -666,14 +666,15 @@ static void draw_cell(const view_t *v, int32_t x, int32_t y, int32_t w, int32_t 
         g_box(x + w - tw - 3, y + 3, tw, 10, K_MOD, K_MOD);
         g_text(T_XS, x + w - tw, y + 4, tag, K_INK);
     }
-    g_text(T_XS, x + 5, y + 16, item_sname(id), K_GREY);
+    if (h < 50) g_text(g_fit(T_XS, item_sname(id), w - (k >= 0 ? 30 : 8)), x + (k >= 0 ? 26 : 5), y + 4, item_sname(id), K_GREY);   /* (the short cell: name, value, bar in 44 px) */
+    else g_text(T_XS, x + 5, y + 16, item_sname(id), K_GREY);
     {                                           /* (too long even small: cut, with a dot) */
         const ks_font_t *f = g_fit(T_M, b, w - 9);
         uint32_t n = str_len(b);
         while (n > 2u && g_text_w(f, b) > w - 9) { b[--n] = 0; b[n - 1u] = '.'; }
-        g_text(f, x + 5, y + 27, b, sel ? K_LIME : K_WHITE);
+        g_text(f, x + 5, y + (h < 50 ? 16 : 27), b, sel ? K_LIME : K_WHITE);
     }
-    g_vbar(x + 5, y + h - 9, w - 10, 4, item_frac(id), sel ? K_LIME : K_CYAN);
+    g_vbar(x + 5, y + h - (h < 50 ? 8 : 9), w - 10, 4, item_frac(id), sel ? K_LIME : K_CYAN);
 }
 
 /* the foot: what the knobs do, as many as fit */
@@ -996,15 +997,16 @@ static void th_studio(const view_t *v, uint32_t vi)
     else if (v->lay == LY_SAVE) save_g(6, 98, 228, 70);
     else if (v->lay == LY_SYS || !v->n || vi == PAGE_V0[PG_LFO] + 3u) rows_g(v, 3, 70, 230, 22, 26, 5, T_S);
     else {                                      /* the items in cells of four, a page of eight round the row */
-        uint32_t per = v->n <= 4u ? 4u : 8u, first = (c / per) * per;
+        uint32_t per = v->n <= 4u ? 4u : v->n <= 8u ? 8u : v->n <= 12u ? 12u : 8u, first = (c / per) * per;
+        int32_t ch = per == 12u ? 44 : 56, cs = per == 12u ? 47 : 60;   /* (up to twelve: three short rows, nothing else on the page) */
         for (i = 0; i < per && first + i < v->n; i++)
-            draw_cell(v, 3 + (int32_t)(i & 3u) * 59, 70 + (int32_t)(i >> 2) * 60, 56, 56, v->it[first + i], first + i == c);
-        if (v->n > 8u && g_vis(186, 4)) {       /* which eight */
+            draw_cell(v, 3 + (int32_t)(i & 3u) * 59, 70 + (int32_t)(i >> 2) * cs, 56, ch, v->it[first + i], first + i == c);
+        if (v->n > 12u && g_vis(186, 4)) {      /* which eight */
             uint32_t pg, np = (v->n + 7u) / 8u;
             for (pg = 0; pg < np; pg++) g_rect(110 + (int32_t)pg * 8, 186, 5, 3, pg == c / 8u ? K_LIME : K_LINE);
         }
         if (per == 4u) draw_visual(vz, 3, 132, 234, 86, 1);
-        else draw_visual(vz, 3, 192, 234, 28, 1);
+        else if (per == 8u) draw_visual(vz, 3, 192, 234, 28, 1);
     }
     if (g_vis(222, 12)) {
         if (ff) str_cat(fb, ff); else foot_text(v, fb, 200);

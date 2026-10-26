@@ -2,7 +2,7 @@
 
 [English](SPECIFICATIONS.md) · [Français](fr/CAHIER-DES-CHARGES.md)
 
-A modern bass synth for the M-VAVE FM-1 (JieLi AC79, two cores, no FPU). Last update: **0.9.20**.
+A modern bass synth for the M-VAVE FM-1 (JieLi AC79, two cores, no FPU). Last update: **0.9.21**.
 This document says where the project stands: what is done, what has to be checked, what is left, and ideas to go further.
 
 ## 1. Vision
@@ -189,4 +189,3 @@ Ranked by **value for a bass** and **cost on the FM-1** (CPU, RAM, a screen with
 ## 10. Versions
 
 - **0.9.19**: one firmware. The separate versions A (4 engines) and B (8 engines) are merged: `SYSTEM › ENGINES` picks **ESSENTIAL** (the first four: ANALOG, SUPER/REESE, WAVE, FM; the default) or **ALL** (eight). A sound keeps its own engine either way, and the factory presets use all eight.
-- 0.9.14 – 0.9.18: two versions, A with 4 engines and B with 8 (`install/version-b/`, now in `install/older/`).

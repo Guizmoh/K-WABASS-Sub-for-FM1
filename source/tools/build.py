@@ -171,7 +171,7 @@ def build_loader():
 
 def build_app():
     flags = [*CFLAGS, "-Ifirmware/hal", "-Ifirmware/src", "-Ifirmware/gen", f'-DFELUCCA_ID="{PRODUCT}"', f'-DAPP_VER="{VERSION or "0.0"}"',
-             *os.environ.get("KSUB_DEFS", "").split()]   # (KSUB_DEFS=-DKS_FOUR=1: a four-engine build for tests; the firmware has all eight engines)
+             *os.environ.get("KSUB_DEFS", "").split()]
     cmds = [("cc", "-c", FW / "crt0.S", "-o", OUT / "crt0.o"),
             ("cc", "-c", FW / "hal" / "fm1_vec.S", "-o", OUT / "fm1_vec.o"),
             ("cc", "-c", FW / "hal" / "fm1_isr.S", "-o", OUT / "fm1_isr.o"),
