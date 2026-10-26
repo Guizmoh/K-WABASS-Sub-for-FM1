@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>K-WASUB Data</title>
+<style>
+html:not([lang="fr"]) [lang="fr"], html[lang="fr"] [lang="en"] { display: none; }
+:root { color-scheme: dark; --bg: #0b1214; --card: #141d20; --edge: #2a3a3d; --ink: #ecf2f2; --mute: #8fa0a2; --lime: #c8f03c; --red: #ff6b5a; }
+[hidden] { display: none !important; }
+html, body { background: var(--bg); color: var(--ink); margin: 0; }
+body { font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; padding: 24px max(16px, env(safe-area-inset-left)); }
+main { max-width: 620px; margin: 0 auto; display: grid; gap: 16px; }
+h1 { font-size: 26px; margin: 0; letter-spacing: .03em; } h1 b { color: var(--lime); }
+h2 { font-size: 18px; margin: 0; } h2 small { color: var(--mute); font-weight: 400; font-size: 13px; }
+.sub, .mute { color: var(--mute); font-size: 13px; } a { color: var(--lime); }
+.card { background: var(--card); border: 1px solid var(--edge); border-radius: 14px; padding: 18px; display: grid; gap: 12px; }
+.card.soon { opacity: .55; }
+ol { margin: 0; padding-left: 20px; color: var(--mute); } ol b { color: var(--ink); }
+button, .file { font: 600 15px system-ui, sans-serif; border-radius: 10px; padding: 12px 16px; border: 1px solid var(--edge); background: #1e2a2d; color: var(--ink); cursor: pointer; }
+button.go { background: var(--lime); color: #111a06; border-color: var(--lime); }
+button:disabled { opacity: .45; cursor: default; }
+button:focus-visible, .file:focus-within { outline: 2px solid var(--lime); outline-offset: 2px; }
+.file input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+#status { font-weight: 600; min-height: 1.5em; } #status.err { color: var(--red); } #status.ok { color: var(--lime); }
+.bar { height: 10px; background: #0d1517; border-radius: 6px; overflow: hidden; border: 1px solid var(--edge); }
+.bar i { display: block; height: 100%; width: 0; background: var(--lime); transition: width .15s; }
+.top { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px; }
+</style>
+</head>
+<body>
+<main>
+  <div class="top">
+    <div>
+      <h1>K-WA<b>SUB</b> · <span lang="en">data</span><span lang="fr">données</span></h1>
+      <div class="sub"><span lang="en">Your sounds, your samples, your recordings: to and from the FM-1, over USB.</span><span lang="fr">Tes sons, tes samples, tes enregistrements : vers le FM-1 et depuis le FM-1, par USB.</span></div>
+    </div>
+    <div class="sub"><a id="home" href="index.html"><span lang="en">← home</span><span lang="fr">← accueil</span></a> · <a id="lang" href="?lang=fr">FR</a></div>
+  </div>
+
+  <div class="card">
+    <ol>
+      <li><span lang="en"><b>Chrome or Edge</b> on a computer (Web MIDI). Close other MIDI software.</span><span lang="fr"><b>Chrome ou Edge</b> sur ordinateur (Web MIDI). Ferme les autres logiciels MIDI.</span></li>
+      <li><span lang="en">K-WASUB <b>0.9.26 or later</b> on the FM-1, switched on, plugged in with a USB <b>data</b> cable.</span><span lang="fr">K-WASUB <b>0.9.26 ou plus</b> sur le FM-1, allumé, branché avec un câble USB <b>de données</b>.</span></li>
+      <li><span lang="en">Allow MIDI access (with SysEx) when the browser asks.</span><span lang="fr">Autorise l'accès MIDI (avec SysEx) quand le navigateur le demande.</span></li>
+    </ol>
+    <div id="status" role="status" aria-live="polite"></div>
+    <div class="bar" id="bar" hidden><i id="fill"></i></div>
+  </div>
+
+  <div class="card">
+    <h2><span lang="en">Backup of your sound design</span><span lang="fr">Sauvegarde de ton sound design</span></h2>
+    <div class="mute"><span lang="en">The 32 user slots, SEQ BASS, ARP, the macros, the MIDI CC map, the EQ and the MORPH choices, in one <b>.kwsub</b> file. Restoring it replaces all of them on the FM-1 (the factory sounds are not touched).</span><span lang="fr">Les 32 emplacements utilisateur, SEQ BASS, ARP, les macros, le mapping MIDI CC, l'EQ et les choix MORPH, dans un fichier <b>.kwsub</b>. Le recharger les remplace tous sur le FM-1 (les sons d'usine ne bougent pas).</span></div>
+    <div class="row">
+      <button id="save" class="go" type="button"><span lang="en">Save a backup</span><span lang="fr">Faire une sauvegarde</span></button>
+      <label class="file"><input id="load" type="file" accept=".kwsub"><span lang="en">Restore a backup…</span><span lang="fr">Recharger une sauvegarde…</span></label>
+    </div>
+  </div>
+
+  <div class="card soon">
+    <h2><span lang="en">Export a recording as WAV</span><span lang="fr">Exporter un enregistrement en WAV</span> <small><span lang="en">(next version)</span><span lang="fr">(prochaine version)</span></small></h2>
+    <div class="mute"><span lang="en">The RESAMPLE recording (2 to 4 s) saved as a .wav file.</span><span lang="fr">L'enregistrement RESAMPLE (2 à 4 s) enregistré en fichier .wav.</span></div>
+  </div>
+  <div class="card soon">
+    <h2><span lang="en">Send a sample to the FM-1</span><span lang="fr">Envoyer un sample vers le FM-1</span> <small><span lang="en">(coming)</span><span lang="fr">(à venir)</span></small></h2>
+    <div class="mute"><span lang="en">A WAV of yours played by OSC C (kept until the FM-1 is switched off).</span><span lang="fr">Un WAV à toi joué par OSC C (gardé jusqu'à l'extinction du FM-1).</span></div>
+  </div>
+</main>
+<script>
+__KWLINK_JS__
+</script>
+<script>
+"use strict";
+const FR = /[?&]lang=fr/.test(location.search), T = (en, fr) => (FR ? fr : en);
+if (FR) { document.documentElement.lang = "fr"; document.getElementById("lang").textContent = "EN"; document.getElementById("lang").href = "?"; document.getElementById("home").href = "fr/index.html"; }
+const $ = id => document.getElementById(id);
+KWLink.setFrench(FR);
+let busy = false;
+function say(t, cls) { $("status").textContent = t; $("status").className = cls || ""; }
+function bar(f) { $("bar").hidden = f == null; $("fill").style.width = Math.round((f || 0) * 100) + "%"; }
+function lock(on) { busy = on; $("save").disabled = on; $("load").disabled = on; }
+async function withFm1(job) {
+  if (busy) return;
+  lock(true); bar(0);
+  let t = null;
+  try {
+    say(T("Looking for the FM-1…", "Recherche du FM-1…"));
+    t = await KWLink.connectMidi();
+    await job(new KWLink.Session(t));
+  } catch (e) {
+    say((e && e.message) || String(e), "err");
+  } finally {
+    if (t) t.close();
+    lock(false); bar(null);
+  }
+}
+$("save").onclick = () => withFm1(async s => {
+  say(T("Reading the FM-1…", "Lecture du FM-1…"));
+  const { blob, version } = await s.backup(bar);
+  const d = new Date(), p = n => String(n).padStart(2, "0");
+  const name = `k-wasub-backup-${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}.kwsub`;
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([blob], { type: "application/octet-stream" }));
+  a.download = name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  say(T(`Saved: ${name} (K-WASUB ${version})`, `Enregistré : ${name} (K-WASUB ${version})`), "ok");
+});
+$("load").onchange = e => {
+  const f = e.target.files[0];
+  e.target.value = "";
+  if (!f) return;
+  if (!confirm(T(`Replace ALL the user sounds, SEQ, ARP and macros on the FM-1 with "${f.name}"?`, `Remplacer TOUS les sons utilisateur, SEQ, ARP et macros du FM-1 par « ${f.name} » ?`))) return;
+  withFm1(async s => {
+    const blob = new Uint8Array(await f.arrayBuffer());
+    say(T("Writing to the FM-1…", "Écriture sur le FM-1…"));
+    await s.restore(blob, bar);
+    say(T("Restored. The FM-1 shows BACKUP RESTORED.", "Rechargé. Le FM-1 affiche BACKUP RESTORED."), "ok");
+  });
+};
+</script>
+</body>
+</html>

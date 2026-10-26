@@ -2081,10 +2081,27 @@ static void midi_clock_out(void)                /* CLOCK OUT (internal clock): 2
     last = now;
 }
 static void app_poll(void) { midi_in(); midi_clock_out(); }
-static int app_sysex(const uint8_t *p, uint32_t n) { (void)p; (void)n; return 0; }
+static void link_service(void);                 /* (ksub_link.c: the backup with the web page) */
 
 /* ================================================================ the main loop */
 static uint32_t ui_frame_ms, prev_ms;
+static void store_fixup(void)                   /* the store as read (or restored from a backup): the old layouts brought up, the broken parts reset */
+{
+    uint32_t i;
+    ux_migrate();
+    for (i = 0; i < NUSER; i++) if (!up_valid(i)) ustore[i].magic = 0;
+    if (perf.magic != PF_MAGIC || perf.sum != perf_sum()) perf_defaults();
+    perf.ar_on = 0;                             /* (the ARP starts off: a key does what it says) */
+    if (perf.mc_magic != MC_MAGIC) mc_defaults();
+    if (perf.cc_magic != 0x43u) { memset(perf.cc_num, 0xFF, sizeof perf.cc_num); perf.cc_magic = 0x43u; }
+    if (perf.eq_magic != 0x45u) eq_defaults();
+    if (perf.mx_magic != MX_MAGIC) {
+        if (perf.mx_magic != 0x59u) for (i = 0; i < 16u; i++) if (perf.cc_id[i] >= I_L1RATE) perf.cc_num[i] = 0xFF;
+        mx_defaults();
+        perf_touch();
+    }
+    eq_dirty = 1;
+}
 static void app_init(void)
 {
     uint32_t i;
@@ -2118,19 +2135,7 @@ static void app_init(void)
     set.oct = (uint8_t)(int8_t)clampi(OCT, -3, 3);
     ks_bpm10 = set.bpm10;
     store_load();
-    ux_migrate();
-    for (i = 0; i < NUSER; i++) if (!up_valid(i)) ustore[i].magic = 0;
-    if (perf.magic != PF_MAGIC || perf.sum != perf_sum()) perf_defaults();
-    perf.ar_on = 0;                             /* (the ARP starts off: a key does what it says) */
-    if (perf.mc_magic != MC_MAGIC) mc_defaults();
-    if (perf.cc_magic != 0x43u) { memset(perf.cc_num, 0xFF, sizeof perf.cc_num); perf.cc_magic = 0x43u; }
-    if (perf.eq_magic != 0x45u) eq_defaults();
-    if (perf.mx_magic != MX_MAGIC) {
-        if (perf.mx_magic != 0x59u) for (i = 0; i < 16u; i++) if (perf.cc_id[i] >= I_L1RATE) perf.cc_num[i] = 0xFF;
-        mx_defaults();
-        perf_touch();
-    }
-    eq_dirty = 1;
+    store_fixup();
     load_preset(set.bank, set.idx);
     if (set.bank && !up_valid(set.idx)) load_preset(0, 0);
     pre_cur[set.bank] = set.idx;
@@ -2194,6 +2199,7 @@ static void app_step(void)
         set_dirty = 0;
         settings_write();
     }
+    link_service();
 #if KS_DUAL
     if (c1_failed) {                            /* core 1 stalled (no sound, frozen LFOs): one core, kept */
         c1_failed = 0;

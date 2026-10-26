@@ -43,3 +43,4 @@
 #include "ksub_dsp.c"
 #include "ksub_gfx.c"
 #include "ksub_ui.c"
+#include "ksub_link.c"
