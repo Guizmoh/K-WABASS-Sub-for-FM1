@@ -1,10 +1,10 @@
-> Notes de construction reprises de KAWA (même toolchain JieLi et même SDK AC79) ; pour K-WASUB : `cd source && ./build.sh --release X.Y.Z`.
+> These notes come from KAWA (same JieLi toolchain, same AC79 SDK). For K-WASUB: `cd source && ./build.sh --release X.Y.Z` (see the [README](../README.md) and the [technical notes](../docs/TECHNICAL-NOTES.md)).
 
-# Building KAWA
+# Building K-WASUB
 
-[README](../README.md) · [Français](../README.fr.md) · [Español](../README.es.md)
+[README](../README.md) · [Français](../fr/README.md)
 
-Everything here is for changing KAWA itself. To put KAWA on an FM-1, see the README: the ready package is in
+Everything here is for changing the firmware itself. To put K-WASUB on an FM-1, see the README: the ready package is in
 [`../install/`](../install/). Run every command below from this `source/` folder.
 
 ## On a computer, no FM-1: the simulator

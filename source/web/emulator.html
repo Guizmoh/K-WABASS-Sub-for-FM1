@@ -2,6 +2,7 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;700&family=IBM+Plex+Mono:wght@400;600&display=swap">
 <style>
+html:not([lang="fr"]) [lang="fr"], html[lang="fr"] [lang="en"] { display: none; }
 /* a hardware emulator: one dark world (the FM-1 and K-WASUB's screen), the device centred, the help below */
 :root {
   color-scheme: dark;
@@ -88,51 +89,48 @@ label.vol { display: flex; align-items: center; gap: 8px; color: var(--mute); fo
       <label class="vol" for="master">MASTER <input id="master" type="range" min="0" max="100" value="70"></label>
     </div>
   </header>
-  <div id="status" role="status">Le son démarre au premier appui (touche, bouton ou clavier de l'ordinateur).</div>
+  <div id="status" role="status"></div>
 
   <div class="device">
     <div class="top">
-      <div class="screen"><canvas id="lcd" width="240" height="240" aria-label="Écran du FM-1"></canvas></div>
+      <div class="screen"><canvas id="lcd" width="240" height="240" aria-label="FM-1 screen"></canvas></div>
       <div class="ctl">
         <div class="encs" id="encs"></div>
         <div class="knobs" id="knobs"></div>
         <div class="btns" id="btns"></div>
       </div>
     </div>
-    <div class="keys-scroll"><div class="keys" id="keys" aria-label="Clavier 27 touches"></div></div>
+    <div class="keys-scroll"><div class="keys" id="keys" aria-label="27-key keyboard"></div></div>
   </div>
 
   <div class="help">
     <section>
-      <h2>PAGES</h2>
+      <h2><span lang="en">PAGES</span><span lang="fr">PAGES</span></h2>
       <ul>
-        <li><b>HOME</b> 01 PLAY &middot; <b>EDIT</b> 02 BASS &middot; <b>ENV</b> 03 ENVELOPE &middot; <b>SEQ</b> 04 FILTER</li>
-        <li><b>LFO</b> 05 LFO &middot; <b>FX</b> 06 FX &middot; <b>ARP</b> 07 PRESETS &middot; <b>GLO</b> 08 SYSTEM</li>
-        <li>Le même bouton ou <b>SEL</b> : vue suivante (OSC A, OSC B, SUB, COMBINE…) ; les points en haut à droite de l'écran montrent les vues de la page</li>
-        <li><b>LFO</b> : LFO 1 WOBBLE, encore <b>LFO</b> : LFO 2, encore : la matrice. Leurs destinations reprennent tous les réglages des oscillateurs actifs</li>
-        <li><b>SELECT</b> choisit la ligne, <b>ALGO</b> change sa valeur, <b>K1–K4</b> font ce que dit le bas de l'écran</li>
-        <li><b>PRESETS</b> charge le patch suivant, où que l'on soit</li>
+        <li><span lang="en"><b>HOME</b> 01 PLAY &middot; <b>EDIT</b> 02 BASS &middot; <b>ENV</b> 03 ENVELOPE &middot; <b>SEQ</b> 04 FILTER &middot; <b>LFO</b> 05 &middot; <b>FX</b> 06 &middot; <b>ARP</b> 07 PRESETS &middot; <b>GLO</b> 08 SYSTEM</span><span lang="fr"><b>HOME</b> 01 PLAY &middot; <b>EDIT</b> 02 BASS &middot; <b>ENV</b> 03 ENVELOPE &middot; <b>SEQ</b> 04 FILTER &middot; <b>LFO</b> 05 &middot; <b>FX</b> 06 &middot; <b>ARP</b> 07 PRESETS &middot; <b>GLO</b> 08 SYSTEM</span></li>
+        <li><span lang="en">A page button opens the <b>first view</b> of its page; press it again for the next view (the dots at the top right show the views)</span><span lang="fr">Un bouton de page ouvre la <b>première vue</b> de sa page ; appuyer encore : vue suivante (les points en haut à droite montrent les vues)</span></li>
+        <li><span lang="en"><b>SELECT</b> chooses the row, <b>ALGO</b> changes its value, <b>K1–K4</b> do what the bottom of the screen says</span><span lang="fr"><b>SELECT</b> choisit la ligne, <b>ALGO</b> change sa valeur, <b>K1–K4</b> font ce que dit le bas de l'écran</span></li>
+        <li><span lang="en"><b>PRESETS</b> changes the sound at once, on HOME and on the PRESETS page (<b>ARP</b>)</span><span lang="fr"><b>PRESETS</b> change le son tout de suite, sur HOME et sur la page PRESETS (<b>ARP</b>)</span></li>
       </ul>
     </section>
     <section>
-      <h2>JOUER EN LIVE</h2>
+      <h2><span lang="en">PLAYING LIVE</span><span lang="fr">JOUER EN LIVE</span></h2>
       <ul>
-        <li>Page PLAY : <b>K1</b> cutoff, <b>K2</b> vitesse du wobble (calée sur le tempo), <b>K3</b> profondeur, <b>K4</b> résonance</li>
-        <li><b>PLAY</b> = HOLD : la note reste, les mains sont libres pour le wobble</li>
-        <li><b>REC</b> = TAP tempo ; le LFO se recale sur la frappe</li>
-        <li><b>SAVE</b> ouvre l'enregistrement (banque B), <b>SAVE</b> encore pour écrire</li>
-        <li><b>SAVE maintenu</b> : annule la dernière modification (undo), et continue tant qu'il reste appuyé</li>
-        <li><b>OCT-</b> + <b>OCT+</b> ensemble : tout couper</li>
-        <li><b>Boutons maintenus</b> (souris) : <b>OCT-</b> 1 s = UNDO, <b>OCT+</b> = REDO, <b>FX</b> = FX PADS (les touches jouent des effets), <b>HOME</b> = PANIC, <b>GLO</b> = CLASSIC / SHIFT, <b>SEL</b> = A/B</li>
+        <li><span lang="en"><b>SEL</b> opens: PERFORM (4 macros, morph, pads) &rarr; MORPH X/Y &rarr; FX LIVE &rarr; MACROS &rarr; MORPH A/B</span><span lang="fr"><b>SEL</b> ouvre : PERFORM (4 macros, morph, pads) &rarr; MORPH X/Y &rarr; FX LIVE &rarr; MACROS &rarr; MORPH A/B</span></li>
+        <li><span lang="en">Hold <b>LFO</b> and turn a knob: LFO 1 goes on what that knob sets</span><span lang="fr"><b>LFO</b> maintenu + un potard : le LFO 1 va sur ce que règle le potard</span></li>
+        <li><span lang="en">Hold <b>FX</b>: FX PADS, the keys play effects (white: wobble speed, black: stutter, tape stop&hellip;)</span><span lang="fr"><b>FX</b> maintenu : FX PADS, les touches jouent des effets (blanches : vitesse du wobble, noires : stutter, tape stop&hellip;)</span></li>
+        <li><span lang="en"><b>PLAY</b> held = HOLD (the note stays, hands free for the wobble); <b>REC</b> = TAP tempo</span><span lang="fr"><b>PLAY</b> maintenu = HOLD (la note reste, mains libres pour le wobble) ; <b>REC</b> = TAP tempo</span></li>
+        <li><span lang="en">Held buttons (mouse): <b>OCT-</b> 1 s = UNDO, <b>OCT+</b> = REDO, <b>SAVE</b> = UNDO / REDO window, <b>HOME</b> = PANIC, <b>GLO</b> = CLASSIC / SHIFT, <b>SEL</b> = A/B</span><span lang="fr">Boutons maintenus (souris) : <b>OCT-</b> 1 s = UNDO, <b>OCT+</b> = REDO, <b>SAVE</b> = fenêtre UNDO / REDO, <b>HOME</b> = PANIC, <b>GLO</b> = CLASSIC / SHIFT, <b>SEL</b> = A/B</span></li>
+        <li><span lang="en"><b>OCT-</b> + <b>OCT+</b> together: everything off</span><span lang="fr"><b>OCT-</b> + <b>OCT+</b> ensemble : tout couper</span></li>
       </ul>
     </section>
     <section>
-      <h2>CLAVIER DE L'ORDINATEUR</h2>
+      <h2><span lang="en">COMPUTER KEYBOARD</span><span lang="fr">CLAVIER DE L'ORDINATEUR</span></h2>
       <ul>
-        <li>Notes : <kbd>Z</kbd><kbd>S</kbd><kbd>X</kbd>… et <kbd>Q</kbd><kbd>2</kbd><kbd>W</kbd>…</li>
-        <li><kbd>↑</kbd><kbd>↓</kbd> ligne &middot; <kbd>←</kbd><kbd>→</kbd> valeur &middot; <kbd>PgUp</kbd><kbd>PgDn</kbd> preset</li>
-        <li><kbd>Shift</kbd>+<kbd>1</kbd>…<kbd>8</kbd> pages &middot; <kbd>Tab</kbd> SEL (PERFORM, MORPH X/Y, FX LIVE, MACROS, MORPH A/B) &middot; <kbd>Espace</kbd> SEQ PLAY/STOP &middot; <kbd>Entrée</kbd> TAP (vue SEQ : REC) &middot; <kbd>⌫</kbd> SAVE (maintenu : undo) &middot; <kbd>-</kbd> / <kbd>=</kbd> OCT− / OCT+ (version B, maintenus : colonnes jaune / orange)</li>
-        <li><kbd>-</kbd> <kbd>=</kbd> octave &middot; molette ou glisser sur un bouton rotatif</li>
+        <li><span lang="en">Notes: <kbd>Z</kbd><kbd>S</kbd><kbd>X</kbd>… and <kbd>Q</kbd><kbd>2</kbd><kbd>W</kbd>…</span><span lang="fr">Notes : <kbd>Z</kbd><kbd>S</kbd><kbd>X</kbd>… et <kbd>Q</kbd><kbd>2</kbd><kbd>W</kbd>…</span></li>
+        <li><span lang="en"><kbd>↑</kbd><kbd>↓</kbd> row &middot; <kbd>←</kbd><kbd>→</kbd> value &middot; <kbd>PgUp</kbd><kbd>PgDn</kbd> preset</span><span lang="fr"><kbd>↑</kbd><kbd>↓</kbd> ligne &middot; <kbd>←</kbd><kbd>→</kbd> valeur &middot; <kbd>PgUp</kbd><kbd>PgDn</kbd> preset</span></li>
+        <li><span lang="en"><kbd>Shift</kbd>+<kbd>1</kbd>…<kbd>8</kbd> pages &middot; <kbd>Tab</kbd> SEL &middot; <kbd>Space</kbd> SEQ PLAY/STOP &middot; <kbd>Enter</kbd> TAP (SEQ view: REC) &middot; <kbd>⌫</kbd> SAVE (held: undo) &middot; <kbd>-</kbd> / <kbd>=</kbd> OCT− / OCT+ (held, in SHIFT: the columns)</span><span lang="fr"><kbd>Shift</kbd>+<kbd>1</kbd>…<kbd>8</kbd> pages &middot; <kbd>Tab</kbd> SEL &middot; <kbd>Espace</kbd> SEQ PLAY/STOP &middot; <kbd>Entrée</kbd> TAP (vue SEQ : REC) &middot; <kbd>⌫</kbd> SAVE (maintenu : undo) &middot; <kbd>-</kbd> / <kbd>=</kbd> OCT− / OCT+ (maintenus, en SHIFT : les colonnes)</span></li>
+        <li><span lang="en">Mouse wheel or drag on a knob</span><span lang="fr">Molette ou glisser sur un bouton rotatif</span></li>
       </ul>
     </section>
   </div>
@@ -140,6 +138,8 @@ label.vol { display: flex; align-items: center; gap: 8px; color: var(--mute); fo
 
 <script>
 "use strict";
+const FR = /[?&]lang=fr/.test(location.search), T = (en, fr) => (FR ? fr : en);
+if (FR) document.documentElement.lang = "fr";
 const WASM_B64 = "__KSUB_WASM__";
 const BTN = { OCT_DOWN: 0, OCT_UP: 1, FX: 2, SEL: 3, ENV: 4, LFO: 5, EDIT: 6, GLO: 7, HOME: 8, SAVE: 9, ARP: 10, SEQ: 11, PLAY: 12, REC: 13 };
 const BTN_LAYOUT = [["HOME", "PLAY"], ["EDIT", "BASS"], ["ENV", "ENVELOPE"], ["SEQ", "FILTER · SEQ"], ["LFO", "LFO"], ["FX", "FX"], ["ARP", "PRESETS · ARP"],
@@ -238,6 +238,7 @@ function boot() {
   return b;
 }
 function startIdle() {
+  $("status").textContent = T("Sound starts at the first press (a key, a button or the computer keyboard).", "Le son démarre au premier appui (touche, bouton ou clavier de l'ordinateur).");
   try {
     const L = new Float32Array(256), R = new Float32Array(256);
     eng = new Engine(wasmBytes, boot());
@@ -245,7 +246,7 @@ function startIdle() {
     send = d => eng.input(d);
     idle = setInterval(() => { for (let k = 0; k < 4; k++) eng.render(L, R); }, 23);
   } catch (err) {
-    $("status").textContent = "Ce navigateur refuse WebAssembly ici : ouvrez emulator/index.html depuis le dépôt.";
+    $("status").textContent = T("This browser refuses WebAssembly here: open emulator/index.html from the repository.", "Ce navigateur refuse WebAssembly ici : ouvrez emulator/index.html depuis le dépôt.");
   }
 }
 function onPage(why) {                              /* the worklet can't run here: the same engine feeds the speakers */
@@ -254,13 +255,13 @@ function onPage(why) {                              /* the worklet can't run her
   sp.onaudioprocess = ev => eng.render(ev.outputBuffer.getChannelData(0), ev.outputBuffer.getChannelData(1));
   sp.connect(ac.destination);
   send = d => eng.input(d);
-  $("status").textContent = "Son actif (moteur sur la page, " + ac.sampleRate + " Hz).";
+  $("status").textContent = T("Sound on (engine on the page, ", "Son actif (moteur sur la page, ") + ac.sampleRate + " Hz).";
   if (why) console.info("audio worklet unavailable:", why);
 }
 function startAudio() {
   if (ac) { if (ac.state !== "running") ac.resume(); return; }
   const AC = window.AudioContext || window.webkitAudioContext;
-  if (!AC || !eng) { $("status").textContent = "Pas d'audio Web dans ce navigateur."; return; }
+  if (!AC || !eng) { $("status").textContent = T("No Web Audio in this browser.", "Pas d'audio Web dans ce navigateur."); return; }
   try { if (navigator.audioSession) navigator.audioSession.type = "playback"; } catch (e) {}   /* iPhone: play even on silent */
   try { ac = new AC({ sampleRate: 44100, latencyHint: "interactive" }); } catch (e) { ac = new AC(); }
   ac.resume();
@@ -277,7 +278,7 @@ function startAudio() {
       node.onprocessorerror = () => { node.disconnect(); onPage("processor error"); };
       node.connect(ac.destination);
       send = d => node.port.postMessage(d);
-      $("status").textContent = "Son actif (audio worklet, " + ac.sampleRate + " Hz).";
+      $("status").textContent = T("Sound on (audio worklet, ", "Son actif (audio worklet, ") + ac.sampleRate + " Hz).";
     } catch (err) { onPage(err && err.message); }
     setMaster();
   })();
@@ -369,12 +370,12 @@ window.addEventListener("blur", () => { for (let k = 0; k < 27; k++) setKey(k, f
 
 /* ---- MIDI in (a controller, a DAW's clock) */
 $("midi").addEventListener("click", async () => {
-  if (!navigator.requestMIDIAccess) { $("status").textContent = "Web MIDI n'est pas disponible dans ce navigateur."; return; }
+  if (!navigator.requestMIDIAccess) { $("status").textContent = T("Web MIDI is not available in this browser.", "Web MIDI n'est pas disponible dans ce navigateur."); return; }
   try {
     const acc = await navigator.requestMIDIAccess();
     const hook = () => { let n = 0; acc.inputs.forEach(i => { n++; i.onmidimessage = m => { const d = m.data; if (d.length && d[0] !== 0xFE) send({ t: "midi", st: d[0], d1: d[1] || 0, d2: d[2] || 0 }); }; }); $("status").textContent = n + " entrée(s) MIDI branchée(s)."; };
     acc.onstatechange = hook; hook();
-  } catch (err) { $("status").textContent = "Accès MIDI refusé."; }
+  } catch (err) { $("status").textContent = T("MIDI access refused.", "Accès MIDI refusé."); }
 });
 
 startIdle();

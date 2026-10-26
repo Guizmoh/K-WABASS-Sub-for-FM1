@@ -1,10 +1,11 @@
 <!doctype html>
-<html lang="fr">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>K-WASUB Installer</title>
 <style>
+html:not([lang="fr"]) [lang="fr"], html[lang="fr"] [lang="en"] { display: none; }
 /* one card on a dark room: the FM-1's colours, big steps, one button */
 :root { color-scheme: dark; --bg: #0b1214; --card: #141d20; --edge: #2a3a3d; --ink: #ecf2f2; --mute: #8fa0a2; --lime: #c8f03c; --red: #ff6b5a; }
 [hidden] { display: none !important; }
@@ -35,39 +36,41 @@ label { color: var(--mute); font-size: 13px; }
 <body>
 <main>
   <div>
-    <h1>K-WA<b>SUB</b> · installateur</h1>
-    <div class="sub">Firmware __PKG_NAME__ (identité __PKG_ID__) · pour le M-VAVE FM-1 · fonctionne hors ligne</div>
+    <h1>K-WA<b>SUB</b> · <span lang="en">installer</span><span lang="fr">installateur</span></h1>
+    <div class="sub"><span lang="en">Firmware __PKG_NAME__ (identity __PKG_ID__) · for the M-VAVE FM-1 · works offline</span><span lang="fr">Firmware __PKG_NAME__ (identité __PKG_ID__) · pour le M-VAVE FM-1 · fonctionne hors ligne</span></div>
   </div>
   <div class="card">
     <ol>
-      <li><b>Chrome ou Edge</b> sur ordinateur (Web MIDI). Ferme les autres logiciels MIDI.</li>
-      <li>Allume le FM-1 et branche-le avec un câble USB <b>de données</b>.</li>
-      <li>Clique sur <b>Installer</b>, autorise l'accès MIDI, puis confirme.</li>
-      <li><b>Ne débranche rien</b> avant « Terminé ». En cas de coupure : rebranche et relance, l'installation reprend.</li>
+      <li><span lang="en"><b>Chrome or Edge</b> on a computer (Web MIDI). Close any other MIDI software.</span><span lang="fr"><b>Chrome ou Edge</b> sur ordinateur (Web MIDI). Ferme les autres logiciels MIDI.</span></li>
+      <li><span lang="en">Switch the FM-1 on and plug it in with a USB <b>data</b> cable.</span><span lang="fr">Allume le FM-1 et branche-le avec un câble USB <b>de données</b>.</span></li>
+      <li><span lang="en">Click <b>Install</b>, allow MIDI access, then confirm.</span><span lang="fr">Clique sur <b>Installer</b>, autorise l'accès MIDI, puis confirme.</span></li>
+      <li><span lang="en"><b>Unplug nothing</b> before “Done”. If the connection drops: plug in again and rerun, the installation resumes.</span><span lang="fr"><b>Ne débranche rien</b> avant « Terminé ». En cas de coupure : rebranche et relance, l'installation reprend.</span></li>
     </ol>
     <div class="row">
-      <button id="go" class="go" type="button">Installer K-WASUB</button>
-      <button id="probe" type="button">Que contient mon FM-1 ?</button>
+      <button id="go" class="go" type="button"><span lang="en">Install K-WASUB</span><span lang="fr">Installer K-WASUB</span></button>
+      <button id="probe" type="button"><span lang="en">What is on my FM-1?</span><span lang="fr">Que contient mon FM-1 ?</span></button>
     </div>
-    <label>Autre fichier .fwsc (KAWA, une autre version) : <input id="file" type="file" accept=".fwsc"></label>
+    <label><span lang="en">Another .fwsc file (KAWA, another version): </span><span lang="fr">Autre fichier .fwsc (KAWA, une autre version) : </span><input id="file" type="file" accept=".fwsc"></label>
   </div>
   <div class="card">
-    <div id="status" role="status">Prêt.</div>
+    <div id="status" role="status"></div>
     <div class="bar" id="bar" hidden><i id="fill"></i></div>
     <div class="card" id="ask" hidden>
       <div id="askText"></div>
-      <div class="row"><button id="yes" class="go" type="button">Écrire sur le FM-1</button><button id="no" type="button">Annuler</button></div>
+      <div class="row"><button id="yes" class="go" type="button"><span lang="en">Write to the FM-1</span><span lang="fr">Écrire sur le FM-1</span></button><button id="no" type="button"><span lang="en">Cancel</span><span lang="fr">Annuler</span></button></div>
     </div>
     <div id="done" hidden></div>
     <div id="err" hidden></div>
     <pre id="log" hidden></pre>
   </div>
-  <div class="sub">Secours : maintenir OCT- à l'allumage (secours USB), puis relancer l'installation. Retour à KAWA : choisir son fichier .fwsc ci-dessus.</div>
+  <div class="sub"><span lang="en">Rescue: hold OCT- at power-on (USB rescue), then run the installation again. Back to KAWA: choose its .fwsc file above.</span><span lang="fr">Secours : maintenir OCT- à l'allumage (secours USB), puis relancer l'installation. Retour à KAWA : choisir son fichier .fwsc ci-dessus.</span></div>
 </main>
 <script>
 __WEBINSTALL_JS__
 </script>
 <script>
+const FR = /[?&]lang=fr/.test(location.search), T = (en, fr) => (FR ? fr : en);
+if (FR) document.documentElement.lang = "fr";
 "use strict";
 const K = window.KawaInstall, $ = id => document.getElementById(id);
 const PKG = Uint8Array.from(atob("__PKG_B64__"), c => c.charCodeAt(0)), PKG_NAME = "__PKG_NAME__";
@@ -82,8 +85,8 @@ function bar(p) {
 function lock(on) { busy = on; $("go").disabled = $("probe").disabled = $("file").disabled = on; }
 function ask(info) {
   return new Promise(res => {
-    $("askText").textContent = (info.resume ? "Le FM-1 est en mode mise à jour : l'écriture interrompue va être terminée. " : "") +
-      "Écrire " + info.product + " (" + info.name + ") sur le FM-1 trouvé (" + info.device + ", port " + info.port + ") ?";
+    $("askText").textContent = (info.resume ? T("The FM-1 is in update mode: the interrupted write will be finished. ", "Le FM-1 est en mode mise à jour : l'écriture interrompue va être terminée. ") : "") +
+      T("Write " + info.product + " (" + info.name + ") to the FM-1 found (" + info.device + ", port " + info.port + ")?", "Écrire " + info.product + " (" + info.name + ") sur le FM-1 trouvé (" + info.device + ", port " + info.port + ") ?");
     $("ask").hidden = false;
     const end = v => { $("ask").hidden = true; res(v); };
     $("yes").onclick = () => end(true); $("no").onclick = () => end(false);
@@ -94,34 +97,35 @@ async function install(bytes, name) {
   if (busy) return;
   lock(true); ["done", "err"].forEach(i => $(i).hidden = true); $("log").textContent = ""; $("log").hidden = true;
   try {
-    status("Vérification du paquet…");
+    status(T("Checking the package…", "Vérification du paquet…"));
     const res = await K.runInstall({
       nav: navigator, bytes, name,
-      say: l => { log(l); if (/^package:/.test(l)) { status("Recherche du FM-1 (autorise l'accès MIDI)…"); bar(null); }
-                          if (/^device:/.test(l)) { status("FM-1 trouvé : confirme l'écriture."); bar(undefined); } },
-      step: (k, a) => { if (k === "write") { bar(a); status("Écriture " + a + " %"); } else { bar(null); status(K.STEP_TEXT[k](a)); } },
+      say: l => { log(l); if (/^package:/.test(l)) { status(T("Looking for the FM-1 (allow MIDI access)…", "Recherche du FM-1 (autorise l'accès MIDI)…")); bar(null); }
+                          if (/^device:/.test(l)) { status(T("FM-1 found: confirm the write.", "FM-1 trouvé : confirme l'écriture.")); bar(undefined); } },
+      step: (k, a) => { if (k === "write") { bar(a); status(T("Writing ", "Écriture ") + a + " %"); } else { bar(null); status(K.STEP_TEXT[k](a)); } },
       confirm: ask, busy: () => {},
     });
-    if (res.cancelled) { status("Annulé. Rien n'a été écrit."); bar(undefined); return; }
-    bar(100); status("Terminé."); $("done").hidden = false; $("done").textContent = "Le FM-1 redémarre avec " + res.id + ". Tu peux le débrancher.";
+    if (res.cancelled) { status(T("Cancelled. Nothing was written.", "Annulé. Rien n'a été écrit.")); bar(undefined); return; }
+    bar(100); status(T("Done.", "Terminé.")); $("done").hidden = false; $("done").textContent = T("The FM-1 restarts with " + res.id + ". You can unplug it.", "Le FM-1 redémarre avec " + res.id + ". Tu peux le débrancher.");
   } catch (e) {
     bar(undefined);
     const clean = e instanceof K.InstallError && (/^(badpkg|nomidi|download|notfound|model|foreign)$/.test(e.code) || /nothing was written/.test(e.message));
-    status(clean ? "Arrêté. Rien n'a été écrit." : "Arrêté.");
-    $("err").hidden = false; $("err").textContent = "Erreur : " + (e && e.message ? e.message : e) +
-      (clean ? "" : "\nSi le FM-1 affiche un écran de mise à jour : rebranche-le et clique sur Installer, l'écriture reprend.");
+    status(clean ? T("Stopped. Nothing was written.", "Arrêté. Rien n'a été écrit.") : T("Stopped.", "Arrêté."));
+    $("err").hidden = false; $("err").textContent = T("Error: ", "Erreur : ") + (e && e.message ? e.message : e) +
+      (clean ? "" : T("\nIf the FM-1 shows an update screen: plug it in again and click Install, the write resumes.", "\nSi le FM-1 affiche un écran de mise à jour : rebranche-le et clique sur Installer, l'écriture reprend."));
   } finally { lock(false); }
 }
 $("go").onclick = () => install(PKG, PKG_NAME);
 $("file").onchange = async () => { const f = $("file").files[0]; if (f) await install(new Uint8Array(await f.arrayBuffer()), f.name); $("file").value = ""; };
 $("probe").onclick = async () => {
-  if (busy) return; lock(true); status("Recherche du FM-1…"); bar(null);
-  try { const r = await K.probe({ nav: navigator }); status("FM-1 sur « " + r.port + " » : " + r.id + (r.loader ? " (en mode mise à jour : Installer termine l'écriture)" : "")); }
-  catch (e) { status("Pas trouvé : " + (e && e.message ? e.message : e)); }
+  if (busy) return; lock(true); status(T("Looking for the FM-1…", "Recherche du FM-1…")); bar(null);
+  try { const r = await K.probe({ nav: navigator }); status(T("FM-1 on “" + r.port + "”: " + r.id + (r.loader ? " (in update mode: Install finishes the write)" : ""), "FM-1 sur « " + r.port + " » : " + r.id + (r.loader ? " (en mode mise à jour : Installer termine l'écriture)" : ""))); }
+  catch (e) { status(T("Not found: ", "Pas trouvé : ") + (e && e.message ? e.message : e)); }
   finally { bar(undefined); lock(false); }
 };
-if (!K) status("Le script d'installation n'a pas chargé.");
-else if (typeof navigator.requestMIDIAccess !== "function") { status("Ce navigateur n'a pas Web MIDI : utilise Chrome ou Edge sur ordinateur."); $("go").disabled = $("probe").disabled = true; }
+status(T("Ready.", "Prêt."));
+if (!K) status(T("The installer script did not load.", "Le script d'installation n'a pas chargé."));
+else if (typeof navigator.requestMIDIAccess !== "function") { status(T("This browser has no Web MIDI: use Chrome or Edge on a computer.", "Ce navigateur n'a pas Web MIDI : utilise Chrome ou Edge sur ordinateur.")); $("go").disabled = $("probe").disabled = true; }
 </script>
 </body>
 </html>

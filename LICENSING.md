@@ -1,13 +1,9 @@
 # Licensing
 
-KAWA is free software under the GNU General Public License, version 3 only (`GPL-3.0-only`, full text in
+K-WASUB, like KAWA which it is built from, is free software under the GNU General Public License, version 3 only (`GPL-3.0-only`, full text in
 `LICENSE`). You may use, study, change and share it. If you give someone a firmware built from it, give
 them its complete source under the same licence too.
 
-*En bref : KAWA est un logiciel libre sous GPL-3.0. Tu peux l'utiliser, l'étudier, le modifier et le
-partager ; si tu donnes un firmware construit à partir de lui, donne aussi son code source.*
-*En resumen: KAWA es software libre bajo GPL-3.0. Puedes usarlo, estudiarlo, cambiarlo y compartirlo; si
-das un firmware construido a partir de él, da también su código fuente.*
 
 ## Who made what
 

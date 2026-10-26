@@ -1,52 +1,58 @@
-<p align="center"><img src="docs/img/promo.png" alt="K-WASUB, synthé de basses modernes pour le M-VAVE FM-1"></p>
+<p align="center"><img src="docs/img/promo.png" alt="K-WASUB, a modern bass synth for the M-VAVE FM-1"></p>
 
-# K-WASUB
+# K-WASUB · FM1 modern Bass firmware
 
-**Synthé de basses modernes pour le M-VAVE FM-1** : DnB, dub, dubstep, techno. Wobble en direct, reese, sub, 808, un EQ, un morph entre quatre sons, des effets sur les touches. Gratuit et libre (GPL-3.0). *Beta.*
+**English** · [Français](fr/README.md)
+
+**A modern bass synth for the M-VAVE FM-1**: DnB, dub, dubstep, techno. Live wobble, reese, sub, 808, an EQ, a morph between four sounds, effects on the keys. Free and open source (GPL-3.0). *Beta.*
 
 | | |
 |---|---|
-| 🎛 **Essayer** (navigateur) | [`emulator/index.html`](emulator/index.html) (version A, 8 moteurs) · [`emulator/b.html`](emulator/b.html) (version B, 4 moteurs) |
-| ⬇️ **Installer** sur le FM-1 | [`installer.html`](installer.html) (Chrome ou Edge, USB) · ou `INSTALL-Windows.bat` / `INSTALL-Mac.command` / `INSTALL-Linux.sh` |
-| 📖 **Manuel** illustré | [`manual.html`](manual.html) |
-| 🏠 **Accueil** | [`index.html`](index.html) (si GitHub Pages est activé : <https://guizmoh.github.io/K-WASUB_Firmware_for_FM1/>) |
-| 🗺 **Cahier des charges** | [`CAHIER-DES-CHARGES.md`](CAHIER-DES-CHARGES.md) : fait, à faire, idées |
-| 📜 Documentation détaillée | [`docs/DOCUMENTATION-COMPLETE.md`](docs/DOCUMENTATION-COMPLETE.md) |
+| 🎛 **Try it** (browser) | [`emulator/index.html`](emulator/index.html) (version A, 8 engines) · [`emulator/b.html`](emulator/b.html) (version B, 4 engines) |
+| ⬇️ **Install** on the FM-1 | [`installer.html`](installer.html) (Chrome or Edge, USB) · or `INSTALL-Windows.bat` / `INSTALL-Mac.command` / `INSTALL-Linux.sh` |
+| 📖 **Manual** (illustrated) | [`manual.html`](manual.html) |
+| 🏠 **Home page** | [`index.html`](index.html) (with GitHub Pages on: <https://guizmoh.github.io/K-WASUB_Firmware_for_FM1/>) |
+| 🗺 **Specifications** | [`SPECIFICATIONS.md`](SPECIFICATIONS.md): done, to do, ideas |
+| 📜 Technical notes | [`docs/TECHNICAL-NOTES.md`](docs/TECHNICAL-NOTES.md) |
+| 🇫🇷 French | [`fr/`](fr/): the home page, manual, specifications and notes in French |
 
-## Ce que ça fait
+## What it does
 
-- **Jouer** : les 27 touches jouent la basse, `K1`–`K4` règlent les quatre réglages importants de chaque page.
-- **Wobble** : `LFO` maintenu + un potard branche le LFO sur ce que règle le potard.
-- **FX PADS** : `FX` maintenu, les touches blanches changent la vitesse du wobble (4, 8, 16, 24, 32, 48), les noires jouent stutters, tape stop, DJ filter, saturation, phaser…
-- **MORPH** : `SEL` ×2 = carré X/Y (au départ, le même son en 4 variantes), ×5 = fondu A/B sur le tempo.
-- **Deux modes** : CLASSIC (listes) ou SHIFT (3 colonnes, `OCT−` et `OCT+` comme Shift) ; `GLO` maintenu pour basculer.
-- **PERFORM** (`SEL`) : 4 macros nommées, le morph et les pads sur un seul écran.
-- **Son** : OTT multibande, MONO BASS, sub verrouillé sur OSC A, **RESAMPLE** (la sortie dans OSC C, à rejouer, ralentir, boucler).
-- **Presets** : tags (sub, reese, growl, wobble, pluck, 808, drone), changement immédiat.
-- **Sortie** : DEEP BASS, limiteur, AUTO LEVEL ; si le FM-1 s'arrête, `LAST STOP` dit pourquoi.
+- **Play**: the 27 keys play the bass, `K1`–`K4` set the four settings that matter on each page.
+- **Wobble**: hold `LFO` and turn a knob to wire the LFO to whatever that knob sets.
+- **FX PADS**: hold `FX`; white keys change the wobble speed (4, 8, 16, 24, 32, 48), black keys play stutters, tape stop, DJ filter, saturation, phaser…
+- **MORPH**: `SEL` ×2 = X/Y square (at first, the same sound in 4 variations), ×5 = A/B fade on the beat.
+- **PERFORM** (`SEL`): 4 named macros, the morph and the pads on one screen.
+- **Sound**: multiband OTT, MONO BASS, a sub locked on OSC A, **RESAMPLE** (the output into OSC C, to replay, slow down, loop).
+- **Presets**: tags (sub, reese, growl, wobble, pluck, 808, drone), instant change.
+- **Two modes**: CLASSIC (lists) or SHIFT (3 columns, `OCT−` and `OCT+` as Shift); hold `GLO` to switch.
+- **Looks**: 6 themes (CLASSIC GLOW and TECH with gradients), 19 palettes, 4 brightness levels.
+- **Output**: DEEP BASS, limiter, AUTO LEVEL; if the FM-1 stops, `LAST STOP` says why.
 
-## Installer
+## Install
 
-1. FM-1 en USB (câble **de données**), autres logiciels MIDI fermés.
-2. Ouvrir [`installer.html`](installer.html) dans Chrome ou Edge → « Installer K-WASUB ».
-3. Les paquets sont dans [`install/`](install/) (`k-wasub-X.fwsc`, version B dans `install/version-b/`, anciens dans `install/older/`, sommes de contrôle dans `SHA256SUMS`).
+1. FM-1 over USB (a **data** cable), other MIDI software closed.
+2. Open [`installer.html`](installer.html) in Chrome or Edge → “Install K-WASUB”.
+3. The packages are in [`install/`](install/) (`k-wasub-X.fwsc`, version B in `install/version-b/`, older ones in `install/older/`, checksums in `SHA256SUMS`).
 
-Retour à KAWA (`install/kawa-0.5.fwsc`) ou au firmware officiel (M-UPGRADE) possible à tout moment ; `OCT−` maintenu à l'allumage = secours USB.
+You can go back to KAWA (`install/kawa-0.5.fwsc`) or to the stock firmware (M-UPGRADE) at any time; holding `OCT−` at power-on = USB rescue.
 
-## Construire
+## Build
 
 ```sh
 cd source
-./build.sh --release 0.9.13          # -> build/k-wasub-0.9.13.fwsc (KSUB_DEFS=-DKS_B=1 pour la version B, X.Y.Z-b)
-APP_VER=0.9.13 bash web/make_emulator.sh      # émulateur (KS_B=1 pour B)
-bash web/make_installer.sh                    # installer.html avec le dernier paquet
-bash tests/run_stress.sh                      # tests de charge (UBSan)
-python3 tests/manual_shots.py                 # captures du manuel (docs/img)
+./build.sh --release 0.9.13          # -> build/k-wasub-0.9.13.fwsc (KSUB_DEFS=-DKS_B=1 for version B, X.Y.Z-b)
+APP_VER=0.9.13 bash web/make_emulator.sh      # emulator (KS_B=1 for B)
+bash web/make_installer.sh                    # installer.html with the newest package
+bash tests/run_stress.sh                      # load tests (UBSan)
+python3 tests/manual_shots.py                 # the manual's screenshots (docs/img)
 ```
-Toolchain JieLi et SDK AC79 : voir `source/BUILDING.md` et `source/tools/get_toolchain.sh`.
+JieLi toolchain and AC79 SDK: see `source/BUILDING.md` and `source/tools/get_toolchain.sh`.
 
-## Crédits et licence
+## Support
 
-☕ **Soutenir** : [ko-fi.com/omnipotard](https://ko-fi.com/omnipotard)
+☕ [ko-fi.com/omnipotard](https://ko-fi.com/omnipotard)
 
-GPL-3.0. K-WASUB est né de [KAWA](https://github.com/Guizmoh/Kawa-Tracker-Fm1) (Omnipotard / Leo Kuroshita, Hügelton Instruments), dont il reprend la plate-forme du FM-1 (démarrage, USB, audio, écran). Voir [`LICENSING.md`](LICENSING.md). Non affilié à M-VAVE.
+## Credits and license
+
+GPL-3.0. K-WASUB is born from [KAWA](https://github.com/Guizmoh/Kawa-Tracker-Fm1) (Omnipotard / Leo Kuroshita, Hügelton Instruments), whose FM-1 platform it reuses (boot, USB, audio, screen). See [`LICENSING.md`](LICENSING.md). Not affiliated with M-VAVE.

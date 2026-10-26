@@ -1,5 +1,7 @@
 # K-WASUB · Cahier des charges
 
+[English](../SPECIFICATIONS.md) · **Français**
+
 Synthé de basses modernes pour le M-VAVE FM-1 (JieLi AC79, deux cœurs, sans FPU). Dernière mise à jour : **0.9.13**.
 Ce document dit où en est le projet : ce qui est fait, ce qui est à vérifier, ce qui reste, et des idées pour aller plus loin.
 
@@ -44,8 +46,11 @@ Ce document dit où en est le projet : ce qui est fait, ce qui est à vérifier,
 | Navigation | Chaque bouton ouvre la première vue de sa page ; vues et lignes réordonnées par importance (EDIT, FX, SYSTEM, SEL, SHIFT FX) ; aides K1–K4 au bas de chaque écran (forme courte si besoin) ; CLASSIC/SHIFT demandé au premier lancement seulement |
 | Thème | Palette **FLUO** (vert fluo sur noir) |
 
+### Langues (0.9.13 et après)
+Tout est en anglais par défaut ; l'accueil, le manuel, le README, le cahier des charges et les notes existent aussi en français dans `fr/` ; l'émulateur et l'installateur basculent avec `?lang=fr`.
+
 ### Interface
-6 thèmes dont **CLASSIC GLOW** (dégradés, vert fluo, 0.9.12) et **TECH** (image sur presque toute la page, 0.9.13), **BRIGHTNESS** ECO / NORMAL / BRIGHT / MAX (0.9.13), 17 palettes (dont INVERTED gris, RED, ICE, FLUO, PINK, GOLD), 4 polices, LOUPE, **CONTRAST** HIGH / MAX, visuels partout (ondes, enveloppes avec point, wavetable, opérateurs FM, EQ…).
+6 thèmes dont **CLASSIC GLOW** (dégradés, vert fluo, 0.9.12) et **TECH** (image sur presque toute la page, 0.9.13), **BRIGHTNESS** ECO / NORMAL / BRIGHT / MAX (0.9.13), 19 palettes (dont INVERTED gris, RED, ICE, FLUO, PINK, GOLD), 4 polices, LOUPE, **CONTRAST** HIGH / MAX, visuels partout (ondes, enveloppes avec point, wavetable, opérateurs FM, EQ…).
 
 ### Stabilité et outillage
 Gouverneur de charge ; budget audio mesuré pour les effets (le watchdog ne voit plus l'audio bloquer) ; repli sur un cœur ; **LAST STOP** (watchdog, tension basse, plantage + adresse) ; tests de charge automatiques (UBSan, A et B) ; émulateur web A et B ; installateur en une page ; build autonome.
@@ -66,13 +71,10 @@ Rien n'a encore été essayé sur l'appareil depuis 0.9.9-4. À regarder en prem
 | Priorité | Sujet | Notes |
 |---|---|---|
 | Haute | Retours du premier essai sur FM-1 | corriger ce qui sort du test (cœurs, charge, écran) |
-| Haute | **Lien de don** | mettre l'adresse dans `index.html` (`DONATE_URL`) |
 | Haute | **Photo du KAWA de face** pour l'écran de démarrage | aujourd'hui dessiné en code ; une photo coûte ~60 à 115 Ko de flash |
 | Moyenne | Activer GitHub Pages (Settings › Pages › main / root) | pour que l'accueil, l'émulateur et le manuel soient en ligne |
-| Moyenne | Manuel en anglais | même page, textes EN |
-| Moyenne | Tests de non-régression des écrans (captures comparées) | `tests/manual_shots.py` en est la base |
+| Moyenne | Tests de non-régression des écrans (captures comparées) | `source/tests/manual_shots.py` en est la base |
 | Basse | Presets B de démonstration pour les nouvelles fonctions (MORPH, PADS) | |
-| Basse | Nettoyer l'ancien dépôt (renvoi vers celui-ci) | |
 
 ## 5. Propositions pour aller plus loin
 
@@ -128,10 +130,9 @@ Rien n'a encore été essayé sur l'appareil depuis 0.9.9-4. À regarder en prem
 
 ## 7. Décisions à prendre ensemble
 
-1. Quel lien de don (Ko-fi, PayPal.me, GitHub Sponsors) ?
-2. Une photo du KAWA de face (fichier image) pour remplacer le dessin de l'écran de démarrage ?
-3. Les noms : K-WASUB partout (déjà fait dans le firmware, les pages et les paquets) ; le dépôt garde son nom GitHub.
-4. Priorité suivante : **LFO dessiné**, **PADS personnalisables**, **scènes**, **wobble tap**.
+1. Une photo du KAWA de face (fichier image) pour remplacer le dessin de l'écran de démarrage ?
+2. Les noms : K-WASUB partout (déjà fait dans le firmware, les pages et les paquets) ; le dépôt s'appelle **K-WASUB_Firmware_for_FM1**.
+3. Priorité suivante : **LFO dessiné**, **PADS personnalisables**, **scènes**, **wobble tap**.
 
 ## 8. Ce que Pure SUB et Serum ont de plus important, et qui ferait une plus-value ici
 
@@ -176,5 +177,5 @@ Classé par **valeur pour une basse** et **coût sur le FM-1** (CPU, RAM, écran
 4. **Vol de voix intelligent** et **mode économie** : couper d'abord les effets les moins audibles quand la charge monte (aujourd'hui : reverb et chorus, puis les voix).
 5. **Dessin de l'écran par zones modifiées** (déjà par bandes de 40 px) : ajouter un petit cache des éléments fixes (grilles, titres) pour réduire la charge des pages chargées (MORPH X/Y).
 6. **Flash** : regrouper les écritures, limiter les cycles d'effacement (réglages 2 s après le dernier changement, déjà fait), journal de plantage circulaire.
-7. **Tests** : captures comparées (`tests/manual_shots.py`) pour repérer les écrans cassés (comme le titre ARP), test de charge étendu à FX PADS / MORPH / limiteur, burn-in de 30 minutes sur l'appareil.
+7. **Tests** : captures comparées (`source/tests/manual_shots.py`) pour repérer les écrans cassés (comme le titre ARP), test de charge étendu à FX PADS / MORPH / limiteur, burn-in de 30 minutes sur l'appareil.
 8. **Mesure** : afficher dans SYSTEM la charge maximale des 10 dernières secondes (pas seulement l'instant) pour régler sans deviner.

@@ -1,10 +1,10 @@
 #!/bin/sh
-# K-WA SUB: installs the firmware in install/ on the M-VAVE FM-1. On Linux: ./INSTALL-Linux.sh (Debian and Ubuntu
+# K-WASUB: installs the firmware in install/ on the M-VAVE FM-1. On Linux: ./INSTALL-Linux.sh (Debian and Ubuntu
 # also need: sudo apt install python3-venv).
 cd "$(dirname "$0")" || exit 1
 done_() { exit "$1"; }
 echo
-echo " K-WA SUB - bass synthesizer for the M-VAVE FM-1"
+echo " K-WASUB - bass synthesizer for the M-VAVE FM-1"
 echo " 1. Switch the FM-1 on, plug it in with a USB DATA cable, close every other MIDI program."
 echo " 2. Unplug nothing until the installer says it is done."
 echo

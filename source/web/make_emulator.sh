@@ -19,7 +19,7 @@ b64 = base64.b64encode(Path(f"build/web/ksub{os.environ['SFX']}.wasm").read_byte
 body = Path("web/emulator.html").read_text().replace("__KSUB_WASM__", b64).replace("__KSUB_VER__", os.environ["KSUB_VER"])
 Path(f"build/web/ksub-emulator{os.environ['SFX']}.html").write_text(body)          # the page's content alone (to embed or publish)
 head, rest = body.split("</style>", 1)
-page = ('<!doctype html>\n<html lang="fr">\n<head>\n<meta charset="utf-8">\n'
+page = ('<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n'
         '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">\n'
         + head + "</style>\n</head>\n<body>" + rest + "</body>\n</html>\n")
 Path("../emulator/" + ("b.html" if os.environ["SFX"] else "index.html")).write_text(page)

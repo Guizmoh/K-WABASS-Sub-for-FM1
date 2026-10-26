@@ -1,0 +1,228 @@
+<!doctype html>
+<!-- SPDX-License-Identifier: GPL-3.0-only -- K-WASUB : le manuel (une seule page, aucune ressource externe ; les images sont dans docs/img) -->
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>K-WASUB · Manuel</title>
+<meta name="description" content="Le manuel de K-WASUB, synthé de basses modernes pour le M-VAVE FM-1 : pages, thèmes, modes CLASSIC et SHIFT, FX PADS, MORPH, EQ.">
+<style>
+:root{--bg:#0b0f10;--panel:#131a1c;--panel2:#1a2326;--rule:#2a3639;--ink:#f1f6f6;--mut:#9db0b2;--lime:#c8f03c;--cyan:#50d8d0;--vio:#aa8cfa;--or:#f08c3c;--red:#ff5c5c;color-scheme:dark;
+--sans:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;--mono:ui-monospace,Menlo,Consolas,monospace}
+*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:70px}
+body{margin:0;background:var(--bg);color:var(--ink);font:1rem/1.6 var(--sans);background-image:radial-gradient(900px 380px at 50% -100px,#1c2a12,transparent 70%);background-repeat:no-repeat}
+a{color:var(--cyan)}a:hover{color:var(--lime)}
+header.top{position:sticky;top:0;z-index:5;background:#0b0f10ee;backdrop-filter:blur(8px);border-bottom:1px solid var(--rule);display:flex;gap:14px;align-items:center;padding:10px 18px;flex-wrap:wrap}
+.logo{font:800 1.25rem var(--sans);letter-spacing:-.02em;color:var(--lime);text-decoration:none}.logo b{color:var(--ink)}
+header.top nav{display:flex;gap:4px 14px;flex-wrap:wrap;font-size:.86rem}header.top nav a{color:var(--mut);text-decoration:none}header.top nav a:hover{color:var(--lime)}
+main{max-width:1040px;margin:0 auto;padding:30px 18px 80px}
+h1{font-size:clamp(2rem,6vw,3.2rem);line-height:1.05;margin:.3rem 0;letter-spacing:-.03em}h1 em{font-style:normal;color:var(--lime)}
+h2{font-size:1.7rem;margin:3.2rem 0 .4rem;letter-spacing:-.01em}h2:before{content:"";display:inline-block;width:14px;height:14px;background:var(--lime);border-radius:3px;margin-right:12px;vertical-align:-1px}
+h3{font-size:1.1rem;margin:1.6rem 0 .3rem;color:var(--lime)}
+p{margin:.5rem 0}.lead{font-size:1.15rem;color:var(--mut);max-width:46rem}
+code,kbd{font-family:var(--mono);font-size:.88em;background:var(--panel2);border:1px solid var(--rule);border-bottom-width:2px;border-radius:6px;padding:0 .35em;white-space:nowrap}
+kbd{color:var(--lime)}
+.hero img{width:100%;border-radius:16px;border:1px solid var(--rule);box-shadow:0 20px 60px #0008;display:block;margin-top:14px}
+.card{background:var(--panel);border:1px solid var(--rule);border-radius:16px;padding:16px 18px;margin:14px 0}
+.tip{border-left:4px solid var(--lime);background:#16200e}.warn{border-left:4px solid var(--or);background:#241a0e}
+.grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));margin:14px 0}
+figure{margin:0;background:var(--panel);border:1px solid var(--rule);border-radius:14px;padding:8px;text-align:center}
+figure img{width:100%;aspect-ratio:1;display:block;border-radius:8px;image-rendering:auto;background:#000}
+figcaption{font-size:.84rem;color:var(--mut);margin-top:6px;line-height:1.35}figcaption b{color:var(--ink)}
+.row{display:grid;gap:18px;grid-template-columns:260px 1fr;align-items:start;margin:14px 0}
+.row figure{width:260px}@media(max-width:640px){.row{grid-template-columns:1fr}.row figure{width:220px;margin:auto}}
+table{width:100%;border-collapse:collapse;margin:12px 0;font-size:.95rem;background:var(--panel);border-radius:12px;overflow:hidden}
+th,td{padding:8px 12px;border-bottom:1px solid var(--rule);text-align:left;vertical-align:top}th{background:var(--panel2);color:var(--lime);font-size:.82rem;text-transform:uppercase;letter-spacing:.06em}
+tr:last-child td{border-bottom:0}
+.key{display:inline-block;min-width:1.6em;text-align:center;border-radius:5px;padding:0 .4em;font:700 .8rem var(--mono);background:#e9efef;color:#111}.key.k{background:#1b1f20;color:#eee;border:1px solid #556}
+.toc{columns:2 220px;margin:14px 0;padding:0;list-style:none}.toc li{margin:3px 0}.toc a{text-decoration:none}
+.pal{display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
+footer{border-top:1px solid var(--rule);margin-top:50px;padding-top:18px;color:var(--mut);font-size:.9rem}
+</style></head><body>
+<header class="top"><a class="logo" href="index.html">K-WA<b>SUB</b></a>
+<nav><a href="#start">Démarrer</a><a href="#panel">Le panneau</a><a href="#pages">Les pages</a><a href="#hold">Appuis longs</a><a href="#modes">CLASSIC / SHIFT</a><a href="#perform">PERFORM</a><a href="#sel">Fenêtres SEL</a><a href="#pads">FX PADS</a><a href="#themes">Thèmes</a><a href="#sound">Le son</a><a href="#seq">SEQ · ARP · MIDI</a><a href="#help">Dépannage</a><a href="../manual.html" hreflang="en" style="margin-left:auto">EN</a><b style="color:var(--lime);font-size:.86rem">FR</b></nav></header>
+<main>
+<section class="hero"><h1>Le manuel de <em>K-WASUB</em></h1>
+<p class="lead">Un synthé de basses modernes pour le M-VAVE FM-1 : DnB, dub, dubstep, techno. Wobble en direct, deux oscillateurs de deux moteurs différents, un sub, des effets, un EQ, un morph entre quatre sons. Tout se joue avec les 27 touches, les 4 potards K1–K4 et les boutons du FM-1.</p>
+<img src="../docs/img/promo.png" alt="K-WASUB, synthé de basses modernes, cinq écrans"></section>
+
+<ul class="toc"><li><a href="#start">1 · Démarrer en 3 minutes</a></li><li><a href="#panel">2 · Le panneau du FM-1</a></li><li><a href="#pages">3 · Les 8 pages et leurs vues</a></li><li><a href="#hold">4 · Les appuis longs</a></li><li><a href="#modes">5 · CLASSIC et SHIFT</a></li><li><a href="#perform">6 · PERFORM, MORPH, FX LIVE, MACROS (SEL)</a></li><li><a href="#pads">7 · FX PADS</a></li><li><a href="#themes">8 · Thèmes, palettes, contraste</a></li><li><a href="#sound">9 · Le son : moteurs, filtres, effets, master</a></li><li><a href="#seq">10 · SEQ BASS, ARP, MIDI</a></li><li><a href="#help">11 · Stabilité et dépannage</a></li><li><a href="#ab">12 · Versions A et B</a></li></ul>
+
+<h2 id="start">1 · Démarrer en 3 minutes</h2>
+<div class="card"><ol>
+<li><b>Installer</b> : ouvre <a href="../installer.html?lang=fr">installer.html</a> dans Chrome ou Edge, branche le FM-1 avec un câble USB <i>de données</i>, clique « Installer K-WASUB ». Sans navigateur compatible : <code>INSTALL-Linux.sh</code>, <code>INSTALL-Mac.command</code> ou <code>INSTALL-Windows.bat</code> (Python 3). Pour revenir à KAWA ou à l'officiel : voir le README.</li>
+<li><b>Premier lancement</b> : K-WASUB te demande une seule fois comment jouer : <b>CLASSIC</b> (listes) ou <b>SHIFT</b> (3 colonnes). Ensuite l'écran de démarrage montre le FM-1 de face ; appuie sur n'importe quel bouton.</li>
+<li><b>Joue</b> : les 27 touches jouent la basse. <kbd>K1</kbd>–<kbd>K4</kbd> règlent les quatre réglages affichés. Tourne <kbd>PRESETS</kbd> pour changer de son, sur HOME ou sur la page des presets (<kbd>ARP</kbd>) : le changement est immédiat, sans confirmation (<kbd>SAVE</kbd> maintenu = UNDO si tu regrettes).</li>
+<li><b>Essaie</b> : <kbd>LFO</kbd> maintenu + un potard met le wobble sur ce que ce potard règle. Maintiens <kbd>FX</kbd> : les touches deviennent des effets (FX PADS).</li></ol></div>
+<div class="grid">
+<figure><img src="../docs/img/p-home.png" alt=""><figcaption><b>HOME</b> : le son, l'onde, 4 réglages en direct</figcaption></figure>
+<figure><img src="../docs/img/pop-value.png" alt=""><figcaption><b>Tourner un potard</b> : la valeur en grand, avec l'ancienne en violet</figcaption></figure>
+<figure><img src="../docs/img/h-hold.png" alt=""><figcaption><b>Bouton maintenu</b> : une barre se remplit, ce qui va arriver est écrit au-dessus</figcaption></figure>
+<figure><img src="../docs/img/pop-dest.png" alt=""><figcaption><b>Choisir une destination</b> : la liste avant / après, groupée</figcaption></figure></div>
+
+<h2 id="panel">2 · Le panneau du FM-1</h2>
+<table><tr><th>Bouton</th><th>Page</th><th>Contenu</th></tr>
+<tr><td><span class="key k">HOME</span></td><td>PLAY</td><td>Le son en cours (onde, 4 réglages) · LIVE MIX</td></tr>
+<tr><td><span class="key k">EDIT</span></td><td>BASS</td><td>Oscillateurs A, B, sub + bruit, combinaison A + B, OSC C (sample, <b>resample</b>)</td></tr>
+<tr><td><span class="key k">ENV</span></td><td>ENV</td><td>Enveloppes amp, filtre, mod</td></tr>
+<tr><td><span class="key k">SEQ</span></td><td>FILT</td><td>Filtre, modulation du filtre, SEQ BASS</td></tr>
+<tr><td><span class="key k">LFO</span></td><td>LFO</td><td>LFO 1 (wobble), LFO 2, STEP FX, matrice</td></tr>
+<tr><td><span class="key k">FX</span></td><td>FX</td><td>Saturation, <b>multiband (OTT)</b>, compresseur, <b>EQ</b>, delay, reverb, chorus, phaser, crush, master</td></tr>
+<tr><td><span class="key k">ARP</span></td><td>PRE</td><td>Presets A (usine) et B (tes sons), SAVE, arpégiateur</td></tr>
+<tr><td><span class="key k">GLO</span></td><td>SYS</td><td>Réglages (thème, palette, contraste, basses, niveau auto, MIDI…)</td></tr>
+<tr><td><span class="key k">SEL</span></td><td>—</td><td>Fenêtres : <b>PERFORM</b> → MORPH X/Y → FX LIVE → MACROS → MORPH A/B</td></tr>
+<tr><td><span class="key k">SAVE</span> <span class="key k">PLAY</span> <span class="key k">REC</span></td><td>—</td><td>Enregistrer un patch · lancer le SEQ · tempo tap</td></tr>
+<tr><td><span class="key k">OCT−</span> <span class="key k">OCT+</span></td><td>—</td><td>Octave (appui bref) · UNDO / REDO (appui long) · SHIFT (maintenu + potard)</td></tr></table>
+<p>Un bouton de page ouvre toujours <b>la première vue</b> de sa page (la plus importante) ; appuyer encore fait défiler les autres, de la plus utile à la moins utile. En bas de chaque écran : ce que font <kbd>K1</kbd>–<kbd>K4</kbd> sur cette vue. <kbd>SELECT</kbd> choisit une ligne, <kbd>ALGO</kbd> change sa valeur, <kbd>K1</kbd>–<kbd>K4</kbd> règlent les quatre premières lignes (les plus utiles sont toujours en premier).</p>
+
+<h2 id="pages">3 · Les 8 pages et leurs vues</h2>
+<h3>EDIT · les oscillateurs</h3>
+<div class="grid"><figure><img src="../docs/img/v-osca.png" alt=""><figcaption><b>OSC A</b> : moteur, onde, 3 couleurs, niveau, octave, fin</figcaption></figure>
+<figure><img src="../docs/img/v-oscb.png" alt=""><figcaption><b>OSC B</b> : le deuxième moteur, additionné au premier</figcaption></figure>
+<figure><img src="../docs/img/v-sub.png" alt=""><figcaption><b>SUB + NOISE</b> : le sub, <b>SUB LOCK</b> (le sub suit OSC A, en phase), le bruit</figcaption></figure>
+<figure><img src="../docs/img/v-combine.png" alt=""><figcaption><b>A + B</b> : ADD, RING, X-MOD, SYNC · glide · voix</figcaption></figure>
+<figure><img src="../docs/img/v-sample.png" alt=""><figcaption><b>OSC C · SAMPLE</b> : 10 sons, 5 textures et <b>RESAMPLE</b>, boucle ou une fois, vitesse</figcaption></figure>
+<figure><img src="../docs/img/v-resample.png" alt=""><figcaption><b>RESAMPLE</b> : la sortie enregistrée 2 à 4 s, rejouée par OSC C</figcaption></figure></div>
+<div class="card tip"><b>RESAMPLE, la technique DnB.</b> Fais tourner un son (une note tenue avec <kbd>PLAY</kbd> maintenu, ou le SEQ), va sur la vue OSC C, choisis <code>REC LENGTH</code> (2, 3 ou 4 s), puis tourne <code>RESAMPLE</code> vers + : la sortie (effets compris) est enregistrée. À la fin, OSC C joue l'enregistrement (sample 16, <code>RESAMPLE</code>) : boucle ou une fois (<code>PLAY</code>), ralenti (<code>SPEED</code>), transposé par les touches (<code>PITCH › KEYS</code>). Ensuite change le son de base et recommence : couche après couche. L'enregistrement est en mémoire vive (11 kHz) : il est perdu à l'extinction.</div>
+<h3>ENV et FILTRE</h3>
+<div class="grid"><figure><img src="../docs/img/v-env-amp.png" alt=""><figcaption><b>Enveloppe d'amplitude</b>, avec le point qui montre où en est la note</figcaption></figure>
+<figure><img src="../docs/img/v-env-filter.png" alt=""><figcaption><b>Enveloppe du filtre</b></figcaption></figure>
+<figure><img src="../docs/img/v-env-mod.png" alt=""><figcaption><b>Enveloppe de mod</b> : une destination au choix</figcaption></figure>
+<figure><img src="../docs/img/v-filter.png" alt=""><figcaption><b>Filtre</b> : 7 caractères, la courbe en direct</figcaption></figure>
+<figure><img src="../docs/img/v-filtermod.png" alt=""><figcaption><b>Mod du filtre</b> : enveloppe, clavier, vélocité</figcaption></figure></div>
+<h3>LFO · le wobble</h3>
+<div class="grid"><figure><img src="../docs/img/v-lfo1.png" alt=""><figcaption><b>LFO 1 · WOBBLE</b> : calé sur le tempo, la forme et un point qui court</figcaption></figure>
+<figure><img src="../docs/img/v-lfo2.png" alt=""><figcaption><b>LFO 2 · MOTION</b> : le même, pour un second mouvement</figcaption></figure>
+<figure><img src="../docs/img/v-step.png" alt=""><figcaption><b>STEP FX</b> : 16 pas, 16 motifs (offbeat, dub chop, DnB roll…)</figcaption></figure>
+<figure><img src="../docs/img/v-matrix.png" alt=""><figcaption><b>Matrice</b> : 4 liaisons source → destination</figcaption></figure></div>
+<p>Presque tout peut être une destination : filtre, hauteur, formes des oscillateurs, mixes et réglages de chaque effet, <b>MORPH X / Y / A-B</b>. Le réglage <code>SYSTEM › GRID</code> limite les vitesses aux divisions rondes pour jouer en live.</p>
+<h3>FX · les effets</h3>
+<div class="grid"><figure><img src="../docs/img/v-sat.png" alt=""><figcaption><b>Saturation</b> : SOFT, TUBE, HARD, FOLD</figcaption></figure>
+<figure><img src="../docs/img/v-ott.png" alt=""><figcaption><b>MULTIBAND (OTT)</b> : 3 bandes ramenées vers leur niveau, vers le haut et vers le bas</figcaption></figure>
+<figure><img src="../docs/img/v-comp.png" alt=""><figcaption><b>Compresseur + PUMP</b> : le creux du sidechain sur le tempo</figcaption></figure>
+<figure><img src="../docs/img/v-eq.png" alt=""><figcaption><b>EQ</b> : 4 bandes, 7 types</figcaption></figure>
+<figure><img src="../docs/img/v-delay.png" alt=""><figcaption><b>Delay</b> : PING-PONG, TAPE, DIGITAL, DUB</figcaption></figure>
+<figure><img src="../docs/img/v-reverb.png" alt=""><figcaption><b>Reverb</b> : ROOM, HALL, PLATE, SPRING</figcaption></figure>
+<figure><img src="../docs/img/v-chorus.png" alt=""><figcaption><b>Chorus</b></figcaption></figure>
+<figure><img src="../docs/img/v-phaser.png" alt=""><figcaption><b>Phaser</b></figcaption></figure>
+<figure><img src="../docs/img/v-crush.png" alt=""><figcaption><b>Bitcrush</b></figcaption></figure>
+<figure><img src="../docs/img/v-master.png" alt=""><figcaption><b>Master</b> : volume, glue, sub boost, <b>MONO BASS</b></figcaption></figure></div>
+<h3>PRESETS, SYSTEM</h3>
+<div class="grid"><figure><img src="../docs/img/v-presets-a.png" alt=""><figcaption><b>Banque A</b> : les presets d'usine, avec le style (DNB, DUB…) et les moteurs</figcaption></figure>
+<figure><img src="../docs/img/v-presets-tag.png" alt=""><figcaption><b>TAGS</b> : <kbd>K4</kbd> ne garde que SUB, REESE, GROWL, WOBBLE, PLUCK, 808 ou DRONE</figcaption></figure>
+<figure><img src="../docs/img/v-presets-b.png" alt=""><figcaption><b>Banque B</b> : tes 32 sons enregistrés</figcaption></figure>
+<figure><img src="../docs/img/v-arp.png" alt=""><figcaption><b>ARP</b> : UP, DOWN, UP-DOWN, RANDOM, ORDER</figcaption></figure>
+<figure><img src="../docs/img/v-system.png" alt=""><figcaption><b>SYSTEM</b> : thème, palette, contraste, basses, niveau, cœurs, dernier arrêt</figcaption></figure>
+<figure><img src="../docs/img/v-midi.png" alt=""><figcaption><b>MIDI</b> : learn, canal, clock, start/stop, program change</figcaption></figure></div>
+
+<h2 id="hold">4 · Les appuis longs</h2>
+<p>Quand tu maintiens un bouton, une barre se remplit en bas de l'écran, avec ce qui va se passer écrit au-dessus. Tu peux relâcher avant la fin pour annuler.</p>
+<div class="row"><figure><img src="../docs/img/h-undo.png" alt=""><figcaption>SAVE maintenu : UNDO / REDO</figcaption></figure>
+<table><tr><th>Maintenir</th><th>Effet</th></tr>
+<tr><td><span class="key k">OCT−</span> 1 s</td><td><b>UNDO</b> (sans tourner de potard ; avec un potard c'est SHIFT)</td></tr>
+<tr><td><span class="key k">OCT+</span> 1 s</td><td><b>REDO</b></td></tr>
+<tr><td><span class="key k">SAVE</span></td><td>Fenêtre UNDO / REDO (OCT− annule, OCT+ refait, 16 pas) · sur PRESETS : favori</td></tr>
+<tr><td><span class="key k">FX</span></td><td><b>FX PADS</b> : les touches jouent des effets</td></tr>
+<tr><td><span class="key k">HOME</span></td><td><b>PANIC</b> : toutes les notes et les effets live s'arrêtent</td></tr>
+<tr><td><span class="key k">GLO</span></td><td>Bascule <b>CLASSIC ↔ SHIFT</b></td></tr>
+<tr><td><span class="key k">SEL</span></td><td>A/B COMPARE : on entend le son enregistré tant qu'on tient</td></tr>
+<tr><td><span class="key k">PLAY</span></td><td>HOLD : les touches restent allumées</td></tr>
+<tr><td><span class="key k">LFO</span> / <span class="key k">ENV</span> + potard</td><td>Assignation rapide : LFO 1 (ou l'enveloppe de mod) sur ce que règle le potard ; le tour règle la quantité</td></tr>
+<tr><td><span class="key k">EDIT</span> <span class="key k">SEQ</span> <span class="key k">ARP</span> 1,2 s</td><td>Aléatoire contrôlé de la page (environ un quart de la plage ; SAVE maintenu annule)</td></tr></table></div>
+
+<h2 id="modes">5 · CLASSIC et SHIFT</h2>
+<p>Deux façons de jouer (<code>SYSTEM › UI MODE</code>, ou <kbd>GLO</kbd> maintenu). K-WASUB ne le redemande plus au démarrage (<code>SYSTEM › ASK</code> le remet).</p>
+<div class="row"><figure><img src="../docs/img/v-osca.png" alt=""><figcaption>CLASSIC</figcaption></figure><div class="card"><b>CLASSIC</b> : des listes. <kbd>SELECT</kbd> une ligne, <kbd>ALGO</kbd> sa valeur, <kbd>K1</kbd>–<kbd>K4</kbd> les quatre premières lignes. Simple, lisible, on voit toute la liste.</div></div>
+<div class="row"><figure><img src="../docs/img/s-osc.png" alt=""><figcaption>SHIFT : 3 colonnes</figcaption></figure><div class="card"><b>SHIFT</b> : 12 réglages par page en trois colonnes de quatre. <b>Gauche</b> : les potards seuls. <b>Milieu</b> : <kbd>OCT−</kbd> maintenu + potard. <b>Droite</b> : <kbd>OCT+</kbd> maintenu + potard. Le bas de l'écran rappelle quel bouton fait quoi. Appui bref sur OCT−/OCT+ : l'octave. Appui long sans potard : UNDO / REDO. Les deux ensemble : PANIC.</div></div>
+<div class="grid"><figure><img src="../docs/img/s-home.png" alt=""><figcaption><b>HOME</b> en SHIFT</figcaption></figure><figure><img src="../docs/img/s-osc-mid.png" alt=""><figcaption><b>OCT−</b> maintenu : colonne du milieu (OSC A)</figcaption></figure>
+<figure><img src="../docs/img/s-osc-right.png" alt=""><figcaption><b>OCT+</b> maintenu : colonne de droite (OSC B)</figcaption></figure><figure><img src="../docs/img/s-env.png" alt=""><figcaption><b>ENV</b> : 3 enveloppes d'un coup</figcaption></figure>
+<figure><img src="../docs/img/s-filter.png" alt=""><figcaption><b>Filtre</b></figcaption></figure><figure><img src="../docs/img/s-lfo.png" alt=""><figcaption><b>LFO</b> : les deux LFO et le STEP</figcaption></figure>
+<figure><img src="../docs/img/s-fx.png" alt=""><figcaption><b>FX</b> : espace, drive, dynamique</figcaption></figure><figure><img src="../docs/img/s-hold-undo.png" alt=""><figcaption>OCT− tenu seul : UNDO</figcaption></figure></div>
+
+<h2 id="perform">6 · PERFORM : tout le live sur un écran</h2>
+<div class="row"><figure><img src="../docs/img/w-perform.png" alt=""><figcaption><b>PERFORM</b> (SEL une fois)</figcaption></figure>
+<div><p>La première fenêtre de <kbd>SEL</kbd>. Rien à faire défiler : <kbd>K1</kbd>–<kbd>K4</kbd> sont les <b>4 macros</b>, nommées d'après ce qu'elles bougent (réglées dans MACROS) ; <kbd>SELECT</kbd> et <kbd>ALGO</kbd> promènent le point du <b>MORPH X/Y</b> ; la vitesse et la profondeur du wobble sont en haut. Les touches jouent la basse ; <b><kbd>OCT+</kbd> maintenu</b> les transforme en <b>pads</b> (les mêmes que FX PADS) le temps de l'appui.</p></div></div>
+<div class="grid"><figure><img src="../docs/img/w-perform-pads.png" alt=""><figcaption><b>OCT+ maintenu</b> : une blanche change la vitesse du wobble, une noire joue un effet</figcaption></figure></div>
+<h2 id="sel">Les fenêtres SEL</h2>
+<p><kbd>SEL</kbd> les ouvre l'une après l'autre, de la plus jouée à la moins jouée : <b>PERFORM</b> → <b>MORPH X/Y</b> → <b>FX LIVE</b> → <b>MACROS</b> → <b>MORPH A/B</b> → retour. Un bouton de page referme la fenêtre.</p>
+<div class="grid"><figure><img src="../docs/img/w-fxlive.png" alt=""><figcaption><b>FX LIVE</b> : DJ filter, PUMP, STUTTER, TAPE STOP. Pas enregistrés, éteints au démarrage.</figcaption></figure>
+<figure><img src="../docs/img/w-macros.png" alt=""><figcaption><b>MACROS</b> : 4 potards, 4 cibles chacun, pour tous les sons.</figcaption></figure>
+<figure><img src="../docs/img/w-morph-xy.png" alt=""><figcaption><b>MORPH X/Y</b> : au départ, le même son aux 4 coins : A tel quel, B cutoff ¼ et résonance ¾, C wobble à fond en 1/8, D wobble à fond en 1/16. <kbd>K1</kbd> X, <kbd>K2</kbd> Y, <kbd>K3</kbd> coin, <kbd>K4</kbd> son du coin.</figcaption></figure>
+<figure><img src="../docs/img/w-morph-ab.png" alt=""><figcaption><b>MORPH A/B</b> : <kbd>K1</kbd> morph, <kbd>K2</kbd> le son B, <kbd>K3</kbd> les parties, <kbd>K4</kbd> la durée ; <kbd>PLAY</kbd> fait le trajet sur le tempo.</figcaption></figure></div>
+<div class="card tip"><b>MORPH, en pratique.</b> Les réglages continus glissent d'un son à l'autre ; les choix (moteur, type de filtre, destination) basculent sur le son le plus proche. Un réglage identique dans tous les sons n'est pas touché. <b>MORPH X</b>, <b>Y</b> et <b>A/B</b> sont des destinations : mets LFO 1 sur X et LFO 2 sur Y, le son tourne entre les quatre coins en rythme. <kbd>SAVE</kbd> enregistre le résultat.</div>
+
+<h2 id="pads">7 · FX PADS : les touches jouent des effets</h2>
+<div class="row"><figure><img src="../docs/img/w-pads.png" alt=""><figcaption><b>FX PADS</b> (FX maintenu)</figcaption></figure>
+<div><p>Maintiens <kbd>FX</kbd> : les 27 touches ne jouent plus de notes mais des effets. Garde une note avec <kbd>PLAY</kbd> maintenu (HOLD) ou lance le SEQ, puis joue avec les effets. <kbd>FX</kbd> ou un bouton de page ferme la fenêtre.</p>
+<table><tr><th>Touches</th><th>Effet</th></tr>
+<tr><td><b>Blanches 1 à 8</b></td><td>Vitesse du wobble : <code>1 BAR</code> <code>1/2</code> puis <code>4</code> <code>8</code> <code>16</code> <code>24</code> <code>32</code> <code>48</code> par mesure (1/4, 1/8, 1/16, triolet de 1/16, 1/32, triolet de 1/32)</td></tr>
+<tr><td><b>Blanches 9 à 12</b></td><td>Profondeur du wobble : OFF, LOW, MID, FULL</td></tr>
+<tr><td><b>Blanches 13 à 16</b></td><td>Forme du wobble : SINE, TRI, SQR, S&amp;H</td></tr>
+<tr><td><b>Noires 1 à 4</b></td><td>STUTTER 1/4, 1/8, 1/16, 1/32 (tant que la touche est tenue)</td></tr>
+<tr><td><b>Noires 5 à 7</b></td><td>TAPE STOP · DJ FILTER LOW · DJ FILTER HIGH</td></tr>
+<tr><td><b>Noires 8 à 11</b></td><td>PUMP · SATURATE · PHASER · BIT CRUSH (rafales)</td></tr></table></div></div>
+
+<h2 id="themes">8 · Thèmes, palettes, contraste</h2>
+<p><code>SYSTEM › THEME</code> change la mise en page (CLASSIC, STUDIO, PURE, RACK, <b>CLASSIC GLOW</b>, <b>TECH</b>) ; <code>PALETTE</code> les couleurs (2 propres à chaque thème, plus SYNTHWAVE, MINT, BLACK / WHITE, INVERTED, RED, ICE, FLUO, <b>PINK</b>, <b>GOLD</b>, valables pour tous les thèmes). <code>CONTRAST</code> (HIGH par défaut) rend le fond vraiment noir et le texte vraiment blanc ; MAX ajoute une courbe gamma plus sombre de l'écran. <code>FONT</code> : 4 polices ; <code>LOUPE</code> : la plus grande taille qui tient.</p>
+<h3>TECH : l'image sur presque toute la page</h3>
+<p>Le thème <b>TECH</b> change complètement la mise en page : l'<b>oscillateur, l'enveloppe, le filtre, le LFO ou l'effet</b> occupe presque tout l'écran, sous une barre fine ; <b>quatre tuiles</b> en dessous sont K1 à K4 ; une ligne montre la rangée choisie avec SELECT / ALGO. Le fond est en dégradé (du haut vers le bas) et chaque fenêtre a le sien dans un autre sens : l'image de gauche à droite, les tuiles de bas en haut, la ligne de droite à gauche. Palettes propres : <b>VOLT</b> (vert fluo) et <b>CYBER</b> (cyan, magenta).</p>
+<div class="grid"><figure><img src="../docs/img/k-home.png" alt=""><figcaption>TECH · HOME</figcaption></figure><figure><img src="../docs/img/k-osc.png" alt=""><figcaption>TECH · oscillateur</figcaption></figure>
+<figure><img src="../docs/img/k-oscb.png" alt=""><figcaption>TECH · OSC B</figcaption></figure><figure><img src="../docs/img/k-env.png" alt=""><figcaption>TECH · enveloppe</figcaption></figure>
+<figure><img src="../docs/img/k-lfo.png" alt=""><figcaption>TECH · wobble</figcaption></figure><figure><img src="../docs/img/k-fx.png" alt=""><figcaption>TECH · saturation</figcaption></figure>
+<figure><img src="../docs/img/k-filter.png" alt=""><figcaption>TECH · filtre</figcaption></figure><figure><img src="../docs/img/k-presets.png" alt=""><figcaption>TECH · presets</figcaption></figure></div>
+<div class="pal"><figure><img src="../docs/img/t-tech-volt.png" alt=""><figcaption>TECH · VOLT</figcaption></figure><figure><img src="../docs/img/t-tech-cyber.png" alt=""><figcaption>TECH · CYBER</figcaption></figure>
+<figure><img src="../docs/img/t-tech-pink.png" alt=""><figcaption>TECH · PINK</figcaption></figure><figure><img src="../docs/img/t-tech-ice.png" alt=""><figcaption>TECH · ICE</figcaption></figure></div>
+<h3>CLASSIC GLOW : la mise en page simple, en dégradés, vert fluo</h3>
+<p>Le thème <b>CLASSIC GLOW</b> (avant : GLOW) garde la mise en page la plus simple et met la couleur en lumière : l'accent descend du haut de l'écran, la ligne choisie s'allume depuis la gauche, les cases et les visuels sont éclairés par le haut. Ses deux palettes propres sont <b>FLUO GREEN</b> et <b>TOXIC</b> (vert-jaune) ; toutes les autres palettes marchent aussi.</p>
+<div class="grid"><figure><img src="../docs/img/g-home.png" alt=""><figcaption>GLOW · HOME</figcaption></figure><figure><img src="../docs/img/g-osc.png" alt=""><figcaption>GLOW · oscillateur</figcaption></figure>
+<figure><img src="../docs/img/g-env.png" alt=""><figcaption>GLOW · enveloppe</figcaption></figure><figure><img src="../docs/img/g-lfo.png" alt=""><figcaption>GLOW · wobble</figcaption></figure>
+<figure><img src="../docs/img/g-filter.png" alt=""><figcaption>GLOW · filtre</figcaption></figure><figure><img src="../docs/img/g-presets.png" alt=""><figcaption>GLOW · presets</figcaption></figure></div>
+<div class="pal"><figure><img src="../docs/img/t-glow-green.png" alt=""><figcaption>GLOW · FLUO GREEN</figcaption></figure><figure><img src="../docs/img/t-glow-toxic.png" alt=""><figcaption>GLOW · TOXIC</figcaption></figure>
+<figure><img src="../docs/img/t-glow-fluo.png" alt=""><figcaption>GLOW · FLUO</figcaption></figure><figure><img src="../docs/img/t-glow-pink.png" alt=""><figcaption>GLOW · PINK</figcaption></figure>
+<figure><img src="../docs/img/t-glow-gold.png" alt=""><figcaption>GLOW · GOLD</figcaption></figure><figure><img src="../docs/img/t-glow-synthwave.png" alt=""><figcaption>GLOW · SYNTHWAVE</figcaption></figure>
+<figure><img src="../docs/img/t-glow-ice.png" alt=""><figcaption>GLOW · ICE</figcaption></figure></div>
+<h3>Luminosité</h3>
+<p><code>SYSTEM › BRIGHTNESS</code> : <b>ECO</b>, <b>NORMAL</b>, <b>BRIGHT</b> et <b>MAX</b>. Le rétroéclairage du FM-1 est un simple interrupteur (allumé à fond, sans paliers) : les paliers bas assombrissent les couleurs, et l'écran reçoit aussi sa commande de luminosité (WRDISBV). <b>MAX</b> est le plus que le FM-1 puisse donner : rétroéclairage à fond, écran à 255, texte blanc pur, et chaque couleur d'accent poussée jusqu'à sa pleine intensité (même teinte). C'est le réglage par défaut.</p>
+<div class="grid"><figure><img src="../docs/img/b-eco.png" alt=""><figcaption>ECO</figcaption></figure><figure><img src="../docs/img/b-normal.png" alt=""><figcaption>NORMAL</figcaption></figure>
+<figure><img src="../docs/img/b-bright.png" alt=""><figcaption>BRIGHT</figcaption></figure><figure><img src="../docs/img/b-max.png" alt=""><figcaption>MAX</figcaption></figure></div>
+<h3>Toutes les palettes</h3>
+<div class="pal">
+<figure><img src="../docs/img/t-neon.png" alt=""><figcaption>CLASSIC · NEON</figcaption></figure><figure><img src="../docs/img/t-amber.png" alt=""><figcaption>CLASSIC · AMBER</figcaption></figure>
+<figure><img src="../docs/img/t-studio.png" alt=""><figcaption>STUDIO</figcaption></figure><figure><img src="../docs/img/t-ocean.png" alt=""><figcaption>STUDIO · OCEAN</figcaption></figure>
+<figure><img src="../docs/img/t-pure.png" alt=""><figcaption>PURE</figcaption></figure><figure><img src="../docs/img/t-purered.png" alt=""><figcaption>PURE RED</figcaption></figure>
+<figure><img src="../docs/img/t-rack.png" alt=""><figcaption>RACK</figcaption></figure><figure><img src="../docs/img/t-magma.png" alt=""><figcaption>RACK · MAGMA</figcaption></figure>
+<figure><img src="../docs/img/t-synthwave.png" alt=""><figcaption>SYNTHWAVE</figcaption></figure><figure><img src="../docs/img/t-mint.png" alt=""><figcaption>MINT</figcaption></figure>
+<figure><img src="../docs/img/t-blackwhite.png" alt=""><figcaption>BLACK / WHITE</figcaption></figure><figure><img src="../docs/img/t-inverted.png" alt=""><figcaption>INVERTED (gris, clair)</figcaption></figure>
+<figure><img src="../docs/img/t-red.png" alt=""><figcaption>RED</figcaption></figure><figure><img src="../docs/img/t-ice.png" alt=""><figcaption>ICE</figcaption></figure>
+<figure><img src="../docs/img/t-fluo.png" alt=""><figcaption><b>FLUO</b> : un vert fluo sur noir, sobre</figcaption></figure>
+<figure><img src="../docs/img/t-pink.png" alt=""><figcaption>PINK</figcaption></figure><figure><img src="../docs/img/t-gold.png" alt=""><figcaption>GOLD</figcaption></figure></div>
+
+<h2 id="sound">9 · Le son</h2>
+<h3>Moteurs, filtres, modulation</h3>
+<div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(230px,1fr))">
+<div class="card"><b>8 moteurs</b> par oscillateur : ANALOG, SUPER / REESE, WAVETABLE (8 tables × 8 images, on voit la table), FM (positions des opérateurs), PHASE DIST, WAVEFOLDER, HARD SYNC, VOCAL. A et B s'additionnent, se multiplient (RING), se modulent (X-MOD) ou se synchronisent.</div>
+<div class="card"><b>OSC C · SAMPLE</b> : 10 sons très différents (808 BOOM, KICK, OI VOX, REESE LOOP, GROWL LOOP…) et 5 textures (VINYL, RAIN, WIND…), en boucle ou une fois, plus ou moins lent sans changer la hauteur.</div>
+<div class="card"><b>Filtre</b> : LP 24, LP 12, BAND, HIGH, NOTCH, VOWEL, COMB, avec drive. Les lignes de mod en font un instrument : enveloppe, clavier, vélocité.</div>
+<div class="card"><b>Presets</b> : 51 sons d'usine classés par style (DNB, DUB, DUBSTEP, TECHNO, JUNGLE, GARAGE…), 32 emplacements à toi, favoris, UNDO / REDO sur 16 pas.</div></div>
+<h3>Le master : plus de basses, sans surprise de volume</h3>
+<div class="card tip">Ce qui travaille le bas et la sortie :<br>
+<b>MULTIBAND (OTT)</b> (page FX, par son) : trois bandes (sous 120 Hz, 120 Hz–2,5 kHz, au-dessus) ramenées chacune vers son niveau : les parties faibles montent, les fortes descendent. <code>AMOUNT</code> dose l'effet, <code>LOW BAND</code> et <code>HIGH BAND</code> règlent le grave et l'aigu.<br>
+<b>MONO BASS</b> (MASTER, par son, 120 Hz par défaut) : sous la fréquence choisie, gauche et droite reçoivent la même chose : un sub net, même avec chorus, delay ou reverb.<br>
+<b>SUB LOCK</b> (SUB + NOISE, par son, ON par défaut) : le sub est l'oscillateur A une ou deux octaves plus bas, en phase avec lui (sa hauteur, sa dérive, son fine) : pas d'annulation, un bas solide.<br>
+<b>DEEP BASS</b> (OFF / DEEP / MAX) : un shelf qui ajoute environ +4 dB (MAX +7 dB) sous 90 Hz, pour des basses plus présentes et plus profondes.<br>
+<b>Limiteur</b> (toujours actif) : rien ne dépasse le plafond, même avec le volume à fond ; le gain redescend tout de suite et remonte en ~50 ms.<br>
+<b>AUTO LEVEL</b> (ON par défaut) : un normaliseur lent qui rapproche tous les sons du même niveau moyen (monte en quelques secondes, descend en moins d'une seconde, ne bouge pas en silence). Le volume du MASTER reste ton réglage final.</div>
+<h3>Les effets</h3>
+<p>Saturation (4 types), compresseur avec PUMP, bitcrush, chorus, phaser, delay (4 types, calé sur le tempo), reverb (4 types), glue, sub boost, EQ 4 bandes (<code>LSHF</code>, <code>BELL</code>, <code>NOTCH</code>, <code>HSHF</code>, passe-haut / bas : <kbd>K1</kbd>–<kbd>K4</kbd> la fréquence, <kbd>OCT−</kbd> maintenu le gain, <kbd>OCT+</kbd> maintenu le type, <kbd>ALGO</kbd> la largeur).</p>
+
+<h2 id="seq">10 · SEQ BASS, ARP, MIDI</h2>
+<div class="grid"><figure><img src="../docs/img/v-seq.png" alt=""><figcaption><b>SEQ BASS</b> : 16 patterns de 16 pas (note, accent, glide), <kbd>PLAY</kbd> lance, les touches écrivent en REC</figcaption></figure>
+<figure><img src="../docs/img/v-arp.png" alt=""><figcaption><b>ARP</b> : rate, octaves, gate ; <kbd>PLAY</kbd> maintenu = HOLD</figcaption></figure>
+<figure><img src="../docs/img/v-midi.png" alt=""><figcaption><b>MIDI</b> : LEARN (tourne un potard, envoie un CC), canal, clock IN / OUT, start/stop, program change</figcaption></figure></div>
+
+<h2 id="help">11 · Stabilité et dépannage</h2>
+<div class="card warn"><b>Si le FM-1 s'éteint ou redémarre</b> : au prochain démarrage, la cause s'affiche en orange (<code>LAST STOP</code>, aussi dans <code>SYSTEM</code>) : <code>WATCHDOG (TOO BUSY)</code> processeur surchargé · <code>LOW VOLTAGE</code> / <code>1.2V LOW</code> alimentation faible (batterie, câble, port USB) · <code>CRASH</code> + adresse : erreur du programme (note-la et envoie-la).</div>
+<p><b>Deux cœurs</b> : les voix tournent sur le cœur 1 et les effets sur le cœur 0. Si le cœur 1 ne suit pas, tout repasse sur un cœur (<code>AUDIO CORES</code> dans SYSTEM). Un <b>gouverneur</b> allège le son (reverb, voix) plutôt que de craquer, et le temps des effets est mesuré à chaque bloc pour que l'audio ne bloque jamais le reste. <b>Pas de son ?</b> Vérifie <code>AUDIO CORES</code> (essaie SINGLE), le volume du MASTER et la page SYSTEM (<code>CPU LOAD</code>).</p>
+<p><b>Secours USB</b> : maintenir <kbd>OCT−</kbd> à l'allumage ouvre le mode de secours : l'installateur marche toujours.</p>
+
+<h2 id="ab">12 · Versions A et B</h2>
+<p><b>A</b> : les 8 moteurs. <b>B</b> (<code>install/version-b/</code>) : 4 moteurs (ANALOG, REESE, WAVE, FM), pour tester une interface plus simple. Les deux ont les mêmes pages, thèmes et modes.</p>
+<footer>K-WASUB est un logiciel libre (GPL-3.0), né de <a href="https://github.com/Guizmoh/Kawa-Tracker-Fm1">KAWA</a> (Omnipotard / Leo Kuroshita, Hügelton Instruments), dont il reprend la plate-forme du FM-1. Beta : pas encore essayé sur tous les FM-1. <a href="index.html">← Accueil</a> · <a href="CAHIER-DES-CHARGES.md">Cahier des charges</a></footer>
+</main></body></html>

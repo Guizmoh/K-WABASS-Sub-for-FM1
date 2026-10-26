@@ -1,8 +1,8 @@
 <!doctype html>
-<!-- SPDX-License-Identifier: GPL-3.0-only -- K-WASUB : la page d'accueil (émulateur, installateur, manuel, don). Une page, aucune ressource externe. -->
-<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<!-- SPDX-License-Identifier: GPL-3.0-only -- K-WASUB: the home page (emulator, installer, manual, donations). One page, no external resource. -->
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>K-WASUB - FM1 modern Bass firmware</title>
-<meta name="description" content="K-WASUB transforme le M-VAVE FM-1 en synthé de basses : wobble en direct, reese, 808, dub, dubstep, DnB, techno. Gratuit et libre. Essaie-le dans ton navigateur, installe-le par USB.">
+<meta name="description" content="K-WASUB turns the M-VAVE FM-1 into a bass synth: live wobble, reese, 808, dub, dubstep, DnB, techno. Free and open source. Try it in your browser, install it over USB.">
 <meta property="og:image" content="docs/img/promo.png"><meta property="og:title" content="K-WASUB - FM1 modern Bass firmware">
 <meta name="theme-color" content="#0b0f10"><meta name="color-scheme" content="dark">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230b0f10'/%3E%3Cpath d='M5 22c4 0 4-12 8-12s4 12 8 12 4-12 6-12' fill='none' stroke='%23c8f03c' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E">
@@ -14,7 +14,7 @@ body{margin:0;background:var(--bg);color:var(--ink);font:1rem/1.6 var(--sans);ba
 a{color:var(--cyan)}a:hover{color:var(--lime)}
 main{max-width:1000px;margin:0 auto;padding:18px 16px 70px}
 nav.bar{display:flex;gap:6px 18px;flex-wrap:wrap;align-items:center;padding:6px 0 14px}nav.bar a{color:var(--mut);text-decoration:none;font-size:.92rem}nav.bar a:hover{color:var(--lime)}
-.logo{font:800 1.3rem var(--sans);letter-spacing:-.02em;color:var(--lime)!important}.logo b{color:var(--ink)}nav.bar .sp{flex:1}
+.logo{font:800 1.3rem var(--sans);letter-spacing:-.02em;color:var(--lime)!important}.logo b{color:var(--ink)}nav.bar .sp{flex:1}nav.bar .lang{color:var(--mut);font-size:.9rem}nav.bar .lang b{color:var(--lime)}
 .hero img{width:100%;display:block;border-radius:18px;border:1px solid var(--rule);box-shadow:0 22px 60px #000a}
 h1{font-size:clamp(1.6rem,4.6vw,2.4rem);line-height:1.15;margin:1.2rem 0 .4rem;letter-spacing:-.02em}h1 em{font-style:normal;color:var(--lime)}
 h2{font-size:1.5rem;margin:0 0 .5rem;letter-spacing:-.01em}.sec{margin-top:52px}
@@ -44,69 +44,68 @@ code{font-family:var(--mono);font-size:.9em;background:var(--panel2);border:1px 
 details{background:var(--panel);border:1px solid var(--rule);border-radius:12px;padding:10px 16px;margin:8px 0}summary{cursor:pointer;font-weight:700}
 footer{margin-top:50px;border-top:1px solid var(--rule);padding-top:18px;color:var(--mut);font-size:.9rem}
 </style></head><body><main>
-<nav class="bar"><span class="logo">K-WA<b>SUB</b></span><span class="sp"></span><a href="#essayer">Essayer</a><a href="#installer">Installer</a><a href="manual.html">Manuel</a><a href="#nouveautes">Nouveautés</a><a href="#don">Soutenir</a><a href="https://github.com/Guizmoh/K-WASUB_Firmware_for_FM1">GitHub</a></nav>
+<nav class="bar"><span class="logo">K-WA<b>SUB</b></span><span class="sp"></span><a href="#try">Try it</a><a href="#install">Install</a><a href="manual.html">Manual</a><a href="#news">What's new</a><a href="#don">Support</a><a href="https://github.com/Guizmoh/K-WASUB_Firmware_for_FM1">GitHub</a><span class="lang"><b>EN</b> · <a href="fr/index.html" hreflang="fr">FR</a></span></nav>
 
-<section class="hero"><img src="docs/img/promo.png" alt="K-WASUB, synthé de basses modernes pour le FM-1 : wobble, morph X/Y, FX PADS, EQ, mode SHIFT">
-<h1>Fais de ton FM-1 un <em>synthé de basses</em> moderne</h1>
-<p class="lead">K-WASUB est un firmware gratuit pour le M-VAVE FM-1. Il sert à fabriquer et jouer des <b>basses de DnB, dub, dubstep et techno</b> : reese qui grognent, subs profonds, 808, et surtout un <b>wobble que tu modules en direct</b> avec les potards et les touches.</p>
-<div class="cta"><a class="btn p" href="#essayer">▶ Essayer dans le navigateur</a><a class="btn" href="#installer">⬇ Installer sur le FM-1</a><a class="btn" href="manual.html">📖 Lire le manuel</a></div></section>
+<section class="hero"><img src="docs/img/promo.png" alt="K-WASUB, a modern bass synth for the FM-1: wobble, X/Y morph, FX PADS, EQ, SHIFT mode">
+<h1>Turn your FM-1 into a modern <em>bass synth</em></h1>
+<p class="lead">K-WASUB is a free firmware for the M-VAVE FM-1. It is made to build and play <b>DnB, dub, dubstep and techno basses</b>: growling reeses, deep subs, 808s, and above all a <b>wobble you shape live</b> with the knobs and the keys.</p>
+<div class="cta"><a class="btn p" href="#try">▶ Try it in the browser</a><a class="btn" href="#install">⬇ Install on the FM-1</a><a class="btn" href="manual.html">📖 Read the manual</a></div></section>
 
-<section class="sec"><h2>À quoi ça sert ?</h2>
+<section class="sec"><h2>What is it for?</h2>
 <div class="cards">
-<div class="card"><h3>Jouer une basse vivante</h3><p>Les 27 touches jouent la basse, <b>K1–K4</b> règlent les 4 réglages importants de chaque page. Un appui long sur LFO et un potard : le wobble est branché sur ce que tu règles.</p></div>
-<div class="card"><h3>Des effets sur les touches</h3><p><b>FX PADS</b> : touches blanches = vitesse du wobble (4, 8, 16, 24, 32, 48), touches noires = stutters, tape stop, DJ filter, saturation, phaser…</p></div>
-<div class="card"><h3>Un vrai son de basse</h3><p>2 oscillateurs de 8 moteurs (reese, FM, wavetable…), un sub verrouillé sur A, un sample et le <b>resample</b>, 7 filtres, <b>OTT multibande</b>, mono-bass, compresseur avec pump, EQ 4 bandes, limiteur et niveau automatique.</p></div>
-<div class="card"><h3>Morpher entre des sons</h3><p><b>MORPH X/Y</b> : quatre sons aux coins d'un carré, un point qui les mélange (un LFO peut le promener). <b>MORPH A/B</b> : un fondu sur le tempo.</p></div>
-<div class="card"><h3>Simple ou rapide</h3><p>Mode <b>CLASSIC</b> (listes) ou <b>SHIFT</b> (3 colonnes, OCT− et OCT+ comme touches Shift). 6 thèmes (dont GLOW et TECH, en dégradés), 19 palettes, 4 luminosités, grand contraste.</p></div>
-<div class="card"><h3>Sûr et ouvert</h3><p>Gratuit, libre (GPL-3.0), se réinstalle ou se retire en USB, avec un mode de secours. Si le FM-1 s'arrête, l'écran dit pourquoi.</p></div></div></section>
+<div class="card"><h3>Play a living bass</h3><p>The 27 keys play the bass, <b>K1–K4</b> set the four settings that matter on each page. Hold LFO and turn a knob: the wobble is wired to whatever that knob sets.</p></div>
+<div class="card"><h3>Effects on the keys</h3><p><b>FX PADS</b>: white keys set the wobble speed (4, 8, 16, 24, 32, 48), black keys play stutters, tape stop, DJ filter, saturation, phaser…</p></div>
+<div class="card"><h3>A real bass sound</h3><p>2 oscillators with 8 engines each (reese, FM, wavetable…), a sub locked on A, a sample layer and <b>resample</b>, 7 filters, <b>multiband OTT</b>, mono bass, compressor with pump, 4-band EQ, limiter and automatic level.</p></div>
+<div class="card"><h3>Morph between sounds</h3><p><b>MORPH X/Y</b>: four sounds in the corners of a square, a dot that blends them (an LFO can walk it). <b>MORPH A/B</b>: a fade on the beat.</p></div>
+<div class="card"><h3>Simple or fast</h3><p><b>CLASSIC</b> mode (lists) or <b>SHIFT</b> mode (3 columns, OCT− and OCT+ as Shift keys). 6 themes (GLOW and TECH with gradients), 19 palettes, 4 brightness levels.</p></div>
+<div class="card"><h3>Safe and open</h3><p>Free, open source (GPL-3.0), can be reinstalled or removed over USB, with a rescue mode. If the FM-1 stops, the screen tells you why.</p></div></div></section>
 
-<section class="sec" id="essayer"><h2>Essayer dans le navigateur</h2>
-<p class="lead">Le même firmware, compilé pour ton navigateur : aucun FM-1 nécessaire. Clique sur l'écran puis joue avec le clavier de l'ordinateur (touches <code>A Z E R T…</code>), la souris sur les boutons, la molette sur les potards. Le son démarre au premier appui.</p>
-<div class="emu"><div class="tabs"><button id="ta" aria-pressed="true">Version A · 8 moteurs</button><button id="tb" aria-pressed="false">Version B · 4 moteurs</button><span><a id="open" href="emulator/index.html">ouvrir en plein écran ↗</a></span></div>
-<div class="frame"><iframe id="fr" title="Émulateur K-WASUB" loading="lazy" allow="autoplay"></iframe>
-<div class="go" id="go"><div><p style="font-size:1.1rem;margin:0 0 12px">Lance l'émulateur ici, sans rien installer</p><button class="btn p" id="start">▶ Démarrer l'émulateur</button><p style="color:var(--mut);font-size:.88rem;margin-top:12px">Il pèse moins d'1 Mo et fonctionne même hors ligne (ouvre <code>emulator/index.html</code> depuis ton dossier).</p></div></div></div></div></section>
+<section class="sec" id="try"><h2>Try it in the browser</h2>
+<p class="lead">The same firmware, compiled for your browser: no FM-1 needed. Click the screen, then play with the computer keyboard, the mouse on the buttons, the wheel on the knobs. Sound starts at the first press.</p>
+<div class="emu"><div class="tabs"><button id="ta" aria-pressed="true">Version A · 8 engines</button><button id="tb" aria-pressed="false">Version B · 4 engines</button><span><a id="open" href="emulator/index.html">open full screen ↗</a></span></div>
+<div class="frame"><iframe id="fr" title="K-WASUB emulator" loading="lazy" allow="autoplay"></iframe>
+<div class="go" id="go"><div><p style="font-size:1.1rem;margin:0 0 12px">Start the emulator right here, nothing to install</p><button class="btn p" id="start">▶ Start the emulator</button><p style="color:var(--mut);font-size:.88rem;margin-top:12px">It is under 1 MB and works offline too (open <code>emulator/index.html</code> from your folder).</p></div></div></div></div></section>
 
-<section class="sec" id="installer"><h2>Installer sur le FM-1</h2>
+<section class="sec" id="install"><h2>Install on the FM-1</h2>
 <div class="cards">
-<div class="card"><h3><span class="n">1</span>Branche</h3><p>Le FM-1 en USB à l'ordinateur, avec un câble <b>de données</b> (pas un câble de charge). Ferme les autres logiciels MIDI.</p></div>
-<div class="card"><h3><span class="n">2</span>Ouvre l'installateur</h3><p>Dans <b>Chrome</b> ou <b>Edge</b> : <a href="installer.html"><b>installer.html</b></a>. Clique « Installer K-WASUB » et confirme. Rien à débrancher avant la fin.</p></div>
-<div class="card"><h3><span class="n">3</span>Joue</h3><p>Au redémarrage, l'écran de démarrage s'affiche. Appuie sur un bouton. Les manuels expliquent la suite en 3 minutes.</p></div></div>
-<div class="cta"><a class="btn p" href="installer.html">⬇ Ouvrir l'installateur</a><a class="btn" href="install/">Tous les fichiers (.fwsc)</a></div>
-<p style="color:var(--mut);font-size:.92rem">Sans Chrome ni Edge : <code>INSTALL-Windows.bat</code>, <code>INSTALL-Mac.command</code> ou <code>INSTALL-Linux.sh</code> (Python 3). Retour à KAWA ou à l'officiel possible à tout moment ; maintenir <code>OCT−</code> à l'allumage ouvre le mode de secours USB.</p></section>
+<div class="card"><h3><span class="n">1</span>Plug in</h3><p>The FM-1 over USB to the computer, with a <b>data</b> cable (not a charge-only one). Close any other MIDI software.</p></div>
+<div class="card"><h3><span class="n">2</span>Open the installer</h3><p>In <b>Chrome</b> or <b>Edge</b>: <a href="installer.html"><b>installer.html</b></a>. Click “Install K-WASUB” and confirm. Unplug nothing until it is done.</p></div>
+<div class="card"><h3><span class="n">3</span>Play</h3><p>After the restart, the start screen shows. Press any button. The manual covers the first 3 minutes.</p></div></div>
+<div class="cta"><a class="btn p" href="installer.html">⬇ Open the installer</a><a class="btn" href="install/">All files (.fwsc)</a></div>
+<p style="color:var(--mut);font-size:.92rem">Without Chrome or Edge: <code>INSTALL-Windows.bat</code>, <code>INSTALL-Mac.command</code> or <code>INSTALL-Linux.sh</code> (Python 3). You can go back to KAWA or to the stock firmware at any time; holding <code>OCT−</code> at power-on opens the USB rescue mode.</p></section>
 
-<section class="sec"><h2>Un aperçu</h2><div class="shots">
+<section class="sec"><h2>A quick look</h2><div class="shots">
 <figure><img src="docs/img/p-home.png" alt=""><figcaption>HOME</figcaption></figure><figure><img src="docs/img/v-lfo1.png" alt=""><figcaption>Wobble</figcaption></figure>
 <figure><img src="docs/img/w-perform.png" alt=""><figcaption>PERFORM</figcaption></figure><figure><img src="docs/img/w-morph-xy.png" alt=""><figcaption>MORPH X/Y</figcaption></figure>
 <figure><img src="docs/img/v-eq.png" alt=""><figcaption>EQ</figcaption></figure><figure><img src="docs/img/s-osc-mid.png" alt=""><figcaption>SHIFT</figcaption></figure>
-<figure><img src="docs/img/v-osca.png" alt=""><figcaption>Oscillateur</figcaption></figure><figure><img src="docs/img/v-filter.png" alt=""><figcaption>Filtre</figcaption></figure>
-<figure><img src="docs/img/g-home.png" alt=""><figcaption>GLOW</figcaption></figure><figure><img src="docs/img/t-magma.png" alt=""><figcaption>MAGMA</figcaption></figure>
+<figure><img src="docs/img/k-osc.png" alt=""><figcaption>TECH</figcaption></figure><figure><img src="docs/img/v-filter.png" alt=""><figcaption>Filter</figcaption></figure>
+<figure><img src="docs/img/g-home.png" alt=""><figcaption>CLASSIC GLOW</figcaption></figure><figure><img src="docs/img/t-magma.png" alt=""><figcaption>MAGMA</figcaption></figure>
 <figure><img src="docs/img/t-inverted.png" alt=""><figcaption>INVERTED</figcaption></figure><figure><img src="docs/img/t-fluo.png" alt=""><figcaption>FLUO</figcaption></figure></div>
-<p style="margin-top:12px"><a href="manual.html">Voir tous les écrans dans le manuel →</a></p></section>
+<p style="margin-top:12px"><a href="manual.html">See every screen in the manual →</a></p></section>
 
-<section class="sec" id="nouveautes"><h2>Dernières mises à jour</h2>
-<table><tr><th>Version</th><th>Quoi de neuf</th></tr>
-<tr><td><b>0.9.13</b></td><td>Nouveau thème <b>TECH</b> : l'image (oscillateur, enveloppe, filtre…) sur presque toute la page, quatre tuiles, dégradés dans des sens différents (palettes VOLT et CYBER) · GLOW devient <b>CLASSIC GLOW</b> · <b>BRIGHTNESS</b> ECO / NORMAL / BRIGHT / <b>MAX</b></td></tr>
-<tr><td>0.9.12</td><td>Nouveau thème <b>GLOW</b> : simple, en dégradés, vert fluo (palettes FLUO GREEN et TOXIC) · nouvelles palettes <b>PINK</b> et <b>GOLD</b> pour tous les thèmes</td></tr>
-<tr><td>0.9.11</td><td><b>PERFORM</b> (4 macros nommées, morph, pads sur un écran) · <b>MULTIBAND / OTT</b> · <b>MONO BASS</b> et <b>SUB LOCK</b> · <b>RESAMPLE</b> dans OSC C · <b>tags</b> de presets (sub, reese, growl…) · MORPH X/Y : le même son aux 4 coins (tel quel, cutoff ¼ res ¾, wobble 1/8, wobble 1/16) · presets sans confirmation · chaque page s'ouvre sur sa première vue · pages réordonnées par importance · aides K1–K4 partout · question CLASSIC/SHIFT au premier lancement seulement · palette <b>FLUO</b></td></tr>
-<tr><td>0.9.10</td><td><b>FX PADS</b> · appuis longs partout (OCT− UNDO, OCT+ REDO, HOME PANIC, GLO CLASSIC/SHIFT) · EQ dans la page FX · basses plus profondes, limiteur, niveau auto · écran de démarrage avec le FM-1 de face · plus de question CLASSIC/SHIFT au démarrage · le logiciel s'appelle K-WASUB</td></tr>
-<tr><td>0.9.9-9 → -7</td><td>MORPH X/Y (avec dégradé) et A/B · contraste HIGH/MAX · LAST STOP (cause du dernier arrêt) · budget audio des effets (stabilité)</td></tr>
-<tr><td>0.9.9-4 → -2</td><td>Sample en boucle / une fois, ralenti · EQ visuel 4 bandes · ENGINE en haut des colonnes SHIFT</td></tr></table>
-<p><a href="CAHIER-DES-CHARGES.md">Cahier des charges : ce qui est fait, ce qui reste, les idées →</a> · <a href="https://github.com/Guizmoh/K-WASUB_Firmware_for_FM1/commits/main">Historique complet</a></p></section>
+<section class="sec" id="news"><h2>Latest updates</h2>
+<table><tr><th>Version</th><th>What's new</th></tr>
+<tr><td><b>0.9.13</b></td><td>New <b>TECH</b> theme: the picture (oscillator, envelope, filter…) fills almost the whole page, four tiles, gradients running in different directions (VOLT and CYBER palettes) · GLOW becomes <b>CLASSIC GLOW</b> · <b>BRIGHTNESS</b> ECO / NORMAL / BRIGHT / <b>MAX</b></td></tr>
+<tr><td>0.9.12</td><td><b>GLOW</b> theme: simple, gradients, fluo green (FLUO GREEN and TOXIC palettes) · new <b>PINK</b> and <b>GOLD</b> palettes for every theme</td></tr>
+<tr><td>0.9.11</td><td><b>PERFORM</b> (4 named macros, morph, pads on one screen) · <b>MULTIBAND / OTT</b> · <b>MONO BASS</b> and <b>SUB LOCK</b> · <b>RESAMPLE</b> into OSC C · preset <b>tags</b> (sub, reese, growl…) · MORPH X/Y: the same sound in the 4 corners (as is, cutoff ¼ res ¾, wobble 1/8, wobble 1/16) · presets load without a question · each page opens on its first view · pages ordered by importance · K1–K4 hints everywhere · CLASSIC/SHIFT asked on the first start only · <b>FLUO</b> palette</td></tr>
+<tr><td>0.9.10</td><td><b>FX PADS</b> · long presses everywhere (OCT− UNDO, OCT+ REDO, HOME PANIC, GLO CLASSIC/SHIFT) · EQ in the FX page · deeper bass, limiter, auto level · start screen with the FM-1 seen from the front · the software is called K-WASUB</td></tr>
+<tr><td>0.9.9-9 → -7</td><td>MORPH X/Y (with gradient) and A/B · CONTRAST HIGH/MAX · LAST STOP (why it stopped) · audio budget for the effects (stability)</td></tr></table>
+<p><a href="SPECIFICATIONS.md">Specifications: what is done, what is left, ideas →</a> · <a href="https://github.com/Guizmoh/K-WASUB_Firmware_for_FM1/commits/main">Full history</a></p></section>
 
-<section class="sec" id="don"><div class="card donate"><h2>Soutenir K-WASUB</h2>
-<p>K-WASUB est gratuit et le restera. S'il te sert pour tes sons, tu peux aider à payer le temps et le matériel de test (FM-1, câbles…). Merci !</p>
-<p><a id="donate" class="btn d p" href="#don" aria-disabled="true">☕ Faire un don</a></p><p id="dnote" style="color:var(--mut);font-size:.88rem">Le lien de don arrive bientôt.</p></div></section>
+<section class="sec" id="don"><div class="card donate"><h2>Support K-WASUB</h2>
+<p>K-WASUB is free and will stay free. If it helps your sounds, you can chip in for the time and the test hardware (FM-1, cables…). Thank you!</p>
+<p><a id="donate" class="btn d p" href="#don" aria-disabled="true">☕ Make a donation</a></p><p id="dnote" style="color:var(--mut);font-size:.88rem">The donation link is coming soon.</p></div></section>
 
-<section class="sec"><h2>Questions fréquentes</h2>
-<details><summary>Je perds KAWA ou le firmware d'origine ?</summary><p>Non. L'installation se fait comme celle de KAWA, avec le même chargeur : tu peux réinstaller KAWA (<code>kawa-0.5.fwsc</code>) ou le firmware officiel (M-UPGRADE) quand tu veux.</p></details>
-<details><summary>Pas de son sur le FM-1 ?</summary><p>Dans SYSTEM, regarde <code>AUDIO CORES</code> (essaie SINGLE) et le volume du MASTER. Si le FM-1 s'est éteint, regarde <code>LAST STOP</code> au démarrage et note ce qui s'affiche.</p></details>
-<details><summary>Version A ou B ?</summary><p>A : 8 moteurs par oscillateur. B : 4 moteurs (ANALOG, REESE, WAVE, FM), pour une interface plus simple. Même reste.</p></details>
-<details><summary>C'est quoi le « beta » ?</summary><p>Le firmware est testé dans l'émulateur et par des tests automatiques, mais pas encore sur tous les FM-1. Dis-moi ce que tu constates (GitHub, onglet Issues).</p></details></section>
+<section class="sec"><h2>FAQ</h2>
+<details><summary>Do I lose KAWA or the stock firmware?</summary><p>No. Installation works like KAWA's, with the same loader: you can reinstall KAWA (<code>kawa-0.5.fwsc</code>) or the stock firmware (M-UPGRADE) whenever you like.</p></details>
+<details><summary>No sound on the FM-1?</summary><p>In SYSTEM, look at <code>AUDIO CORES</code> (try SINGLE) and the MASTER volume. If the FM-1 switched off, read <code>LAST STOP</code> at start-up and note what it says.</p></details>
+<details><summary>Version A or B?</summary><p>A: 8 engines per oscillator. B: 4 engines (ANALOG, REESE, WAVE, FM), for a simpler interface. Everything else is the same.</p></details>
+<details><summary>What does “beta” mean?</summary><p>The firmware is tested in the emulator and by automatic tests, but not yet on every FM-1. Tell me what you see (GitHub, Issues tab).</p></details></section>
 
-<footer>K-WASUB · GPL-3.0 · né de <a href="https://github.com/Guizmoh/Kawa-Tracker-Fm1">KAWA</a> (Omnipotard / Leo Kuroshita, Hügelton Instruments), dont il reprend la plate-forme du FM-1. Pas affilié à M-VAVE. <a href="https://github.com/Guizmoh/K-WASUB_Firmware_for_FM1">Code source</a> · <a href="LICENSE">Licence</a></footer>
+<footer>K-WASUB · GPL-3.0 · born from <a href="https://github.com/Guizmoh/Kawa-Tracker-Fm1">KAWA</a> (Omnipotard / Leo Kuroshita, Hügelton Instruments), whose FM-1 platform it reuses. Not affiliated with M-VAVE. <a href="https://github.com/Guizmoh/K-WASUB_Firmware_for_FM1">Source code</a> · <a href="LICENSE">License</a></footer>
 </main>
 <script>
-/* le lien de don : mets ton adresse ici (Ko-fi, PayPal.me, GitHub Sponsors…), le bouton s'active tout seul */
+/* the donation link: put your address here (Ko-fi, PayPal.me, GitHub Sponsors…), the button switches on by itself */
 var DONATE_URL = "https://ko-fi.com/omnipotard";
 (function(){
   var d=document.getElementById("donate");
