@@ -30,7 +30,7 @@ static const uint16_t PALS[21][KC_N] = {
     {C3(8,20,16), C3(14,34,28), C3(34,70,58), C3(120,255,190), C3(20,60,44), C3(255,230,140), C3(230,255,244), C3(120,170,150), C3(30,64,52), C3(255,140,90), C3(120,255,190), C3(8,20,16), C3(255,230,140)},
     /* MONO: white on black (classic); INVERT: greys, dark on light, the cards a shade darker (as through a tint) */
     {C3(0,0,0), C3(16,16,16), C3(70,70,70), C3(255,255,255), C3(48,48,48), C3(200,200,200), C3(255,255,255), C3(140,140,140), C3(50,50,50), C3(255,255,255), C3(255,255,255), C3(0,0,0), C3(200,200,200)},
-    {C3(206,209,212), C3(184,188,192), C3(156,160,165), C3(34,38,44), C3(160,164,170), C3(74,80,88), C3(22,24,28), C3(92,98,104), C3(166,170,175), C3(52,56,62), C3(40,44,50), C3(222,224,226), C3(100,104,116)},
+    {C3(206,209,212), C3(184,188,192), C3(156,160,165), C3(0,0,0), C3(160,164,170), C3(0,0,0), C3(0,0,0), C3(70,74,80), C3(166,170,175), C3(0,0,0), C3(0,0,0), C3(222,224,226), C3(70,74,90)},
     /* RED (the STUDIO look in red), ICE */
     {C3(14,8,9), C3(30,14,16), C3(66,30,34), C3(255,64,72), C3(62,14,18), C3(255,150,120), C3(248,236,236), C3(170,130,132), C3(58,26,30), C3(255,190,60), C3(255,64,72), C3(14,8,9), C3(255,140,170)},
     {C3(8,14,22), C3(16,26,40), C3(38,56,80), C3(150,220,255), C3(20,44,66), C3(220,240,255), C3(236,246,255), C3(130,156,180), C3(34,52,74), C3(255,180,90), C3(150,220,255), C3(8,14,22), C3(190,170,255)},
@@ -87,7 +87,9 @@ static void theme_set(uint32_t t, uint32_t pal)
     if (g_con) {                                /* (the cards stay apart from the background) */
         kc[KC_PANEL] = g_mix(kc[KC_PANEL], PALS[k][KC_PANEL], 128u);
     }
-    if (g_bri == 3u) {                          /* MAX: the text white, the accents at their top (the most the panel gives) */
+    if (theme_pal == 5u) {                      /* INVERTED: black text on light grey; MAX would turn that text pale, so it is left alone */
+        if (g_bri < 3u) { static const uint16_t FI[3] = {104, 168, 218}; for (i = 0; i < KC_N; i++) kc[i] = bri_px(kc[i], FI[g_bri]); }
+    } else if (g_bri == 3u) {                   /* MAX: the text white, the accents at their top (the most the panel gives) */
         for (i = 0; i < KC_N; i++) if (i == KC_LIME || i == KC_CYAN || i == KC_ORANGE || i == KC_WAVE || i == KC_MOD || i == KC_WHITE) kc[i] = bri_full(kc[i]);
         kc[KC_WHITE] = 0xFFFFu;
     } else {

@@ -39,8 +39,8 @@ Retour à KAWA (`install/kawa-0.5.fwsc`) ou au firmware officiel (M-UPGRADE) pos
 
 ```sh
 cd source
-./build.sh --release 0.9.17          # -> build/k-wasub-0.9.17.fwsc, version A à 4 moteurs (KSUB_DEFS=-DKS_FOUR=0 et X.Y.Z-b pour la version B, 8 moteurs)
-APP_VER=0.9.17 bash web/make_emulator.sh      # émulateur (KS_FOUR=0 pour B)
+./build.sh --release 0.9.18          # -> build/k-wasub-0.9.18.fwsc, version A à 4 moteurs (KSUB_DEFS=-DKS_FOUR=0 et X.Y.Z-b pour la version B, 8 moteurs)
+APP_VER=0.9.18 bash web/make_emulator.sh      # émulateur (KS_FOUR=0 pour B)
 bash web/make_installer.sh                    # installer.html avec le dernier paquet
 bash tests/run_stress.sh                      # tests de charge (UBSan)
 python3 tests/manual_shots.py                 # captures du manuel (docs/img)
