@@ -64,6 +64,7 @@ static int32_t dest_of(uint32_t id)             /* the destination that moves th
     switch (id) {
     case F_CUT: return D_CUT; case F_RES: return D_RES; case F_DRV: return D_DRV;
     case A_LVL: return D_ALVL; case A_P1: return D_AP1; case A_P2: return D_AP2; case A_P3: return D_AP3;
+    case I_ABMIX: return D_ABMIX;
     case A_OCT: case A_SEMI: case A_FINE: return D_APIT;
     case B_LVL: return D_BLVL; case B_P1: return D_BP1; case B_P2: return D_BP2; case B_P3: return D_BP3;
     case B_OCT: case B_SEMI: case B_FINE: return D_BPIT;

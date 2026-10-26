@@ -41,10 +41,11 @@ enum { D_OFF, D_CUT, D_RES, D_PITCH, D_AP1, D_AP2, D_BP1, D_BP2, D_ALVL, D_BLVL,
        D_DLFB, D_DLTONE, D_DLMIX, D_RVSIZE, D_RVDAMP, D_RVMIX, D_GLUE, D_SUBB, D_VOL,   /* once a block, not a voice */
        D_CPAMT, D_PHRATE, D_PHDEP, D_PHMIX,
        D_MORPHX, D_MORPHY, D_MORPH,               /* MORPH X/Y and A/B (the main loop reads them: ksub_ui.c) */
+       D_ABMIX,                                   /* the A/B MIX of the oscillators (per voice: A one way, B the other) */
        ND };   /* (stored in patches: append only) */
 #define IS_PITCH(d) ((d) == D_PITCH || (d) == D_APIT || (d) == D_BPIT)
 /* the order DEST steps through: the oscillators' EDIT rows together (ksub_ui.c skips an oscillator that is off) */
-static const uint8_t DST_ORDER[ND] = {D_OFF, D_CUT, D_RES, D_MORPHX, D_MORPHY, D_MORPH, D_DRV, D_DRAMT, D_FENV, D_PITCH, D_ALVL, D_AP1, D_AP2, D_AP3, D_APIT, D_BLVL,
+static const uint8_t DST_ORDER[ND] = {D_OFF, D_CUT, D_RES, D_MORPHX, D_MORPHY, D_MORPH, D_DRV, D_DRAMT, D_FENV, D_PITCH, D_ALVL, D_ABMIX, D_AP1, D_AP2, D_AP3, D_APIT, D_BLVL,
                                       D_BP1, D_BP2, D_BP3, D_BPIT, D_XMOD, D_SUB, D_NOISE, D_NCOL, D_AMP, D_WOB, D_L1RATE,
                                       D_L2RATE, D_L2DEP, D_GATE, D_DRMIX, D_CRBITS, D_CRRATE, D_CRMIX, D_CHRATE,
                                       D_CHDEP, D_CHMIX, D_PHRATE, D_PHDEP, D_PHMIX, D_DLFB, D_DLTONE, D_DLMIX, D_RVSIZE, D_RVDAMP,
@@ -79,7 +80,7 @@ static const char *const L_DST[ND] = {"OFF", "CUTOFF", "RESO", "PITCH", "A SHAPE
                                       "CRUSH RATE", "CRUSH MIX", "CHORUS RATE", "CHORUS DEPTH", "CHORUS MIX", "DELAY FDBK",
                                       "DELAY TONE", "DELAY MIX", "VERB SIZE", "VERB DAMP", "VERB MIX", "GLUE", "SUB BOOST",
                                       "VOLUME", "COMP AMOUNT", "PHASER RATE", "PHASER DEPTH", "PHASER MIX",
-                                      "MORPH X", "MORPH Y", "MORPH A/B"};
+                                      "MORPH X", "MORPH Y", "MORPH A/B", "A/B MIX"};
 static const char *const L_SRC[NSRC] = {"OFF", "LFO 1", "LFO 2", "FILT ENV", "MOD ENV", "VELOCITY", "MOD WHEEL",
                                         "PRESSURE", "NOTE", "RANDOM", "STEP"};
 /* the STEP patterns: 16 steps, a level 0..F each ("RANDOM": a new one every bar) */

@@ -38,7 +38,7 @@ static const view_t VIEWS[] = {
     {LY_PLAY, "LIVE MIX", 4, {S_LVL, DR_AMT, DL_MIX, MS_VOL}, "HOME"},
     OSCV("A", A), OSCV("B", B),
     {LY_LIST, "SUB + NOISE", 7, {S_LVL, S_OCT, S_WAVE, N_LVL, S_LOCK, N_COL, S_ROUTE}, "EDIT"},
-    {LY_LIST, "COMBINE A + B", 9, {X_MODE, A_LVL, B_LVL, I_ABMIX, X_AMT, V_GLIDE, V_MODE, X_DRIFT, X_RESET}, "EDIT"},
+    {LY_LIST, "COMBINE A + B", 13, {I_ABMIX, X_MODE, X_AMT, B_ENG, A_ENG, A_LVL, B_LVL, A_OCT, B_OCT, B_SEMI, B_FINE, X_DRIFT, X_RESET}, "EDIT"},   /* (HOME held opens it: the two oscillators together) */
     {LY_LIST, "OSCILLATOR C \xB7 SAMPLE", 8, {SM_SEL, SM_LVL, SM_MODE, SM_SPEED, G_RS_GO, G_RS_LEN, SM_TUNE, SM_KEY}, "EDIT"},
     {LY_BOX, "AMP ENVELOPE", 4, {AE_A, AE_D, AE_S, AE_R}, "ENV"},
     {LY_BOX, "FILTER ENVELOPE", 4, {FE_A, FE_D, FE_S, FE_R}, "ENV"},
@@ -1797,7 +1797,7 @@ static void on_enc(uint32_t e, int32_t d)
 }
 
 static int page_of_btn(uint32_t b) { uint32_t i; for (i = 0; i < NPAGE; i++) if (PAGE_BTN[i] == b) return (int)i; return -1; }
-static int holdable(uint32_t b) { return page_of_btn(b) >= 0 || b == BTN_SAVE || b == BTN_SEL || b == BTN_PLAY || b <= BTN_OCT_UP; }
+static int holdable(uint32_t b) { return page_of_btn(b) >= 0 || b == BTN_SAVE || b == BTN_SEL || b == BTN_PLAY || b == BTN_REC || b <= BTN_OCT_UP; }
 static void hold_toggle(void)
 {
     uint32_t i;
@@ -1810,7 +1810,7 @@ static uint32_t hold_time(uint32_t b)           /* how long until the held actio
     if (b == BTN_SAVE) return PRE_BROWSING ? 700u : 600u;
     if (b == BTN_SEL) return 400u;
     if (b == BTN_FX) return 600u;
-    if (b == BTN_HOME) return 800u;
+    if (b == BTN_HOME || b == BTN_REC) return 800u;
     if (b == BTN_GLO) return 900u;
     if (b == BTN_OCT_UP && win == 7u) return 0u;   /* (PERFORM: OCT+ held is the pads) */
     if (b <= BTN_OCT_UP) return 1000u;      /* (no knob turned: UNDO / REDO; with one it is SHIFT) */
@@ -1828,7 +1828,8 @@ static const char *hold_label(uint32_t b)
     if (b == BTN_SAVE) return "UNDO / REDO";
     if (b == BTN_SEL) return "COMPARE: THE SAVED SOUND";
     if (b == BTN_FX) return win == 6u ? "BACK" : "FX PADS: THE KEYS PLAY EFFECTS";
-    if (b == BTN_HOME) return "PANIC: ALL NOTES OFF";
+    if (b == BTN_HOME) return "A + B: THE TWO OSCILLATORS";
+    if (b == BTN_REC) return "PANIC: ALL NOTES OFF";
     if (b == BTN_GLO) return set.ui ? "BACK TO CLASSIC MODE" : "SWITCH TO SHIFT MODE";
     if (b == BTN_OCT_DOWN) return "UNDO  (OR TURN A KNOB: SHIFT)";
     if (b == BTN_OCT_UP) return "REDO  (OR TURN A KNOB: SHIFT)";
@@ -1915,7 +1916,7 @@ static void ask_done(uint32_t sel)
 {
     ask_on = 0;
     splash_until = 0;
-    if (set.ui != sel || first_run || set.askv < 2u) { set.ui = (uint8_t)sel; set.askv = 3; set_dirty = 1; set_ms = fm1_ms; first_run = 0; }
+    if (set.ui != sel || first_run || set.askv < 2u) { set.ui = (uint8_t)sel; set.askv = 4; set_dirty = 1; set_ms = fm1_ms; first_run = 0; }
     toast(sel ? "SHIFT MODE" : "CLASSIC MODE");
     g_force = 1;
 }
@@ -1979,7 +1980,13 @@ static void ui_input(void)
             else if (hb.b == BTN_SEL) { compare(1); hb.next = 0; }
             else if (hb.b == BTN_PLAY) { hold_toggle(); hb.next = 0; }
             else if (hb.b == BTN_FX) { win = win == 6u ? 0u : 6u; vpop_ms = 0; g_force = 1; hb.next = 0; }
-            else if (hb.b == BTN_HOME) { notes_all_off(); ev_push(EV_PANIC, 0, 0); pad_release_all(); lfx_flt = 0; lfx_pump = 0; lfx_stut = 0; lfx_tape = 0; toast("ALL NOTES OFF"); hb.next = 0; }
+            else if (hb.b == BTN_HOME) {        /* HOME held: COMBINE A + B, the two oscillators' main settings */
+                uint32_t j;
+                for (j = 0; j < sizeof VIEWS / sizeof VIEWS[0]; j++) if (str_eq(VIEWS[j].cat, "COMBINE A + B")) break;
+                for (page = 0; page + 1u < NPAGE && PAGE_V0[page + 1u] <= j; page++) {}
+                vcur[page] = (uint8_t)(j - PAGE_V0[page]); win = 0; vpop_ms = 0; g_force = 1; hb.next = 0;
+            }
+            else if (hb.b == BTN_REC) { notes_all_off(); ev_push(EV_PANIC, 0, 0); pad_release_all(); lfx_flt = 0; lfx_pump = 0; lfx_stut = 0; lfx_tape = 0; toast("ALL NOTES OFF"); hb.next = 0; }
             else if (hb.b == BTN_GLO) { item_set(G_UI, set.ui ? 0 : 1); set_dirty = 1; set_ms = fm1_ms; toast(set.ui ? "SHIFT MODE" : "CLASSIC MODE"); hb.next = 0; }
             else if (hb.b <= BTN_OCT_UP) { if (hb.b == BTN_OCT_DOWN) undo(); else redo(); hb.next = 0; }
             else { randomize((uint32_t)page_of_btn(hb.b)); hb.next = 0; }
@@ -1998,13 +2005,13 @@ static void ui_input(void)
         if (dimmed) { dim_set(0); continue; }
         if (cmp_on) continue;                   /* (comparing: nothing changes) */
         if (hb.b <= BTN_OCT_UP && b >= ENC_KNOB1 && b <= ENC_KNOB4) hb.used = 1;   /* (SHIFT: no octave on release) */
-        if (hb.b != 0xFF && (hb.b == BTN_LFO || hb.b == BTN_ENV) && ((b >= ENC_KNOB1 && b <= ENC_KNOB4) || b == ENC_ALGORITHM)) {
+        if (hb.b != 0xFF && (hb.b == BTN_LFO || hb.b == BTN_ENV || (hb.b == BTN_OCT_DOWN && (fm1_in.buttons >> BTN_LFO & 1u))) && ((b >= ENC_KNOB1 && b <= ENC_KNOB4) || b == ENC_ALGORITHM)) {   /* (OCT- then LFO held: LFO 1 too) */
             const view_t *v = view();
             uint32_t id = b == ENC_ALGORITHM ? (v->n ? v->it[cursor[vidx()]] : I_NONE) : vknob(v, b - ENC_KNOB1);
             if (win) id = I_NONE;
             else if (C3_ON) id = b == ENC_ALGORITHM ? COL3[page].id[c3_cur >> 2][c3_cur & 3u] : COL3[page].id[0][b - ENC_KNOB1];
             hb.used = 1;
-            if (id != I_NONE) quick_assign(hb.b, rate_like(id), d);
+            if (id != I_NONE) quick_assign(hb.b == BTN_ENV ? BTN_ENV : BTN_LFO, rate_like(id), d);
             continue;
         }
         if (hb.b != 0xFF && page_of_btn(hb.b) >= 0 && b >= ENC_KNOB1 && b <= ENC_KNOB4) {   /* SHIFT: that page's knobs */
@@ -2175,8 +2182,9 @@ static void app_init(void)
     set.bri = set.bri < 4u ? set.bri : 3u;
     g_bri = set.bri;
     if (!set.askv) { set.ask = 0; set.askv = 1; set_dirty = 1; set_ms = fm1_ms; }
+    if (set.askv == 3u) { set.qlfo = 1; set.askv = 4; set_dirty = 1; set_ms = fm1_ms; }   /* (0.9.44: LFO held puts LFO 2 on, once again) */
     if (set.askv == 2u) {                       /* (a save from before 0.9.31: LOUPE on, once; the RAD palettes two further, after SKY and BLAZE) */
-        set.zoom = 1; set.askv = 3; set_dirty = 1; set_ms = fm1_ms;
+        set.zoom = 1; set.askv = 4; set.qlfo = 1; set_dirty = 1; set_ms = fm1_ms;
         if (set.pal >= 11u && set.pal < 22u) set.pal = (uint8_t)(set.pal + 2u);
     }   /* (0.10: no more question at each start; SYSTEM > ASK brings it back) */
     set.norm = set.norm ? 1u : 0u; set.deep = set.deep < 3u ? set.deep : 1u;

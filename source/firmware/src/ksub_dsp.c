@@ -691,6 +691,10 @@ static void voice_block(voice_t *v, int32_t *acc)
     }
     la = lvl15(pv(P[A_LVL], m[D_ALVL]) >> 8);
     lb = lvl15(pv(P[B_LVL], m[D_BLVL]) >> 8);
+    if (m[D_ABMIX]) {                           /* A/B MIX moved: up, toward B (A down); down, toward A (B down) */
+        int32_t bal = clampi(m[D_ABMIX] >> 8, -127, 127);
+        if (bal > 0) la = la * (127 - bal) / 127; else lb = lb * (127 + bal) / 127;
+    }
     lsub = lvl15(pv(P[S_LVL], m[D_SUB]) >> 8);
     ln = lvl15(pv(P[N_LVL], m[D_NOISE]) >> 8);
 
