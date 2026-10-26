@@ -358,7 +358,11 @@ static const struct { const char *name, *t; } DKP[] = {
     {"HALFTIME", "X.......x.x.....|........X.......||x.x.x.x.x.x.x.x.||..............x.||"},
     {"TRAP", "X......x..x.....|........X.......||xxxxxxxxx?x?xxxx||||"},
     {"ROLLING HATS", "X...X...X...X...||....x.......x...|xXxxxXxxxXxxxXxx||||"},
-    {"FOUR FLOOR", "X...X...X...X...|||||||"}};
+    {"FOUR FLOOR", "X...X...X...X...|||||||"},
+    {"DUB TECHNO", "X...X...X...X...|||x.?.x.?.x.?.x.?.|..x...x...x...x.||...X......x...x.|"},   /* (made for the DUB TECHNO kit: PERC its chord) */
+    {"ROCK", "X.......X.X.....|....X.......X...||x.x.x.x.x.x.x.x.||||"},                    /* (and these for ACOUSTIC) */
+    {"FUNK", "X..x..x...X..x..|....X..?.?..X..?||xxxxxxxxxxxxxx.x|..............x.|||"},
+    {"JAZZ RIDE", "x...x...x...x...|......?.......?.||....x.......x...||||x...x..xx...x..x"}};
 #define NDKP (sizeof DKP / sizeof DKP[0])
 static uint8_t perf_sum(void)                   /* (up to the macros: they check themselves, mc_magic) */
 {
@@ -529,7 +533,13 @@ static uint32_t sq_len(void) { uint32_t l = sq_pat()->len; return l >= 1u && l <
 static const char *dk_tname(uint32_t t)
 {
     static const char *const N[NDK] = {"KICK", "SNARE", "CLAP", "CLOSED HAT", "OPEN HAT", "TOM", "PERC", "CYMBAL"};
-    return t % NDK == DK_PERC ? (dk.kit ? "RIMSHOT" : "COWBELL") : N[t % NDK];
+    static const char *const PERC[DK_NKIT] = {"COWBELL", "RIMSHOT", "CHORD", "CONGA"};
+    return t % NDK == DK_PERC ? PERC[dk.kit % DK_NKIT] : N[t % NDK];
+}
+static const char *dk_kname(uint32_t k)
+{
+    static const char *const K[DK_NKIT] = {"808", "909", "DUB TECHNO", "ACOUSTIC"};
+    return K[k % DK_NKIT];
 }
 static const char *const SC_NAME[NSC] = {"ALWAYS", "1/2", "2/2", "1/4", "2/4", "3/4", "4/4", "START", "NOT START", "IF BEFORE", "IF AFTER"};
 /* the libraries: PRESET 0 is the pattern as it was before turning (MY PATTERN), kept until something is changed by hand */
@@ -604,8 +614,11 @@ static void dk_load_preset(uint32_t sel)        /* 1.. : DKP[(sel - 1) / 3] in 1
         while (*c && *c != '|') c++;
         if (*c == '|') c++;
     }
-    if (m > 1u) {                               /* the fill: four snares, the last one accented; 64: a cymbal to start */
-        for (i = size - 4u; i < size; i++) { q->on[i] |= 1u << DK_SNARE; q->pc[DK_SNARE][i] = 0; }
+    if (m > 1u) {                               /* the fill: four snares (ACOUSTIC: three toms), the last one accented; 64: a cymbal to start */
+        for (i = size - 4u; i < size; i++) {
+            t = dk.kit % DK_NKIT == DK_ACOU && i < size - 1u ? DK_TOM : DK_SNARE;
+            q->on[i] |= (uint8_t)(1u << t); q->pc[t][i] = 0;
+        }
         q->acc[size - 1u] |= 1u << DK_SNARE;
         if (m == 4u) { q->on[0] |= 1u << DK_CYM; q->acc[0] |= 1u << DK_CYM; }
     }
@@ -1243,7 +1256,7 @@ static void item_range(uint32_t id, int32_t *lo, int32_t *hi)
     if (id == G_SQ_PRESET) *hi = (int32_t)(NSQP * 3u);
     if (id >= G_DK_LVL && id <= G_DK_SWING) {
         static const int16_t LO[16] = {0, -64, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0};
-        static const int16_t HI[16] = {127, 63, 127, 127, NDK - 1, DK_MAX - 1, 2, 15, NSC - 1, DK_NPAT - 1, NDKP * 3, DK_MAX, 1, 127, 2, 50};
+        static const int16_t HI[16] = {127, 63, 127, 127, NDK - 1, DK_MAX - 1, 2, 15, NSC - 1, DK_NPAT - 1, NDKP * 3, DK_MAX, DK_NKIT - 1, 127, 2, 50};
         *lo = LO[id - G_DK_LVL]; *hi = HI[id - G_DK_LVL];
         if (id == G_DK_STEP) *hi = (int32_t)dk_len() - 1;
     }
@@ -1741,7 +1754,7 @@ static void item_text(uint32_t id, char *b)
         case G_DK_PROB: b = fmt_u(b, DK_PROB[15 - (v & 15)], 0); str_cat(b, "%"); break;
         case G_DK_PAT: b = str_cat(b, "P"); fmt_u(b, (uint32_t)v + 1u, 0); break;
         case G_DK_LEN: b = fmt_u(b, (uint32_t)v, 0); str_cat(b, " STEPS"); break;
-        case G_DK_KIT: str_cat(b, v ? "909" : "808"); break;
+        case G_DK_KIT: str_cat(b, dk_kname((uint32_t)v)); break;
         case G_DK_MODE: str_cat(b, v == 2 ? "BASS ONLY" : v ? "DRUMS ONLY" : "BASS + DRUMS"); break;
         case G_DK_SWING: if (v) { b = fmt_u(b, 50u + (uint32_t)v / 2u, 0); str_cat(b, "%"); } else str_cat(b, "OFF"); break;
         case G_SQ_PAT: b = str_cat(b, "P"); b = fmt_u(b, (uint32_t)v + 1u, 2); if (v < 8) { b = str_cat(b, " "); str_cat(b, SQ_DEF[v][0]); } break;

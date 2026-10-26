@@ -1068,68 +1068,97 @@ static dkv_t dkv[NDK];
 static int32_t dkb[HALF_FRAMES];
 static const uint16_t DK_TR[32] = {256, 280, 306, 335, 366, 400, 438, 479, 524, 573, 626, 685, 749, 819, 895, 979, 1071, 1171, 1281, 1400,
                                    1531, 1675, 1831, 2003, 2190, 2395, 2619, 2864, 3132, 3425, 3746, 4096};   /* x1 .. x16, Q8 */
-static const uint16_t DK_TMIN[2][NDK] = {{80, 30, 25, 4, 60, 50, 25, 150}, {50, 25, 22, 4, 50, 40, 6, 120}};   /* the shortest decay (ms) */
-static const uint16_t DK_TRIM[NDK] = {300, 330, 900, 230, 230, 300, 300, 200};   /* (levels evened out, Q8) */
+/* the kits: 808, 909, DUB TECHNO (a deep soft kick, noisy hats, a minor chord stab on PERC, a dark dub echo on the
+ * snare, clap, toms, chord and open hats), ACOUSTIC (a beater kick, snare wires, toms with an overtone, a conga, brighter
+ * hats and a ride) */
+#define DK_NKIT 4u
+enum { DK_808, DK_909, DK_DUB, DK_ACOU };
+static const uint16_t DK_TMIN[DK_NKIT][NDK] = {{80, 30, 25, 4, 60, 50, 25, 150}, {50, 25, 22, 4, 50, 40, 6, 120},
+                                              {150, 22, 40, 5, 80, 70, 60, 200}, {60, 45, 25, 5, 70, 80, 40, 260}};   /* the shortest decay (ms) */
+static const uint16_t DK_TRIM[DK_NKIT][NDK] = {{295, 315, 675, 1855, 1915, 305, 320, 2095}, {300, 335, 990, 2615, 2615, 285, 360, 2590},
+                                              {300, 360, 1030, 1740, 1855, 305, 485, 1835}, {310, 250, 640, 2210, 1795, 300, 340, 1190}};   /* (levels evened out at the default sounds, Q8; the hats were far too quiet before 0.9.54) */
+static const uint16_t DK_SEND[NDK] = {0, 16000, 18000, 3000, 9000, 14000, 22000, 7000};   /* DUB TECHNO: into its echo, Q15 */
 static const uint32_t DK_METAL[6] = {19994485u, 29645987u, 35995916u, 50906562u, 52591436u, 77913239u};   /* 808: 205 304 370 523 540 800 Hz */
 static uint32_t dk_cf(uint32_t ms10) { uint32_t tau = ms10 * 441u / 100u; return 0xFFFFFFFFu / (tau < 20u ? 20u : tau); }   /* (2^32/tau, 32-bit: no 64-bit divide on the chip) */   /* (tenths of ms) */
 static inline int32_t dk_env(int32_t *e, uint32_t cf) { int32_t v = *e; *e = v - (int32_t)(((int64_t)v * cf) >> 32); return v >> 15; }
 static inline int32_t dk_noise(void) { return (int32_t)rnd() >> 17; }
+static inline int32_t dk_saw(uint32_t ph) { return (int32_t)(ph >> 18) - 8192; }   /* (+-8192) */
 static void dk_start(uint32_t t, uint32_t vel)
 {
     dkv_t *v = &dkv[t];
     const int8_t *p = dk.prm[t];
-    uint32_t kit = dk.kit & 1u, ms10 = DK_TMIN[kit][t] * 10u * DK_TR[((uint32_t)p[2] & 127u) >> 2] / 256u, q;
+    uint32_t kit = dk.kit % DK_NKIT, ms10 = DK_TMIN[kit][t] * 10u * DK_TR[((uint32_t)p[2] & 127u) >> 2] / 256u, q;
     int32_t tq8 = p[1] * 48, tone = p[3] & 127, g;
     uint32_t tf = pitch_inc(60 * 256 + tq8) / ((pitch_inc(60 * 256) >> 12) | 1u);   /* TUNE, Q12 (no 64-bit divide on the chip) */
     memset(v, 0, sizeof *v);
     g = mul15(mul15(lvl15(p[0] & 127), vel >= 120u ? 32767 : 23000), lvl15(dk.vol & 127));
-    v->gain = (g * (int32_t)DK_TRIM[t]) >> 8;
+    v->gain = (g * (int32_t)DK_TRIM[kit][t]) >> 8;
     v->tone = tone;
     v->amp = 1 << 30;
     v->acf = dk_cf(ms10);
     v->on = 1;
     switch (t) {
-    case DK_KICK:                               /* a sine falling in pitch, a click (TONE) */
-        v->inc = pitch_inc((kit ? 33 : 31) * 256 + tq8);
-        v->sweep = kit ? v->inc * 3u : v->inc + (v->inc >> 1);
-        v->pe = 1 << 30; v->pcf = dk_cf(kit ? 200u : 120u);
-        v->ne = tone << 22; v->ncf = dk_cf(15u);
+    case DK_KICK: {                             /* a sine falling in pitch, a click (TONE) */
+        static const uint8_t NOTE[DK_NKIT] = {31, 33, 29, 33};
+        v->inc = pitch_inc(NOTE[kit] * 256 + tq8);
+        v->sweep = kit == DK_909 ? v->inc * 3u : kit == DK_DUB ? v->inc : kit == DK_ACOU ? v->inc * 4u : v->inc + (v->inc >> 1);
+        v->pe = 1 << 30; v->pcf = dk_cf(kit == DK_909 ? 200u : kit == DK_DUB ? 90u : kit == DK_ACOU ? 45u : 120u);
+        v->ne = kit == DK_DUB ? tone << 19 : kit == DK_ACOU ? (tone + 48) << 21 : tone << 22;
+        v->ncf = dk_cf(kit == DK_ACOU ? 30u : 15u);
         break;
-    case DK_SNARE:                              /* two sines and a high-passed noise (TONE: the snares) */
-        v->inc = pitch_inc((kit ? 55 : 54) * 256 + tq8);
-        v->inc2 = pitch_inc((kit ? 66 : 64) * 256 + tq8);
-        v->sweep = kit ? v->inc / 3u : 0u;
-        v->pe = 1 << 30; v->pcf = dk_cf(150u);
-        v->ne = 1 << 30; v->ncf = dk_cf(ms10 * (kit ? 15u : 12u) / 10u);
-        v->fa = kit ? 9000 : 6000;
+    }
+    case DK_SNARE: {                            /* two sines and a high-passed noise (TONE: the snares) */
+        static const uint8_t N1[DK_NKIT] = {54, 55, 57, 53}, N2[DK_NKIT] = {64, 66, 69, 60}, NL[DK_NKIT] = {12, 15, 9, 24};
+        v->inc = pitch_inc(N1[kit] * 256 + tq8);
+        v->inc2 = pitch_inc(N2[kit] * 256 + tq8);
+        v->sweep = kit == DK_909 ? v->inc / 3u : kit == DK_ACOU ? v->inc / 2u : 0u;
+        v->pe = 1 << 30; v->pcf = dk_cf(kit == DK_ACOU ? 60u : 150u);
+        v->ne = 1 << 30; v->ncf = dk_cf(ms10 * NL[kit] / 10u);
+        v->fa = kit == DK_909 ? 9000 : kit == DK_DUB ? 4500 : kit == DK_ACOU ? 7000 : 6000;
+        v->fq = kit == DK_ACOU ? 88 : kit == DK_DUB ? 56 : 64;   /* (the noise's share, /32) */
         break;
+    }
     case DK_CLAP:                               /* noise in a band, four quick bursts, then the tail */
-        v->fa = (int32_t)((kit ? 1300 : 1000) + tone * 12) * 4781 / 1024;
-        v->fq = 11000;
+        v->fa = (int32_t)((kit == DK_909 ? 1300 : kit == DK_DUB ? 750 : kit == DK_ACOU ? 1700 : 1000) + tone * 12) * 4781 / 1024;
+        v->fq = kit == DK_DUB ? 8000 : 11000;
         v->ncf = dk_cf(25u);
         break;
     case DK_CH:
     case DK_OH:
-    case DK_CYM:                                /* six squares (909: and noise), high-passed twice (TONE: brighter) */
-        for (q = 0; q < 6u; q++) v->minc[q] = (uint32_t)(((uint64_t)DK_METAL[q] * tf) >> 12) * (t == DK_CYM ? 1u : 2u);
-        v->fa = 13000 + tone * 110;
+    case DK_CYM: {                              /* six squares (909, DUB, ACOUSTIC: and noise), high-passed twice (TONE: brighter) */
+        uint32_t mul = kit == DK_ACOU ? (t == DK_CYM ? 3u : 6u) : t == DK_CYM ? 2u : 4u;   /* (x 1/2) */
+        for (q = 0; q < 6u; q++) v->minc[q] = (uint32_t)(((uint64_t)DK_METAL[q] * tf) >> 12) * mul / 2u;
+        v->fa = (kit == DK_ACOU && t == DK_CYM ? 9000 : kit == DK_DUB ? 15000 : 13000) + tone * 110;
         if (t == DK_CH) dkv[DK_OH].acf = dk_cf(30u);   /* (the closed hat chokes the open one) */
         break;
+    }
     case DK_TOM:                                /* a sine falling in pitch (TONE: how far) */
-        v->inc = pitch_inc((kit ? 47 : 45) * 256 + tq8);
-        v->sweep = (uint32_t)(((uint64_t)v->inc * (uint32_t)(tone + 16)) >> 7);
-        v->pe = 1 << 30; v->pcf = dk_cf(300u);
-        if (kit) { v->ne = 1 << 29; v->ncf = dk_cf(40u); }
+        v->inc = pitch_inc((kit == DK_909 ? 47 : kit == DK_DUB ? 43 : 45) * 256 + tq8);
+        v->sweep = (uint32_t)(((uint64_t)v->inc * (uint32_t)(kit == DK_ACOU ? (tone >> 1) + 6 : kit == DK_DUB ? tone + 40 : tone + 16)) >> 7);
+        v->pe = 1 << 30; v->pcf = dk_cf(kit == DK_DUB ? 500u : kit == DK_ACOU ? 150u : 300u);
+        if (kit == DK_909) { v->ne = 1 << 29; v->ncf = dk_cf(40u); }
+        if (kit == DK_ACOU) { v->ne = 1 << 28; v->ncf = dk_cf(25u); v->inc2 = v->inc + (v->inc >> 1) + (v->inc >> 4); }   /* (the skin's overtone) */
         break;
-    default:                                    /* PERC: 808 cowbell (two squares in a band), 909 rim (two sines, a click) */
-        if (!kit) {
+    default:                                    /* PERC: 808 cowbell, 909 rimshot, DUB a minor chord stab, ACOUSTIC a conga */
+        if (kit == DK_808) {                    /* (two squares in a band) */
             v->minc[0] = (uint32_t)(((uint64_t)52591436u * tf) >> 12);
             v->minc[1] = (uint32_t)(((uint64_t)77913239u * tf) >> 12);
             v->fa = (int32_t)(800 + tone * 16) * 4781 / 1024; v->fq = 20000;
-        } else {
+        } else if (kit == DK_909) {             /* (two sines, a click) */
             v->inc = (uint32_t)(((uint64_t)48695774u * tf) >> 12);
             v->inc2 = (uint32_t)(((uint64_t)165565633u * tf) >> 12);
             v->ne = tone << 23; v->ncf = dk_cf(10u);
+        } else if (kit == DK_DUB) {             /* (four saws, root minor seventh, a closing low-pass: TONE how open) */
+            static const uint8_t CH[4] = {0, 3, 7, 10};
+            for (q = 0; q < 4u; q++) { v->minc[q] = pitch_inc((50 + CH[q]) * 256 + tq8 + (int32_t)q * 3); v->m[q] = rnd(); }
+            v->fa = 2500 + tone * 90;
+            v->fq = 21000;
+            v->pe = 1 << 30; v->pcf = dk_cf(ms10 * 6u / 10u + 200u);
+        } else {                                /* (a sine dropping a little, a slap) */
+            v->inc = pitch_inc(62 * 256 + tq8);
+            v->sweep = v->inc >> 2;
+            v->pe = 1 << 30; v->pcf = dk_cf(40u);
+            v->ne = tone << 22; v->ncf = dk_cf(8u);
         }
         break;
     }
@@ -1144,7 +1173,8 @@ static int32_t dk_voice(dkv_t *v, uint32_t t, uint32_t kit)   /* one sample */
         v->ph += v->inc + (uint32_t)(((uint64_t)v->sweep * (uint32_t)dk_env(&v->pe, v->pcf)) >> 15);
         s = sin32(v->ph);
         if (v->ne) s += mul15(dk_noise(), dk_env(&v->ne, v->ncf));
-        if (kit) s = sat15(s + (s >> 1));
+        if (kit == DK_909) s = sat15(s + (s >> 1));
+        else if (kit == DK_ACOU) { v->lo += (s - v->lo) >> 2; s = sat15(v->lo + (v->lo >> 2)); }   /* (the beater a little dulled) */
         return mul15(s, a);
     case DK_SNARE: {
         int32_t n = dk_noise(), e = dk_env(&v->ne, v->ncf), body;
@@ -1153,7 +1183,7 @@ static int32_t dk_voice(dkv_t *v, uint32_t t, uint32_t kit)   /* one sample */
         v->ph2 += v->inc2;
         body = (sin32(v->ph) * 3 + sin32(v->ph2) * 2) / 5;
         v->lo += mul15(n - v->lo, v->fa);
-        return mul15(body, mul15(a, 32767 - v->tone * 120)) + mul15(n - v->lo, mul15(e, 6000 + v->tone * 200)) * 2;
+        return mul15(body, mul15(a, 32767 - v->tone * 120)) + ((mul15(n - v->lo, mul15(e, 6000 + v->tone * 200)) * v->fq) >> 5);
     }
     case DK_CLAP: {
         int32_t hp, env;
@@ -1170,7 +1200,9 @@ static int32_t dk_voice(dkv_t *v, uint32_t t, uint32_t kit)   /* one sample */
     case DK_CYM:
         a = dk_env(&v->amp, v->acf);
         for (s = 0, q = 0; q < 6u; q++) { v->m[q] += v->minc[q]; s += v->m[q] >> 31 ? 5000 : -5000; }
-        if (kit) s = (s * 2 + dk_noise() * 3) / 5;
+        if (kit == DK_909) s = (s * 2 + dk_noise() * 3) / 5;
+        else if (kit == DK_DUB) s = (s + dk_noise() * 5) / 4;
+        else if (kit == DK_ACOU) s = (s * 2 + dk_noise() * 4) / 5;
         v->h1 += mul15(s - v->h1, v->fa); x = s - v->h1;
         v->h2 += mul15(x - v->h2, v->fa); x -= v->h2;
         return mul15(x, a);
@@ -1178,11 +1210,12 @@ static int32_t dk_voice(dkv_t *v, uint32_t t, uint32_t kit)   /* one sample */
         a = dk_env(&v->amp, v->acf);
         v->ph += v->inc + (uint32_t)(((uint64_t)v->sweep * (uint32_t)dk_env(&v->pe, v->pcf)) >> 15);
         s = sin32(v->ph);
+        if (v->inc2) { v->ph2 += v->inc2; s = (s * 3 + sin32(v->ph2)) / 4; }
         if (v->ne) s += mul15(dk_noise(), dk_env(&v->ne, v->ncf)) >> 1;
         return mul15(s, a);
     default:
         a = dk_env(&v->amp, v->acf);
-        if (!kit) {
+        if (kit == DK_808) {
             int32_t hp;
             v->m[0] += v->minc[0]; v->m[1] += v->minc[1];
             s = (v->m[0] >> 31 ? 12000 : -12000) + (v->m[1] >> 31 ? 12000 : -12000);
@@ -1190,30 +1223,73 @@ static int32_t dk_voice(dkv_t *v, uint32_t t, uint32_t kit)   /* one sample */
             v->bp += mul15(v->fa, hp);
             v->lo += mul15(v->fa, v->bp);
             s = v->bp + (s >> 2);
-        } else {
+        } else if (kit == DK_909) {
             v->ph += v->inc; v->ph2 += v->inc2;
             s = (sin32(v->ph) + sin32(v->ph2)) >> 1;
             if (v->ne) s += mul15(dk_noise(), dk_env(&v->ne, v->ncf));
+        } else if (kit == DK_DUB) {
+            int32_t hp, f = 900 + mul15(v->fa, dk_env(&v->pe, v->pcf));
+            for (s = 0, q = 0; q < 4u; q++) { v->m[q] += v->minc[q]; s += dk_saw(v->m[q]); }
+            hp = s - v->lo - mul15(v->fq, v->bp);
+            v->bp += mul15(f, hp);
+            v->lo += mul15(f, v->bp);
+            s = v->lo;
+        } else {
+            v->ph += v->inc + (uint32_t)(((uint64_t)v->sweep * (uint32_t)dk_env(&v->pe, v->pcf)) >> 15);
+            s = sin32(v->ph);
+            if (v->ne) s += mul15(dk_noise(), dk_env(&v->ne, v->ncf)) >> 1;
         }
         return mul15(s, a);
     }
 }
+/* DUB TECHNO's echo: a dotted eighth (an eighth when slow), dark and fading, at a quarter of the rate (11 kHz, its own
+ * buffer: 0.56 s) */
+#define DE_N 6144u
+static int16_t de_buf[DE_N] POOL;
+static struct { uint32_t w, k; int32_t acc, prev, cur, lp, hp; uint8_t on; } de;
+static int32_t dke[HALF_FRAMES];
+static void dk_echo(uint32_t n)
+{
+    uint32_t i, t = 4961250u / (ks_bpm10 | 1u);   /* (3/4 of a beat at 11025 Hz) */
+    if (t > DE_N - 2u) t = t * 2u / 3u;
+    if (t > DE_N - 2u) t = DE_N - 2u;
+    if (t < 64u) t = 64u;
+    if (!de.on) { memset(de_buf, 0, sizeof de_buf); memset(&de, 0, sizeof de); de.on = 1; }
+    for (i = 0; i < n; i++) {
+        de.acc += dke[i];
+        if (++de.k == 4u) {                     /* (every fourth sample: in, out, feedback) */
+            int32_t in = de.acc >> 2, y = de_buf[(de.w + DE_N - t) % DE_N];
+            de.acc = 0; de.k = 0;
+            de.lp += mul15(y - de.lp, 11000);
+            de.hp += (de.lp - de.hp) >> 6;
+            de_buf[de.w] = (int16_t)sat15(in + mul15(de.lp - de.hp, 19000));
+            if (++de.w == DE_N) de.w = 0;
+            de.prev = de.cur; de.cur = y;
+        }
+        dkb[i] += (de.prev + (((de.cur - de.prev) * (int32_t)de.k) >> 2)) >> 1;
+    }
+}
 static void dk_render(uint32_t n)               /* the drums for this block -> dkb (mono) */
 {
-    uint32_t t, i, kit = dk.kit & 1u;
-    for (i = 0; i < n; i++) dkb[i] = 0;
+    uint32_t t, i, kit = dk.kit % DK_NKIT;
+    for (i = 0; i < n; i++) dkb[i] = dke[i] = 0;
     for (t = 0; t < NDK; t++) {
         dkv_t *v = &dkv[t];
         uint32_t at = dk_trig_at[t];
+        int32_t snd = kit == DK_DUB ? DK_SEND[t] : 0, o;
         if (at == 0xFFFFu && !v->on) continue;
         dk_trig_at[t] = 0xFFFFu;
         for (i = 0; i < n; i++) {
             if (i == at) dk_start(t, dk_trig_vel[t]);
             if (!v->on) continue;
-            dkb[i] += mul15(dk_voice(v, t, kit), v->gain);
+            o = mul15(dk_voice(v, t, kit), v->gain);
+            dkb[i] += o;
+            if (snd) dke[i] += mul15(o, snd);
             if (v->amp < (1 << 16) && (t != DK_CLAP || v->clk >= 4u)) v->on = 0;
         }
     }
+    if (kit == DK_DUB) dk_echo(n);
+    else de.on = 0;
 }
 
 static void seq_clock(uint32_t beats)

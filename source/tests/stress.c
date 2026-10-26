@@ -118,6 +118,22 @@ int main(void)
         play(chord, 4, 200);
         perf.ar_on = 0; blocks(10);
     }
+    {                                           /* DRUMS: every kit, every track, its settings at both ends, all hit together (accents), the echo */
+        uint32_t kit, t, j;
+        static const int8_t V[4][2] = {{0, 127}, {-64, 63}, {0, 127}, {0, 127}};
+        for (kit = 0; kit < DK_NKIT; kit++)
+            for (j = 0; j < 16u; j++) {
+                dk.kit = (uint8_t)kit; dk.vol = 127;
+                for (t = 0; t < NDK; t++) {
+                    uint32_t q;
+                    for (q = 0; q < 4u; q++) dk.prm[t][q] = V[q][(j >> q) & 1u];
+                    ev_push(EV_DRUM, t, 127);
+                }
+                blocks(40);
+                runs++;
+            }
+        dk.kit = 0; blocks(20);
+    }
     printf("stress: %u parameter runs, peak %.3f, late blocks %u: no integer wrapped\n", runs, (double)peak, ks_late);
     return 0;
 }

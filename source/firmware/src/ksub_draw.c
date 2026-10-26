@@ -636,7 +636,7 @@ static const char *view_title(uint32_t vi, char *t, char *sub)
         p = str_cat(t, "DRUMS P");
         p = fmt_u(p, dk.cur + 1u, 0);
         if (dk_psel) { p = str_cat(p, " "); str_cat(p, DKP[(dk_psel - 1u) / 3u % NDKP].name); }
-        p = str_cat(sub, dk.kit ? "909 \xB7 " : "808 \xB7 ");
+        p = str_cat(str_cat(sub, dk_kname(dk.kit)), " \xB7 ");
         p = str_cat(p, dk_tname(dk_trk));
         if (dk_len() > 16u) { p = str_cat(p, " \xB7 PAGE "); p = fmt_u(p, dk_cur / 16u + 1u, 0); p = str_cat(p, "/"); p = fmt_u(p, (dk_len() + 15u) / 16u, 0); }
         if (sq_rec) str_cat(p, sq_play ? " \xB7 REC LIVE" : " \xB7 REC");
