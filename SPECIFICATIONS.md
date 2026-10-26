@@ -2,7 +2,7 @@
 
 [English](SPECIFICATIONS.md) · [Français](fr/CAHIER-DES-CHARGES.md)
 
-A modern bass synth for the M-VAVE FM-1 (JieLi AC79, two cores, no FPU). Last update: **0.9.50**.
+A modern bass synth for the M-VAVE FM-1 (JieLi AC79, two cores, no FPU). Last update: **0.9.51**.
 This document says where the project stands: what is done, what has to be checked, what is left, and ideas to go further.
 
 ## 1. Vision
@@ -24,7 +24,7 @@ This document says where the project stands: what is done, what has to be checke
 | Master | **DEEP BASS** (shelf +4 / +7 dB under 90 Hz), **always-on limiter**, **AUTO LEVEL** (normaliser) | 0.9.10 |
 | Voices | Mono, legato, poly 4, glide with time | ≤ 0.9 |
 | Presets | 51 factory sounds by style, 32 user slots, favourites, UNDO / REDO | ≤ 0.9 |
-| SEQ / ARP / MIDI | SEQ BASS (16 patterns of up to 64 steps, probability and trig conditions per step, 0.9.50), ARP (5 modes), MIDI: learn, clock in/out, start/stop, program change | ≤ 0.9.8 |
+| SEQ / ARP / MIDI | SEQ BASS (16 patterns of up to 64 steps, probability and trig conditions per step, 0.9.51), ARP (5 modes), MIDI: learn, clock in/out, start/stop, program change | ≤ 0.9.8 |
 
 ### Playing and workflow
 | Area | Detail | Version |
@@ -32,7 +32,7 @@ This document says where the project stands: what is done, what has to be checke
 | Modes | CLASSIC (lists) and SHIFT (3 columns, OCT−/OCT+ = Shift); K1–K4 = the first 4 rows; knob acceleration | ≤ 0.9.7 |
 | SEL windows | FX LIVE, MACROS, **MORPH X/Y**, **MORPH A/B** | 0.9.9-6 → 7 |
 | **FX PADS** | Hold FX: white keys = wobble speed (4 8 16 24 32 48, 1/2, 1 bar), depth, shape; black = 4 stutters, tape stop, DJ filter, pump, saturation, phaser, crush | 0.9.10 |
-| Long presses | OCT− UNDO, OCT+ REDO, SAVE UNDO/REDO, HOME A + B (0.9.50), REC PANIC, GLO CLASSIC/SHIFT, FX FX PADS, SEL A/B, PLAY HOLD, LFO/ENV quick assign, page = controlled random | 0.9.10 |
+| Long presses | OCT− UNDO, OCT+ REDO, SAVE UNDO/REDO, HOME A + B (0.9.51), REC PANIC, GLO CLASSIC/SHIFT, FX FX PADS, SEL A/B, PLAY HOLD, LFO/ENV quick assign, page = controlled random | 0.9.10 |
 | Visual feedback | Value big with the old one, modulation bars, loading bar for long presses, scrolling destination list | ≤ 0.9.8 |
 | Start | Screen with **the FM-1 seen from the front** (keys lit), no more question at every start | 0.9.10 |
 

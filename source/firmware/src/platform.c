@@ -130,17 +130,8 @@ static int ota_prog(uint32_t off, const void *p, uint32_t n)
     return fl_write(off, p, n);
 }
 static int ota_fread(uint32_t off, void *p, uint32_t n) { app_flash_busy(); return st_read(off, p, n); }
-static void ota_show(uint32_t step, int32_t code)
-{
-    static const char *const STEP[] = {"", "PACKAGE", "CHECK HEAD", "LOADER", "CONFIRM", "RESTART"};
-    if (recovery_active) return;
-    lcd_fill(0, 0, 240, 240, C_BLACK);
-    draw_text_box(0, 92, 240, &FONT_S, "UPDATE", C_WHITE, 1);
-    if (step < 9u)
-        draw_text_box(0, 124, 240, &FONT_S, STEP[step < 6u ? step : 0], C_WHITE, 1);
-    else
-        draw_text_box(0, 124, 240, &FONT_S, code == 1 ? "DRY RUN OK" : "FAILED", C_WHITE, 1);
-}
+/* ota_show (the update screen) is defined in ksub_draw.c, near draw_all: it reuses the start screen's picture and
+ * ksub_draw.c's g_buf/rb_rrect drawing, not available yet this early in the file */
 static void ota_commit(const uint8_t *parm)
 {
     app_flash_busy();

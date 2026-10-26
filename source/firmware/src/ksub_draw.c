@@ -2006,6 +2006,22 @@ static void draw_ask(void)
 
 
 
+static void draw_logo_pic(void)             /* the start-screen picture (216 x 216, 16 greys), the current band */
+{
+    uint16_t lut[16];
+    int32_t y, x, y1 = g_y0 + (int32_t)BAND_H;
+    for (x = 0; x < 16; x++) lut[x] = g_mix(0x0000u, 0xFFFFu, (uint32_t)x * 17u);
+    g_rect(0, g_y0, 240, (int32_t)BAND_H, 0x0000u);                   /* (black, whatever the palette) */
+    for (y = g_y0; y < y1 && y < (int32_t)KS_LOGO_N; y++) {
+        const uint8_t *row = KS_LOGO + KS_LOGO_ROW[y];   /* (the black packed: 0x00 then how many black bytes) */
+        uint16_t *d = &g_buf[(uint32_t)(y - g_y0) * 240u + 12u];
+        for (x = 0; x < (int32_t)KS_LOGO_N / 2;) {
+            uint32_t v = *row++, n = 1;
+            if (!v) n = *row++;
+            for (; n && x < (int32_t)KS_LOGO_N / 2; n--, x++) { d[2 * x] = lut[v >> 4]; d[2 * x + 1] = lut[v & 15u]; }
+        }
+    }
+}
 static void draw_all(void)
 {
     const view_t *v = view();
@@ -2153,19 +2169,7 @@ static void draw_all(void)
     }
     if (splash_until) {                         /* the start: the picture (216 x 216, 16 greys), the patch and the cores beneath */
         char b[40], *p;
-        uint16_t lut[16];
-        int32_t y, x, y1 = g_y0 + (int32_t)BAND_H;
-        for (x = 0; x < 16; x++) lut[x] = g_mix(0x0000u, 0xFFFFu, (uint32_t)x * 17u);
-        g_rect(0, g_y0, 240, (int32_t)BAND_H, 0x0000u);               /* (black, whatever the palette) */
-        for (y = g_y0; y < y1 && y < (int32_t)KS_LOGO_N; y++) {
-            const uint8_t *row = KS_LOGO + KS_LOGO_ROW[y];   /* (the black packed: 0x00 then how many black bytes) */
-            uint16_t *d = &g_buf[(uint32_t)(y - g_y0) * 240u + 12u];
-            for (x = 0; x < (int32_t)KS_LOGO_N / 2;) {
-                uint32_t v = *row++, n = 1;
-                if (!v) n = *row++;
-                for (; n && x < (int32_t)KS_LOGO_N / 2; n--, x++) { d[2 * x] = lut[v >> 4]; d[2 * x + 1] = lut[v & 15u]; }
-            }
-        }
+        draw_logo_pic();
         p = str_cat(b, pname);
         p = str_cat(p, " \xB7 ");
         eng_str(p, patch);
@@ -2181,3 +2185,46 @@ static void draw_all(void)
         g_text_c(T_S, 120, 202, toast_txt, K_WHITE);
     }
 }
+
+/* ---------------------------------------------------------------- the update screen (ota.c's ota_show hook): the same
+ * start-screen picture, a rounded loading bar in place of the patch name and "press any button", drawn straight to
+ * the LCD (no g_frame_send: that polls USB and could re-enter the flash write this runs during). Real hardware only:
+ * on KAWA_WASM / DINGHY_HOST, platform.c never includes ota.c or lcd.c (no OTA, no LCD SPI), so nothing here is built
+ * (or called) there either. */
+#if !defined(DINGHY_HOST)
+static uint8_t ota_step_g;
+static int32_t ota_code_g;
+static void draw_ota_pic(void)
+{
+    draw_logo_pic();
+    if (g_vis(212, 28)) {
+        if (ota_step_g < 9u) {
+            static const char *const OL[6] = {"", "READING THE PACKAGE", "CHECKING IT", "STAGING THE LOADER", "CONFIRMING", "RESTARTING"};
+            int32_t w = 192 * (int32_t)ota_step_g / 5;
+            g_text_c(T_XS, 120, 213, OL[ota_step_g < 6u ? ota_step_g : 0], RGB(150, 150, 150));
+            rb_frame(20, 224, 200, 14, 7, RGB(90, 90, 90), RGB(0, 0, 0), RGB(0, 0, 0));
+            if (w > 0) rb_rrect(24, 227, w, 8, 4, RGB(255, 255, 255), RGB(255, 255, 255));
+        } else
+            g_text_c(T_XS, 120, 225, ota_code_g == 1 ? "DRY RUN OK" : "FAILED", RGB(255, 255, 255));
+    }
+}
+static void ota_push(void (*draw)(void))    /* like g_frame_send, but no polling and no diff-skip: a few redraws only, glitch-free */
+{
+    uint32_t b, i;
+    for (b = 0; b < NBAND; b++) {
+        g_y0 = (int32_t)(b * BAND_H);
+        draw();
+        for (i = 0; i < 240u * BAND_H; i++) { uint16_t c = g_buf[i]; g_txb[i] = (uint16_t)(c >> 8 | c << 8); }
+        lcd_blit(0, (uint32_t)g_y0, 240, BAND_H, g_txb);
+        lcd_sync();                 /* g_txb is reused right away: wait for this band's transfer, unlike the ping-pong main loop */
+    }
+}
+static void ota_show(uint32_t step, int32_t code)
+{
+#if !defined(KAWA_WASM)
+    if (recovery_active) return;
+#endif
+    ota_step_g = (uint8_t)step; ota_code_g = code;
+    ota_push(draw_ota_pic);
+}
+#endif
