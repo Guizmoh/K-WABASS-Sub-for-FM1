@@ -125,13 +125,13 @@ def build(L):
         '<li><b>Low end</b>: MONO BASS (mono under 120 Hz), SUB LOCK (sub in phase with OSC A), DEEP BASS (+4 / +7 dB under 90 Hz), OTT.</li>'
         '<li><b>Output</b>: AUTO LEVEL (same loudness for every sound), limiter always on, MASTER volume last.</li>'
         '<li><b>Presets</b>: 51 factory sounds (with tags: SUB, REESE, GROWL, WOBBLE, PLUCK, 808, DRONE), 32 of yours.</li>'
-        '<li><b>SEQ BASS</b>: 16 × 16 steps, REC writes from the keys. <b>ARP</b>: 5 modes. <b>MIDI</b>: learn, clock in / out, program change.</li>',
+        '<li><b>SEQ BASS</b>: 16 patterns of up to 64 steps (LENGTH 16, 32, 64…), each step with a <b>PROBABILITY</b> (%) and a <b>TRIG CONDITION</b>: 1/2, 2/2, 1/4…4/4 (that time round), START / NOT START (the first time round), IF BEFORE (the step before played), IF AFTER (the step after plays). A white dot marks such steps, the marks top right the page of 16 shown. REC writes from the keys. <b>ARP</b>: 5 modes. <b>MIDI</b>: learn, clock in / out, program change.</li>',
         '<li><b>Moteurs</b> : ANALOG, SUPER / REESE, WAVE, FM (ESSENTIAL) + PHASE, FOLD, SYNC, VOCAL (SYSTEM › ENGINES › ALL). A et B : addition, ring, X-mod, sync.</li>'
         '<li><b>Filtre</b> : LP 24, LP 12, BAND, HIGH, NOTCH, VOWEL, COMB.</li>'
         '<li><b>Grave</b> : MONO BASS (mono sous 120 Hz), SUB LOCK (sub en phase avec OSC A), DEEP BASS (+4 / +7 dB sous 90 Hz), OTT.</li>'
         '<li><b>Sortie</b> : AUTO LEVEL (même volume pour tous les sons), limiteur toujours actif, volume MASTER en dernier.</li>'
         '<li><b>Presets</b> : 51 sons d’usine (avec tags : SUB, REESE, GROWL, WOBBLE, PLUCK, 808, DRONE), 32 à toi.</li>'
-        '<li><b>SEQ BASS</b> : 16 × 16 pas, REC écrit depuis les touches. <b>ARP</b> : 5 modes. <b>MIDI</b> : learn, horloge in / out, program change.</li>')) + '</ul>')
+        '<li><b>SEQ BASS</b> : 16 patterns jusqu\'à 64 pas (LENGTH 16, 32, 64…), chaque pas avec une <b>PROBABILITY</b> (%) et une <b>TRIG CONDITION</b> : 1/2, 2/2, 1/4…4/4 (ce tour-là), START / NOT START (le premier tour), IF BEFORE (le pas d\'avant a joué), IF AFTER (le pas d\'après joue). Un point blanc marque ces pas, les repères en haut à droite la page de 16 affichée. REC écrit depuis les touches. <b>ARP</b> : 5 modes. <b>MIDI</b> : learn, horloge in / out, program change.</li>')) + '</ul>')
 
     # 8 data
     data = "../data.html?lang=fr" if fr else "data.html"

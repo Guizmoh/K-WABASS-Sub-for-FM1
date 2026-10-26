@@ -24,7 +24,7 @@
 4. **Fenêtres SEL** : PERFORM, MORPH, FX LIVE, MACROS.
 5. **Morph A/B** : fondu entre deux sons en direct.
 6. Une **page LFO** en direct pour retravailler tes basses wobble en jouant.
-7. **SEQ BASS**, **ARP**, **MIDI**.
+7. **SEQ BASS** (jusqu'à 64 pas, probabilité et conditions de déclenchement par pas), **ARP**, **MIDI**.
 8. Le son : moteurs, filtres, effets, master, et **FX PADS**.
 9. Visuels d'oscillateur animés, en direct.
 10. Un **EQ** visuel.
@@ -44,8 +44,8 @@ Retour à KAWA (`install/kawa-0.5.fwsc`) ou au firmware officiel (M-UPGRADE) pos
 
 ```sh
 cd source
-./build.sh --release 0.9.46          # -> build/k-wasub-0.9.46.fwsc
-APP_VER=0.9.46 bash web/make_emulator.sh      # émulateur
+./build.sh --release 0.9.47          # -> build/k-wasub-0.9.47.fwsc
+APP_VER=0.9.47 bash web/make_emulator.sh      # émulateur
 bash web/make_installer.sh                    # installer.html avec le dernier paquet
 bash tests/run_stress.sh                      # tests de charge (UBSan)
 python3 tests/manual_shots.py                 # captures du manuel (docs/img)

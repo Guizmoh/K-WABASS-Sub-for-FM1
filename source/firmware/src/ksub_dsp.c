@@ -50,6 +50,17 @@ static struct {                                 /* stored (the store's second se
     int8_t eq_g[4];                             /* ... and gain (dB) */
     uint8_t mx_magic, mx_pre[4], ab_pre, ab_parts, ab_time;   /* MORPH: the corners' sounds, A/B's B, its parts and time */
 } perf;
+/* SEQ BASS past the 16 steps perf holds (a pattern plays up to 64), and each step's chance and condition: stored on
+ * the store's third sector */
+#define SQ_MAX 64u
+#define SX_MAGIC 0x53u
+enum { SC_ALWAYS, SC_1_2, SC_2_2, SC_1_4, SC_2_4, SC_3_4, SC_4_4, SC_START, SC_NSTART, SC_BEFORE, SC_AFTER, NSC };
+static struct {
+    uint8_t magic, sum, pad[2];
+    struct { uint8_t note[SQ_MAX - 16u], fl[SQ_MAX - 16u], cond[SQ_MAX], prob[SQ_MAX]; } p[SQ_NPAT];   /* prob: 0..100 % */
+} sqx;
+static uint8_t *sq_np(uint32_t k, uint32_t i) { k %= SQ_NPAT; i %= SQ_MAX; return i < 16u ? &perf.pat[k].note[i] : &sqx.p[k].note[i - 16u]; }
+static uint8_t *sq_fp(uint32_t k, uint32_t i) { k %= SQ_NPAT; i %= SQ_MAX; return i < 16u ? &perf.pat[k].fl[i] : &sqx.p[k].fl[i - 16u]; }
 /* the EQ (held FX), on every sound: 4 biquads a side, Q24 (b0 b1 b2 a1 a2); the main loop works them out (eq_n),
  * the audio takes them at the next block (eq_new) */
 enum { EQ_OFF, EQ_LOCUT, EQ_LOSH, EQ_BELL, EQ_NOTCH, EQ_HISH, EQ_HICUT, NEQT };
@@ -883,8 +894,10 @@ static void step_run(uint32_t beats)
 
 
 /* ================================================================ SEQ BASS and ARP (the voices' core, at each KS_CB)
- * SEQ BASS: 16 patterns of up to 16 steps, each a note (C1 + 0..48), on or a rest, an accent, a slide into the next
- * (no new attack, a glide). While it plays the keys transpose it (C4 = as written) and do not sound.
+ * SEQ BASS: 16 patterns of up to 64 steps, each a note (C1 + 0..48), on or a rest, an accent, a slide into the next
+ * (no new attack, a glide), a chance (%) and a condition: 1/2..4/4 (that time round in 2 or 4), START (the first time
+ * round only), NOT START, IF BEFORE (the step before played), IF AFTER (the step after plays: drawn a step ahead).
+ * While it plays the keys transpose it (C4 = as written) and do not sound.
  * ARP: the keys held (or HOLD) played one at a time on the tempo: UP, DOWN, UP-DN, RANDOM, ORDER, over 1..4
  * octaves. Both run on ks_beats: on the MIDI clock with the LFOs. */
 static volatile uint8_t sq_play, sq_rec;        /* playing (the voices say), step record (the main loop says) */
@@ -892,6 +905,19 @@ static volatile uint8_t sq_show = 0xFF;         /* the step playing (the screen)
 static int32_t sq_tr;                           /* the keys' transposition */
 static uint8_t sq_note = 0xFF, sq_slide, ar_held[16], ar_n, ar_was;
 static uint32_t sq_tick = 0xFFFFFFFFu, sq_step, sq_gate, ar_i;
+static uint32_t sq_pass, sq_nx_i = 0xFFFFFFFFu;  /* the times round since PLAY; the next step drawn (pattern << 8 | step) */
+static uint8_t sq_last, sq_nx_ok;               /* the last step played; the next one's draw */
+static uint32_t sq_draw(uint32_t k, uint32_t i, uint32_t pass)   /* on, its chance, its condition (IF BEFORE / AFTER: later) */
+{
+    uint32_t c = sqx.p[k].cond[i] % NSC, pr = sqx.p[k].prob[i];
+    if (!(*sq_fp(k, i) & SF_ON)) return 0;
+    if (pr < 100u && (rnd() >> 8) % 100u >= pr) return 0;
+    if (c >= SC_1_2 && c <= SC_2_2) return pass % 2u == c - SC_1_2;
+    if (c >= SC_1_4 && c <= SC_4_4) return pass % 4u == c - SC_1_4;
+    if (c == SC_START) return pass == 0;
+    if (c == SC_NSTART) return pass != 0;
+    return 1;
+}
 static void sq_off(void) { if (sq_note != 0xFF) note_off(sq_note); sq_note = 0xFF; sq_slide = 0; }
 static void sq_sound(uint32_t n, uint32_t vel, int slide_in, uint32_t gate)   /* (a slide: the new one, then the old one off) */
 {
@@ -915,14 +941,23 @@ static void ar_del(uint32_t n)
 static void seq_step_on(void)
 {
     if (sq_play) {
-        const seqpat_t *p = &perf.pat[perf.cur % SQ_NPAT];
-        uint32_t len = p->len >= 1u && p->len <= 16u ? p->len : 16u, f;
-        sq_step = (sq_step + 1u) % len;
-        sq_show = (uint8_t)sq_step;
-        f = p->fl[sq_step];
-        if (f & SF_ON) {
+        uint32_t k = perf.cur % SQ_NPAT, l = perf.pat[k].len, len = l >= 1u && l <= SQ_MAX ? l : 16u, i, j, c, ok, f;
+        if (sq_step == 0xFFFFFFFFu) { sq_step = 0; sq_pass = 0; }
+        else if (++sq_step >= len) { sq_step = 0; sq_pass++; }
+        i = sq_step;
+        ok = sq_nx_i == (k << 8 | i) ? sq_nx_ok : sq_draw(k, i, sq_pass);
+        j = i + 1u >= len ? 0u : i + 1u;
+        sq_nx_ok = (uint8_t)sq_draw(k, j, j ? sq_pass : sq_pass + 1u);
+        sq_nx_i = k << 8 | j;
+        c = sqx.p[k].cond[i] % NSC;
+        if (c == SC_BEFORE) ok = ok && sq_last;
+        if (c == SC_AFTER) ok = ok && sq_nx_ok;   /* (and a next IF BEFORE: the two together) */
+        sq_last = (uint8_t)ok;
+        sq_show = (uint8_t)i;
+        f = *sq_fp(k, i);
+        if (ok) {
             int slide = sq_slide;
-            sq_sound((uint32_t)clampi(24 + p->note[sq_step] + sq_tr, 0, 127), f & SF_ACC ? 127u : 90u, slide, 0x800000u);
+            sq_sound((uint32_t)clampi(24 + *sq_np(k, i) + sq_tr, 0, 127), f & SF_ACC ? 127u : 90u, slide, 0x800000u);
             sq_slide = (uint8_t)(f & SF_SLIDE);
         } else sq_off();
         return;
@@ -990,6 +1025,8 @@ static void voices_render(int32_t *dst, uint32_t n, uint32_t t0, uint32_t budget
             sq_play = (uint8_t)a;
             sq_step = 0xFFFFFFFFu;
             sq_tick = 0xFFFFFFFFu;
+            sq_nx_i = 0xFFFFFFFFu;
+            sq_last = 0;
             if (a && b) ks_beats = 0;           /* (the internal clock: from the bar, the LFOs too) */
         } else if (t == EV_PANIC) { for (k = 0; k < NVOICE; k++) { vo[k].on = 0; vo[k].ea.st = 0; vo[k].ea.lv = 0; } nheld = 0; ar_n = 0; sq_note = 0xFF; }
         else if (t == EV_SYNC) ks_beats = a ? b * 699051u : 0u;   /* (the MIDI clock: its tick, 1/24 beat) */

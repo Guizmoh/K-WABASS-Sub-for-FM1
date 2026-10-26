@@ -235,24 +235,30 @@ static void vis_step(int32_t x, int32_t y, int32_t w, int32_t h)
                !patch[ST_ON] ? K_LINE : i == step_pos ? K_LIME : (i & 3) ? K_WAVE : g_mix(K_WAVE, K_WHITE, 90));
     }
 }
-static void vis_seq(int32_t x, int32_t y, int32_t w, int32_t h)   /* SEQ BASS: the 16 steps as a little piano roll */
+static void vis_seq(int32_t x, int32_t y, int32_t w, int32_t h)   /* SEQ BASS: 16 steps as a little piano roll (the cursor's page of 16) */
 {
     const seqpat_t *q = sq_pat();
-    int32_t i, len = q->len ? q->len : 16, bw = (w - 8) / 16, x0 = x + 4 + (w - 8 - bw * 16) / 2, H = h - 11, top = y + 4;
+    uint32_t k = perf.cur % SQ_NPAT;
+    int32_t i, len = q->len >= 1u && q->len <= SQ_MAX ? q->len : 16, bw = (w - 8) / 16, x0 = x + 4 + (w - 8 - bw * 16) / 2, H = h - 11, top = y + 4;
+    int32_t pg = sq_cur_step / 16, np = (len + 15) / 16;
     if (!g_vis(y, h)) return;
     for (i = 0; i < 16; i++) {
-        int32_t bx = x0 + i * bw, f = q->fl[i], nh;
-        int on = sq_play && i == sq_show;
-        g_rect(bx + 1, top, bw - 2, H, i >= len ? K_BG : on ? g_mix(K_TRACK, K_LIME, 40) : K_TRACK);
-        if (i < len && (f & SF_ON)) {
+        int32_t s = pg * 16 + i, bx = x0 + i * bw, f = *sq_fp(k, (uint32_t)s), nh;
+        int on = sq_play && s == sq_show;
+        g_rect(bx + 1, top, bw - 2, H, s >= len ? K_BG : on ? g_mix(K_TRACK, K_LIME, 40) : K_TRACK);
+        if (s < len && (f & SF_ON)) {
             uint16_t c = on ? K_LIME : (f & SF_ACC) ? K_ORANGE : K_WAVE;
-            nh = 4 + q->note[i] * (H - 4) / 48;
+            nh = 4 + *sq_np(k, (uint32_t)s) * (H - 4) / 48;
             g_rect(bx + 1, top + H - nh, bw - 2, 3, c);
             g_rect(bx + 2, top + H - nh + 3, bw - 4, nh - 3, g_mix(K_TRACK, c, 45));
             if (f & SF_SLIDE) g_rect(bx + bw - 2, top + H - nh + 1, 3, 1, c);   /* (into the next) */
+            if (sqx.p[k].cond[s] || sqx.p[k].prob[s] < 100u) g_rect(bx + bw / 2 - 1, top + H - nh - 4, 3, 2, K_WHITE);   /* (a chance or a condition: a dot above) */
         }
-        g_rect(bx + 1, top + H + 2, bw - 2, 3, i == sq_cur_step ? (sq_rec ? K_ORANGE : K_WHITE) : (i & 3) ? K_BG : K_LINE);
+        g_rect(bx + 1, top + H + 2, bw - 2, 3, s == sq_cur_step ? (sq_rec ? K_ORANGE : K_WHITE) : (i & 3) ? K_BG : K_LINE);
     }
+    if (np > 1)                                 /* the pages, top right: this one white, the one playing lime */
+        for (i = 0; i < np; i++)
+            g_rect(x + w - 6 - (np - i) * 9, top + 1, 7, 3, i == pg ? K_WHITE : sq_play && sq_show != 0xFF && sq_show / 16 == i ? K_LIME : K_LINE);
 }
 
 /* ---- the oscillators, each engine its own picture */

@@ -16,10 +16,11 @@
  *   0A SMP WRITE off u16, n u8, data -> off, status  OSC C plays it, until the FM-1 is switched off (or RESAMPLE records)
  *   0B SMP DONE                      -> status
  * status: 0 ok, 1 bad size / offset, 2 bad crc, 3 not a K-WASUB backup (or another layout), 4 flash failed, 5 busy
- * The blob: "KSB1", the sizes of the three parts (u16 each), then ustore, perf, uext. Little endian. */
+ * The blob: "KSB1", the sizes of the three parts (u16 each), then ustore, perf, uext, then sqx (SEQ BASS past 16 steps,
+ * the chances and conditions; the total size tells the layouts apart). Little endian. */
 #define LK_PROTO 1u
 #define LK_HEAD 10u
-#define LK_SIZE (LK_HEAD + sizeof ustore + sizeof perf + sizeof uext)
+#define LK_SIZE (LK_HEAD + sizeof ustore + sizeof perf + sizeof uext + sizeof sqx)
 typedef char lk_fits[LK_SIZE < 65536u ? 1 : -1];
 static uint8_t lk_stage[LK_SIZE], lk_out[2 + 3 + 1 + 160];
 static uint32_t lk_got, lk_want;                /* staged bytes; the size BEGIN announced (0: no restore under way) */
@@ -61,7 +62,7 @@ static uint32_t lk_unpack7(const uint8_t *in, uint32_t n, uint8_t *out, uint32_t
 }
 static void lk_blob_read(uint32_t off, uint8_t *d, uint32_t n)   /* the backup as it is now, byte by byte */
 {
-    static const uint32_t S1 = sizeof ustore, S2 = sizeof perf, S3 = sizeof uext;
+    static const uint32_t S1 = sizeof ustore, S2 = sizeof perf, S3 = sizeof uext, S4 = sizeof sqx;
     uint32_t i;
     for (i = 0; i < n; i++, off++) {
         uint32_t o = off;
@@ -72,6 +73,7 @@ static void lk_blob_read(uint32_t off, uint8_t *d, uint32_t n)   /* the backup a
         } else if ((o -= LK_HEAD) < S1) b = ((const uint8_t *)ustore)[o];
         else if ((o -= S1) < S2) b = ((const uint8_t *)&perf)[o];
         else if ((o -= S2) < S3) b = ((const uint8_t *)&uext)[o];
+        else if ((o -= S3) < S4) b = ((const uint8_t *)&sqx)[o];
         else b = 0;
         d[i] = b;
     }
@@ -228,6 +230,8 @@ static void link_service(void)                  /* the main loop: a restore aske
         memcpy(ustore, lk_stage + LK_HEAD, sizeof ustore);
         memcpy(&perf, lk_stage + LK_HEAD + sizeof ustore, sizeof perf);
         memcpy(&uext, lk_stage + LK_HEAD + sizeof ustore + sizeof perf, sizeof uext);
+        memcpy(&sqx, lk_stage + LK_HEAD + sizeof ustore + sizeof perf + sizeof uext, sizeof sqx);
+        sqx_dirty = 1;
         store_fixup();
         if (store_save() || perf_save()) st = 4;
         perf_dirty = 0;

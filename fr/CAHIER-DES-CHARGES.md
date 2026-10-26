@@ -24,7 +24,7 @@ Ce document dit où en est le projet : ce qui est fait, ce qui est à vérifier,
 | Master | **DEEP BASS** (shelf +4 / +7 dB sous 90 Hz), **limiteur toujours actif**, **AUTO LEVEL** (normaliseur) | 0.9.10 |
 | Voix | Mono, legato, poly 4, glide avec durée | ≤ 0.9 |
 | Presets | 51 sons d'usine par style, 32 emplacements utilisateur, favoris, UNDO / REDO | ≤ 0.9 |
-| SEQ / ARP / MIDI | SEQ BASS (16 patterns), ARP (5 modes), MIDI : learn, clock in/out, start/stop, program change | ≤ 0.9.8 |
+| SEQ / ARP / MIDI | SEQ BASS (16 patterns jusqu'à 64 pas, probabilité et conditions de déclenchement par pas, 0.9.47), ARP (5 modes), MIDI : learn, clock in/out, start/stop, program change | ≤ 0.9.8 |
 
 ### Jeu et workflow
 | Domaine | Détail | Version |
