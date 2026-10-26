@@ -147,7 +147,7 @@ static struct {
 static char pname[14];
 static uint8_t page, vcur[NPAGE], cursor[sizeof VIEWS / sizeof VIEWS[0]], pre_cur[2], save_slot, save_pos, hold;
 static uint8_t key_note[27], latched[128], phys[128];
-static uint32_t prev_keys, toast_ms, set_ms, last_turn_ms, tap_ms[4];
+static uint32_t prev_keys, toast_ms, set_ms, last_turn_ms, turn_start_ms, tap_ms[4];
 static uint8_t set_dirty, prev_dirty = 1;
 static char toast_txt[24];
 static int16_t prev_wave[224], prev_a[112], prev_b[112], prev_s[112];   /* the pictures of the sound */
@@ -950,6 +950,7 @@ static void item_range(uint32_t id, int32_t *lo, int32_t *hi)
     }
     *lo = 0;
     *hi = id == G_MIDICH ? 16 : id == G_BPM ? 2400 : id == G_CLOCK || id == G_QLFO || id == G_ENG8 || id == G_ASAVE || id == G_NORM || id == G_RS_GO || id == G_CORES || id == G_GRID || id == G_BROWSE || id == G_C3COL || id == G_UI || id == G_ASK || id == G_ZOOM || id == G_MLEARN || id == G_MSTART || id == G_MPROG || id == G_MCLK ? 1 : id == G_MMAP ? 16 : id == I_ABMIX ? 127 : id == G_BRI ? 3 : id == G_ACCEL || id == G_CON || id == G_DEEP || id == G_RS_LEN ? 2 : id == G_THEME ? 6 : id == G_FONT ? (int32_t)NFONT - 1 : id == G_PAL ? (int32_t)(2u * NPAL_BASE - 1u) : id == G_OCT ? 6 : 0;
+    if (id == G_ACCEL) *hi = 3;                 /* (OFF, ON, FAST, ULTRA) */
     if (id == G_BPM) *lo = 600;
     if (id >= G_SQ_STEP && id <= G_AR_GATE) {
         static const int8_t LO[12] = {0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1}, HI[12] = {15, 48, 4, 15, 16, 5, 50, 1, 4, 5, 3, 10};
@@ -1303,7 +1304,7 @@ static void item_text(uint32_t id, char *b)
         case G_PAL: { static const char *const PN[11] = {"SYNTHWAVE", "MINT", "BLACK / WHITE", "INVERTED", "RED", "ICE", "FLUO", "PINK", "GOLD", "SKY", "BLAZE"}; int32_t q = v >= (int32_t)NPAL_BASE ? v - (int32_t)NPAL_BASE : v; str_cat(b, q < 2 ? PAL_NAME[set.theme % 7u][q] : PN[(q - 2) % 11]); if (v >= (int32_t)NPAL_BASE) str_cat(b, " RAD"); break; }
         case G_GRID: str_cat(b, v ? "STRAIGHT" : "ALL (T, D)"); break;
         case G_BROWSE: str_cat(b, v ? "FAVORITES" : "ALL"); break;
-        case G_ACCEL: str_cat(b, v == 2 ? "FAST" : v ? "ON" : "OFF"); break;
+        case G_ACCEL: str_cat(b, v == 3 ? "ULTRA" : v == 2 ? "FAST" : v ? "ON" : "OFF"); break;
         case G_C3COL: str_cat(b, v ? "GREEN YEL ORANGE" : "THEME"); break;
         case G_UI: str_cat(b, v ? "SHIFT (3 COLUMNS)" : "CLASSIC"); break;
         case G_ASK: str_cat(b, v ? "YES" : "NO"); break;
@@ -1561,11 +1562,13 @@ static void edit_item(uint32_t id, int32_t d)
     if (id != G_CPU && (vpop_id != (uint8_t)id || !vpop_ms)) { item_text(id, vpop_before); vpop_id = (uint8_t)id; }
     vpop_ms = fm1_ms | 1u;
     item_range(id, &lo, &hi);
+    if (id != turn_id || fm1_ms - last_turn_ms > 150u) turn_start_ms = fm1_ms;   /* (a turn that goes on: ULTRA speeds it up) */
     if (set.accel && hi - lo > 24 && id == turn_id) {   /* ACCEL: the faster the turn, the bigger the step */
-        uint32_t dt = fm1_ms - last_turn_ms;
+        uint32_t dt = fm1_ms - last_turn_ms, held = fm1_ms - turn_start_ms;
         step = dt < 20u ? 6 : dt < 40u ? 4 : dt < 70u ? 2 : 1;
-        if (set.accel == 2u) step *= 2;
-        if (hi - lo <= 64 && step > 3) step = 3;   /* (short ranges: never past a few) */
+        if (set.accel >= 2u) step *= 2;
+        if (set.accel == 3u && held > 1000u) step *= 1 + (int32_t)((held - 1000u) / 400u > 3u ? 3u : (held - 1000u) / 400u);   /* (ULTRA: after a second, up to 4 times more) */
+        if (hi - lo <= 64 && step > (set.accel == 3u ? 6 : 3)) step = set.accel == 3u ? 6 : 3;   /* (short ranges: never past a few) */
         if (hi - lo > 300) step *= (hi - lo) / 128;   /* (the tempo: tenths of a BPM) */
     }
     turn_id = id;
