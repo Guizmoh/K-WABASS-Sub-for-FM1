@@ -2,7 +2,7 @@
 
 [English](SPECIFICATIONS.md) · [Français](fr/CAHIER-DES-CHARGES.md)
 
-A modern bass synth for the M-VAVE FM-1 (JieLi AC79, two cores, no FPU). Last update: **0.9.18**.
+A modern bass synth for the M-VAVE FM-1 (JieLi AC79, two cores, no FPU). Last update: **0.9.19**.
 This document says where the project stands: what is done, what has to be checked, what is left, and ideas to go further.
 
 ## 1. Vision
@@ -16,7 +16,7 @@ This document says where the project stands: what is done, what has to be checke
 ### Sound
 | Area | Detail | Version |
 |---|---|---|
-| Engines | Version A: 4 efficient engines for modern basses (analog, reese, wavetable, FM); version B: 8 engines (adds phase dist, wavefolder, sync, vocal) for deeper sound design | ≤ 0.9 |
+| Engines | 8 engines per oscillator (analog, super/reese, wavetable, FM, phase dist, wavefolder, sync, vocal); `SYSTEM › ENGINES` picks the first 4 (ESSENTIAL, default) or all 8 | ≤ 0.9, 0.9.19 |
 | Oscillators | A + B (ADD, RING, X-MOD, SYNC), sub, noise, **OSC C sample** (10 sounds, 5 textures, loop / once, speed) | 0.9.9-4 |
 | Filter | 7 characters (LP24, LP12, BAND, HIGH, NOTCH, VOWEL, COMB), drive, mod by envelope, keyboard, velocity | ≤ 0.9 |
 | Modulation | 3 envelopes, 2 LFOs locked to the tempo (round grid option), STEP FX (16 patterns), 4-slot matrix, 4 MACROS × 4 targets | ≤ 0.9 |
@@ -188,4 +188,5 @@ Ranked by **value for a bass** and **cost on the FM-1** (CPU, RAM, a screen with
 
 ## 10. Versions
 
-- **0.9.14**: versions swapped. **A** (the main one, `install/`, `emulator/index.html`) has **4 efficient engines** for modern basses (ANALOG, REESE, WAVE, FM); **B** (`install/version-b/`, `emulator/b.html`) has **8 engines** (adds PHASE DIST, WAVEFOLDER, HARD SYNC, VOCAL) for deeper sound design (pads, synth and FX). The build flag is `KS_FOUR` (1 by default = A).
+- **0.9.19**: one firmware. The separate versions A (4 engines) and B (8 engines) are merged: `SYSTEM › ENGINES` picks **ESSENTIAL** (the first four: ANALOG, SUPER/REESE, WAVE, FM; the default) or **ALL** (eight). A sound keeps its own engine either way, and the factory presets use all eight.
+- 0.9.14 – 0.9.18: two versions, A with 4 engines and B with 8 (`install/version-b/`, now in `install/older/`).

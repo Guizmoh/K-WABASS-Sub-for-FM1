@@ -45,11 +45,10 @@ OSC C joue des sons µ-law 8 bits depuis la flash (`KS_SMP`, 10 sons à 22,05 kH
 
 ```sh
 cd source
-./build.sh --release 0.9.18                 # build/k-wasub-0.9.18.fwsc   (X.Y, X.Y.Z ou X.Y.Z-suffixe ; identité FM-1_97Y)
-KSUB_DEFS=-DKS_FOUR=0 ./build.sh --release 0.9.18-b  # version B (8 moteurs)
-APP_VER=0.9.18 bash web/make_emulator.sh    # ../emulator/index.html   (KS_FOUR=0 pour ../emulator/b.html)
+./build.sh --release 0.9.19                 # build/k-wasub-0.9.19.fwsc   (X.Y, X.Y.Z ou X.Y.Z-suffixe ; identité FM-1_97Y)
+APP_VER=0.9.19 bash web/make_emulator.sh    # ../emulator/index.html  
 bash web/make_installer.sh                  # ../installer.html avec le dernier install/k-wasub-*.fwsc
-bash tests/run_stress.sh                    # 13 000 essais de réglages sous UBSan (KS_FOUR=0 pour la version B)
+bash tests/run_stress.sh                    # 13 000 essais de réglages sous UBSan
 python3 tests/manual_shots.py               # tous les écrans du manuel -> docs/img
 ```
 Toolchain et SDK : voir [`source/BUILDING.md`](../source/BUILDING.md). La construction vérifie la carte mémoire, qu'aucune adresse de registre n'apparaît hors de `hal/`, et que le paquet tient dans les limites du chargeur.

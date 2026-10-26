@@ -22,7 +22,7 @@ enum { I_L1RATE = 136, I_L2RATE, I_ABMIX, G_MIDICH, G_BPM, G_CLOCK, G_OCT, G_COR
        G_EQ_F, G_EQ_G, G_EQ_T, G_EQ_Q,                                               /* FX held: the EQ (the band eq_cur) */
        G_RST, G_CON, G_NORM, G_DEEP,                                                 /* SYSTEM: why the last stop; CONTRAST; AUTO LEVEL; DEEP BASS */
        G_RS_GO, G_RS_LEN,                                                            /* OSC C: RESAMPLE (record), its length */
-       G_BRI, G_QLFO,                                                                /* SYSTEM: BRIGHTNESS; which LFO LFO held assigns */
+       G_BRI, G_QLFO, G_ENG8,                                                        /* SYSTEM: BRIGHTNESS; which LFO LFO held assigns; ENGINES (4 or 8) */
        I_NONE = 255 };
 
 typedef struct {
@@ -64,7 +64,7 @@ static const view_t VIEWS[] = {
     {LY_PRESET, "PRESET BANK B", 0, {0}, "PRESET"},
     {LY_SAVE, "SAVE PATCH", 0, {0}, "PRESET"},
     {LY_LIST, "ARPEGGIATOR", 5, {G_AR_ON, G_AR_MODE, G_AR_RATE, G_AR_OCT, G_AR_GATE}, "ARP"},
-    {LY_SYS, "GLOBAL SETUP", 23, {G_BPM, V_MODE, G_UI, G_THEME, G_PAL, V_GLIDE, G_QLFO, G_BRI, G_CON, G_DEEP, G_NORM, G_ACCEL, G_GRID, V_BEND, V_VEL,
+    {LY_SYS, "GLOBAL SETUP", 24, {G_BPM, V_MODE, G_UI, G_THEME, G_PAL, V_GLIDE, G_QLFO, G_BRI, G_ENG8, G_CON, G_DEEP, G_NORM, G_ACCEL, G_GRID, V_BEND, V_VEL,
                                   G_FONT, G_ZOOM, G_C3COL, G_BROWSE, G_ASK, G_CORES, G_CPU, G_RST}, "SYSTEM"},
     {LY_SYS, "MIDI", 7, {G_MLEARN, G_MMAP, G_MIDICH, G_CLOCK, G_MSTART, G_MPROG, G_MCLK}, "SYSTEM"},
 };
@@ -97,7 +97,7 @@ static struct {                                 /* the user slots' settings past
     uint8_t magic, sum;
     int8_t p[NUSER][NP_MAX - NP_STORE];
 } uext;
-typedef char ids_fit[G_QLFO < I_NONE ? 1 : -1];
+typedef char ids_fit[G_ENG8 < I_NONE ? 1 : -1];
 typedef char perf_fits_before_uext[sizeof perf <= UX_AT ? 1 : -1];   /* (the 2nd sector: SEQ/ARP/MACROS, then the slots' rest) */
 typedef char uext_fits[UX_AT + sizeof uext <= 4096u ? 1 : -1];
 static uint8_t ux_sum(void) { const uint8_t *b = (const uint8_t *)uext.p; uint32_t i, x = 0x77; for (i = 0; i < sizeof uext.p; i++) x = (x * 7u + b[i]) & 0xFFu; return (uint8_t)x; }
@@ -132,7 +132,8 @@ static struct {
     uint8_t norm, deep, askv;                   /* AUTO LEVEL on, DEEP BASS (0 off, 1 deep, 2 max); askv: the start question was switched off once (0.10) */
     uint8_t bri;                                /* BRIGHTNESS: 0 ECO, 1 NORMAL, 2 BRIGHT, 3 MAX */
     uint8_t qlfo;                               /* QUICK ASSIGN (LFO held + a knob): 0 LFO 1, 1 LFO 2 */
-} set = {6, 0, 0, 0xFF, 1400, 0, 0, 1, 0, 0, 0, 0, 0, {0}, 1, 0, 0, 1, 0, 1, 1, 0, 1, 1, 1, 0, 3, 1};
+    uint8_t eng8;                               /* ENGINES: 0 ESSENTIAL (the first four: ANALOG SUPER WAVE FM), 1 ALL (eight) */
+} set = {6, 0, 0, 0xFF, 1400, 0, 0, 1, 0, 0, 0, 0, 0, {0}, 1, 0, 0, 1, 0, 1, 1, 0, 1, 1, 1, 0, 3, 1, 0};
 static char pname[14];
 static uint8_t page, vcur[NPAGE], cursor[sizeof VIEWS / sizeof VIEWS[0]], pre_cur[2], save_slot, save_pos, hold;
 static uint8_t key_note[27], latched[128], phys[128];
@@ -946,9 +947,13 @@ static uint32_t rate_id(uint32_t id) { uint32_t o = id == I_L2RATE ? LFO_2 : 0u;
 static void item_range(uint32_t id, int32_t *lo, int32_t *hi)
 {
     if (id == I_L1RATE || id == I_L2RATE) id = rate_id(id);
-    if (item_patch(id)) { *lo = PD[id].lo; *hi = PD[id].hi; return; }
+    if (item_patch(id)) {
+        *lo = PD[id].lo; *hi = PD[id].hi;
+        if (id == A_ENG || id == B_ENG) *hi = set.eng8 ? 7 : 3;   /* ENGINES: the list the knobs walk (a sound keeps its own engine) */
+        return;
+    }
     *lo = 0;
-    *hi = id == G_MIDICH ? 16 : id == G_BPM ? 2400 : id == G_CLOCK || id == G_QLFO || id == G_NORM || id == G_RS_GO || id == G_CORES || id == G_GRID || id == G_BROWSE || id == G_C3COL || id == G_UI || id == G_ASK || id == G_ZOOM || id == G_MLEARN || id == G_MSTART || id == G_MPROG || id == G_MCLK ? 1 : id == G_MMAP ? 16 : id == I_ABMIX ? 127 : id == G_BRI ? 3 : id == G_ACCEL || id == G_CON || id == G_DEEP || id == G_RS_LEN ? 2 : id == G_THEME ? 5 : id == G_FONT ? 3 : id == G_PAL ? 10 : id == G_OCT ? 6 : 0;
+    *hi = id == G_MIDICH ? 16 : id == G_BPM ? 2400 : id == G_CLOCK || id == G_QLFO || id == G_ENG8 || id == G_NORM || id == G_RS_GO || id == G_CORES || id == G_GRID || id == G_BROWSE || id == G_C3COL || id == G_UI || id == G_ASK || id == G_ZOOM || id == G_MLEARN || id == G_MSTART || id == G_MPROG || id == G_MCLK ? 1 : id == G_MMAP ? 16 : id == I_ABMIX ? 127 : id == G_BRI ? 3 : id == G_ACCEL || id == G_CON || id == G_DEEP || id == G_RS_LEN ? 2 : id == G_THEME ? 5 : id == G_FONT ? 3 : id == G_PAL ? 10 : id == G_OCT ? 6 : 0;
     if (id == G_BPM) *lo = 600;
     if (id >= G_SQ_STEP && id <= G_AR_GATE) {
         static const int8_t LO[12] = {0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1}, HI[12] = {15, 48, 4, 15, 16, 5, 50, 1, 4, 5, 3, 10};
@@ -989,6 +994,7 @@ static int32_t item_get(uint32_t id)
     case G_NORM: return set.norm;
     case G_BRI: return set.bri;
     case G_QLFO: return set.qlfo;
+    case G_ENG8: return set.eng8;
     case G_RS_GO: return rs_want ? 1 : 0;
     case G_RS_LEN: return rs_secs;
     case G_DEEP: return set.deep;
@@ -1103,6 +1109,7 @@ static void item_set(uint32_t id, int32_t v)
     case G_ZOOM: set.zoom = (uint8_t)v; font_set(set.font, set.zoom); g_force = 1; break;
     case G_NORM: set.norm = (uint8_t)v; ks_norm = (uint8_t)v; break;
     case G_QLFO: set.qlfo = (uint8_t)v; break;
+    case G_ENG8: set.eng8 = (uint8_t)v; toast(v ? "ENGINES: ALL 8" : "ENGINES: ESSENTIAL 4"); break;
     case G_BRI: set.bri = (uint8_t)v; g_bri = (uint8_t)v; lcd_bright((uint32_t)v); theme_set(set.theme, set.pal); g_force = 1; break;
     case G_RS_LEN: rs_secs = (uint8_t)v; return;
     case G_RS_GO:                               /* RESAMPLE: the output for 2 .. 4 s into OSC C */
@@ -1164,6 +1171,7 @@ static const char *item_name(uint32_t id)
     case G_NORM: return "AUTO LEVEL";
     case G_BRI: return "BRIGHTNESS";
     case G_QLFO: return "LFO HELD = LFO";
+    case G_ENG8: return "ENGINES";
     case G_RS_GO: return "RESAMPLE";
     case G_RS_LEN: return "REC LENGTH";
     case G_DEEP: return "DEEP BASS";
@@ -1213,7 +1221,7 @@ static const char *item_sname(uint32_t id)
     if (k) return ENG_P[e][k - 1];
     if (id == I_L1RATE || id == I_L2RATE) return "RATE";
     if (item_patch(id)) return PD[id].sname;
-    return id == G_MIDICH ? "MIDI" : id == G_BPM ? "BPM" : id == G_CLOCK ? "CLOCK" : id == G_OCT ? "OCT" : id == G_CORES ? "CORES" : id == G_THEME ? "THEME" : id == G_PAL ? "PALETTE" : id == G_FONT ? "FONT" : id == G_GRID ? "GRID" : id == G_BROWSE ? "BROWSE" : id == G_ACCEL ? "ACCEL" : id == G_C3COL ? "COLOURS" : id == G_UI ? "UI" : id == G_ASK ? "ASK" : id == G_ZOOM ? "LOUPE" : id == G_CON ? "CONTRAST" : id == G_NORM ? "LEVEL" : id == G_BRI ? "BRIGHT" : id == G_QLFO ? "QLFO" : id == G_RS_GO ? "RESAMP" : id == G_RS_LEN ? "LENGTH" : id == G_DEEP ? "DEEP" : id == G_MLEARN ? "LEARN" : id == G_MMAP ? "CC MAP" : id == I_ABMIX ? "A/B" : id == G_SQ_TYPE ? "TYPE" : id == G_SQ_PAT ? "PAT" : id == G_SQ_LEN ? "LEN" : id == G_AR_OCT ? "OCT" : item_name(id);
+    return id == G_MIDICH ? "MIDI" : id == G_BPM ? "BPM" : id == G_CLOCK ? "CLOCK" : id == G_OCT ? "OCT" : id == G_CORES ? "CORES" : id == G_THEME ? "THEME" : id == G_PAL ? "PALETTE" : id == G_FONT ? "FONT" : id == G_GRID ? "GRID" : id == G_BROWSE ? "BROWSE" : id == G_ACCEL ? "ACCEL" : id == G_C3COL ? "COLOURS" : id == G_UI ? "UI" : id == G_ASK ? "ASK" : id == G_ZOOM ? "LOUPE" : id == G_CON ? "CONTRAST" : id == G_NORM ? "LEVEL" : id == G_BRI ? "BRIGHT" : id == G_QLFO ? "QLFO" : id == G_ENG8 ? "ENGINES" : id == G_RS_GO ? "RESAMP" : id == G_RS_LEN ? "LENGTH" : id == G_DEEP ? "DEEP" : id == G_MLEARN ? "LEARN" : id == G_MMAP ? "CC MAP" : id == I_ABMIX ? "A/B" : id == G_SQ_TYPE ? "TYPE" : id == G_SQ_PAT ? "PAT" : id == G_SQ_LEN ? "LEN" : id == G_AR_OCT ? "OCT" : item_name(id);
 }
 static uint32_t ilog2q8(uint32_t x)             /* log2(x) in Q8, x >= 1 */
 {
@@ -1308,6 +1316,7 @@ static void item_text(uint32_t id, char *b)
         }
         case G_RS_LEN: { char *q = fmt_u(b, 2u + (uint32_t)v, 0); str_cat(q, " s"); break; }
         case G_QLFO: str_cat(b, v ? "LFO 2" : "LFO 1"); break;
+        case G_ENG8: str_cat(b, v ? "ALL (8 ENGINES)" : "ESSENTIAL (4)"); break;
         case G_BRI: str_cat(b, v == 3 ? "MAX" : v == 2 ? "BRIGHT" : v == 1 ? "NORMAL" : "ECO"); break;
         case G_NORM: str_cat(b, v ? "ON (EVEN LEVEL)" : "OFF"); break;
         case G_DEEP: str_cat(b, v == 2 ? "MAX (+7 dB UNDER 90 Hz)" : v ? "DEEP (+4 dB)" : "OFF"); break;
@@ -2092,16 +2101,17 @@ static void app_init(void)
     uint32_t i;
     int ok;
     {                                           /* (a save from before a field was added: the fields it has, the rest as is) */
-        const uint32_t LEN[9] = {sizeof set, (uint32_t)((uint8_t *)&set.qlfo - (uint8_t *)&set), (uint32_t)((uint8_t *)&set.bri - (uint8_t *)&set), (uint32_t)((uint8_t *)&set.norm - (uint8_t *)&set), (uint32_t)((uint8_t *)&set.contrast - (uint8_t *)&set), (uint32_t)((uint8_t *)&set.mstart - (uint8_t *)&set), (uint32_t)((uint8_t *)&set.zoom - (uint8_t *)&set),
+        const uint32_t LEN[10] = {sizeof set, (uint32_t)((uint8_t *)&set.eng8 - (uint8_t *)&set), (uint32_t)((uint8_t *)&set.qlfo - (uint8_t *)&set), (uint32_t)((uint8_t *)&set.bri - (uint8_t *)&set), (uint32_t)((uint8_t *)&set.norm - (uint8_t *)&set), (uint32_t)((uint8_t *)&set.contrast - (uint8_t *)&set), (uint32_t)((uint8_t *)&set.mstart - (uint8_t *)&set), (uint32_t)((uint8_t *)&set.zoom - (uint8_t *)&set),
                                  (uint32_t)((uint8_t *)&set.ui - (uint8_t *)&set), (uint32_t)((uint8_t *)&set.accel - (uint8_t *)&set)};
-        for (ok = 0, i = 0; i < 9u && !ok; i++) ok = !settings_load(&set, LEN[i]) && set.ver == 6u;
+        for (ok = 0, i = 0; i < 10u && !ok; i++) ok = !settings_load(&set, LEN[i]) && set.ver == 6u;
     }
     first_run = !ok || set.askv < 2u;           /* (the very first start, or a save from before 0.9.17: the question once) */
     if (!ok) {
         set.font = set.grid = set.browse = 0; set.theme = 1; set.pal = 10;   /* (STUDIO, GOLD) */
         memset(set.fav, 0, sizeof set.fav);
-        set.ver = 6; set.midich = 0; set.clock = 0; set.oct = 0xFF; set.bpm10 = 1400; set.bank = 0; set.idx = 0; set.cores = 1; set.accel = 1; set.c3col = 0; set.ui = 0; set.ask = 0; set.zoom = 0; set.mstart = 1; set.mprog = 1; set.mclk = 0; set.contrast = 1; set.norm = 1; set.deep = 1; set.askv = 1; set.bri = 3; set.qlfo = 1;
+        set.ver = 6; set.midich = 0; set.clock = 0; set.oct = 0xFF; set.bpm10 = 1400; set.bank = 0; set.idx = 0; set.cores = 1; set.accel = 1; set.c3col = 0; set.ui = 0; set.ask = 0; set.zoom = 0; set.mstart = 1; set.mprog = 1; set.mclk = 0; set.contrast = 1; set.norm = 1; set.deep = 1; set.askv = 1; set.bri = 3; set.qlfo = 1; set.eng8 = 0;
     }
+    set.eng8 = set.eng8 ? 1u : 0u;
     set.qlfo = set.qlfo ? 1u : 0u;
     set.bri = set.bri < 4u ? set.bri : 3u;
     g_bri = set.bri;

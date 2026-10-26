@@ -8,7 +8,7 @@
 
 | | |
 |---|---|
-| 🎛 **Essayer** (navigateur) | [`emulator/index.html`](../emulator/index.html?lang=fr) (version A, 4 moteurs) · [`emulator/b.html`](../emulator/b.html) (version B, 8 moteurs) |
+| 🎛 **Essayer** (navigateur) | [`emulator/index.html`](../emulator/index.html?lang=fr)  |
 | ⬇️ **Installer** sur le FM-1 | [`installer.html`](../installer.html) (Chrome ou Edge, USB) · ou `INSTALL-Windows.bat` / `INSTALL-Mac.command` / `INSTALL-Linux.sh` |
 | 📖 **Manuel** illustré | [`manual.html`](manual.html) |
 | 🏠 **Accueil** | [`index.html`](index.html) (si GitHub Pages est activé : <https://guizmoh.github.io/K-WASUB_Firmware_for_FM1/>) |
@@ -31,7 +31,7 @@
 
 1. FM-1 en USB (câble **de données**), autres logiciels MIDI fermés.
 2. Ouvrir [`installer.html`](../installer.html) dans Chrome ou Edge → « Installer K-WASUB ».
-3. Les paquets sont dans [`install/`](../install/) (`k-wasub-X.fwsc` = version A à 4 moteurs, version B à 8 moteurs dans `install/version-b/`, anciens dans `install/older/`, sommes de contrôle dans `SHA256SUMS`).
+3. Les paquets sont dans [`install/`](../install/) (`k-wasub-X.fwsc`, anciens dans `install/older/`, sommes de contrôle dans `SHA256SUMS`).
 
 Retour à KAWA (`install/kawa-0.5.fwsc`) ou au firmware officiel (M-UPGRADE) possible à tout moment ; `OCT−` maintenu à l'allumage = secours USB.
 
@@ -39,8 +39,8 @@ Retour à KAWA (`install/kawa-0.5.fwsc`) ou au firmware officiel (M-UPGRADE) pos
 
 ```sh
 cd source
-./build.sh --release 0.9.18          # -> build/k-wasub-0.9.18.fwsc, version A à 4 moteurs (KSUB_DEFS=-DKS_FOUR=0 et X.Y.Z-b pour la version B, 8 moteurs)
-APP_VER=0.9.18 bash web/make_emulator.sh      # émulateur (KS_FOUR=0 pour B)
+./build.sh --release 0.9.19          # -> build/k-wasub-0.9.19.fwsc
+APP_VER=0.9.19 bash web/make_emulator.sh      # émulateur
 bash web/make_installer.sh                    # installer.html avec le dernier paquet
 bash tests/run_stress.sh                      # tests de charge (UBSan)
 python3 tests/manual_shots.py                 # captures du manuel (docs/img)

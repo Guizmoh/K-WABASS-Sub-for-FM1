@@ -8,7 +8,7 @@
 
 | | |
 |---|---|
-| 🎛 **Try it** (browser) | [`emulator/index.html`](emulator/index.html) (version A, 4 engines) · [`emulator/b.html`](emulator/b.html) (version B, 8 engines) |
+| 🎛 **Try it** (browser) | [`emulator/index.html`](emulator/index.html)  |
 | ⬇️ **Install** on the FM-1 | [`installer.html`](installer.html) (Chrome or Edge, USB) · or `INSTALL-Windows.bat` / `INSTALL-Mac.command` / `INSTALL-Linux.sh` |
 | 📖 **Manual** (illustrated) | [`manual.html`](manual.html) |
 | 🏠 **Home page** | [`index.html`](index.html) (with GitHub Pages on: <https://guizmoh.github.io/K-WASUB_Firmware_for_FM1/>) |
@@ -23,6 +23,7 @@
 - **FX PADS**: hold `FX`; white keys change the wobble speed (4, 8, 16, 24, 32, 48), black keys play stutters, tape stop, DJ filter, saturation, phaser…
 - **MORPH**: `SEL` ×2 = X/Y square (at first, the same sound in 4 variations), ×5 = A/B fade on the beat.
 - **PERFORM** (`SEL`): 4 named macros, the morph and the pads on one screen.
+- **Engines**: one firmware; `SYSTEM › ENGINES` picks ESSENTIAL (4 engines, the default) or ALL (8).
 - **Sound**: multiband OTT, MONO BASS, a sub locked on OSC A, **RESAMPLE** (the output into OSC C, to replay, slow down, loop).
 - **Presets**: tags (sub, reese, growl, wobble, pluck, 808, drone), instant change.
 - **Two modes**: CLASSIC (lists) or SHIFT (3 columns, `OCT−` and `OCT+` as Shift); hold `GLO` to switch.
@@ -33,7 +34,7 @@
 
 1. FM-1 over USB (a **data** cable), other MIDI software closed.
 2. Open [`installer.html`](installer.html) in Chrome or Edge → “Install K-WASUB”.
-3. The packages are in [`install/`](install/) (`k-wasub-X.fwsc` = version A with 4 engines, version B with 8 engines in `install/version-b/`, older ones in `install/older/`, checksums in `SHA256SUMS`).
+3. The packages are in [`install/`](install/) (`k-wasub-X.fwsc`, older ones in `install/older/`, checksums in `SHA256SUMS`).
 
 You can go back to KAWA (`install/kawa-0.5.fwsc`) or to the stock firmware (M-UPGRADE) at any time; holding `OCT−` at power-on = USB rescue.
 
@@ -41,8 +42,8 @@ You can go back to KAWA (`install/kawa-0.5.fwsc`) or to the stock firmware (M-UP
 
 ```sh
 cd source
-./build.sh --release 0.9.18          # -> build/k-wasub-0.9.18.fwsc, version A, 4 engines (KSUB_DEFS=-DKS_FOUR=0 and X.Y.Z-b for version B, 8 engines)
-APP_VER=0.9.18 bash web/make_emulator.sh      # emulator (KS_FOUR=0 for B)
+./build.sh --release 0.9.19          # -> build/k-wasub-0.9.19.fwsc
+APP_VER=0.9.19 bash web/make_emulator.sh      # emulator
 bash web/make_installer.sh                    # installer.html with the newest package
 bash tests/run_stress.sh                      # load tests (UBSan)
 python3 tests/manual_shots.py                 # the manual's screenshots (docs/img)

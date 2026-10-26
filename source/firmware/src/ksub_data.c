@@ -59,7 +59,7 @@ enum { VM_MONO, VM_LEGATO, VM_POLY };
 enum { FM_PCT, FM_BIP, FM_LIST, FM_INT, FM_SEMI, FM_CENT, FM_TIME, FM_CUT, FM_LFOHZ, FM_DIV, FM_VOL, FM_OSCP, FM_DEST };
 
 #ifndef KS_FOUR
-#define KS_FOUR 1
+#define KS_FOUR 0   /* (1: a build with four engines only, for tests; the firmware has all eight and SYSTEM > ENGINES picks 4 or 8) */
 #endif
 #if KS_FOUR   /* version A: four engines, one for each job (the others' patches are moved onto them: eng_b) */
 #define NENG_UI 4

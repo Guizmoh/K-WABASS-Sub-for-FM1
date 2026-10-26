@@ -60,14 +60,14 @@ footer{margin-top:50px;border-top:1px solid var(--rule);padding-top:18px;color:v
 <div class="cards">
 <div class="card"><h3>Jouer une basse vivante</h3><p>Les 27 touches jouent la basse, <b>K1–K4</b> règlent les 4 réglages importants de chaque page. Un appui long sur LFO et un potard : le LFO 2 est branché sur ce que tu règles (ou le LFO 1, dans les options).</p></div>
 <div class="card"><h3>Des effets sur les touches</h3><p><b>FX PADS</b> : touches blanches = vitesse du wobble (4, 8, 16, 24, 32, 48), touches noires = stutters, tape stop, DJ filter, saturation, phaser…</p></div>
-<div class="card"><h3>Un vrai son de basse</h3><p>2 oscillateurs de 4 moteurs (A) ou 8 (B) (reese, FM, wavetable…), un sub verrouillé sur A, un sample et le <b>resample</b>, 7 filtres, <b>OTT multibande</b>, mono-bass, compresseur avec pump, EQ 4 bandes, limiteur et niveau automatique.</p></div>
+<div class="card"><h3>Un vrai son de basse</h3><p>2 oscillateurs de 4 ou 8 moteurs (reese, FM, wavetable…, au choix dans les options), un sub verrouillé sur A, un sample et le <b>resample</b>, 7 filtres, <b>OTT multibande</b>, mono-bass, compresseur avec pump, EQ 4 bandes, limiteur et niveau automatique.</p></div>
 <div class="card"><h3>Morpher entre des sons</h3><p><b>MORPH X/Y</b> : quatre sons aux coins d'un carré, un point qui les mélange (un LFO peut le promener). <b>MORPH A/B</b> : un fondu sur le tempo.</p></div>
 <div class="card"><h3>Simple ou rapide</h3><p>Mode <b>CLASSIC</b> (listes) ou <b>SHIFT</b> (3 colonnes, OCT− et OCT+ comme touches Shift). 6 thèmes (dont GLOW et TECH, en dégradés), 19 palettes, 4 luminosités, grand contraste.</p></div>
 <div class="card"><h3>Sûr et ouvert</h3><p>Gratuit, libre (GPL-3.0), se réinstalle ou se retire en USB, avec un mode de secours. Si le FM-1 s'arrête, l'écran dit pourquoi.</p></div></div></section>
 
 <section class="sec" id="essayer"><h2>Essayer dans le navigateur</h2>
 <p class="lead">Le même firmware, compilé pour ton navigateur : aucun FM-1 nécessaire. Clique sur l'écran puis joue avec le clavier de l'ordinateur (touches <code>A Z E R T…</code>), la souris sur les boutons, la molette sur les potards. Le son démarre au premier appui.</p>
-<div class="emu"><div class="tabs"><button id="ta" aria-pressed="true">Version A · 4 moteurs</button><button id="tb" aria-pressed="false">Version B · 8 moteurs</button><span><a id="open" href="../emulator/index.html?lang=fr">ouvrir en plein écran ↗</a></span></div>
+<div class="emu"><div class="tabs"><span><a id="open" href="../emulator/index.html?lang=fr">ouvrir en plein écran ↗</a></span></div>
 <div class="frame"><iframe id="fr" title="Émulateur K-WASUB" loading="lazy" allow="autoplay"></iframe>
 <div class="go" id="go"><div><p style="font-size:1.1rem;margin:0 0 12px">Lance l'émulateur ici, sans rien installer</p><button class="btn p" id="start">▶ Démarrer l'émulateur</button><p style="color:var(--mut);font-size:.88rem;margin-top:12px">Il pèse moins d'1 Mo et fonctionne même hors ligne (ouvre <code>emulator/index.html</code> depuis ton dossier).</p></div></div></div></div></section>
 
@@ -90,7 +90,8 @@ footer{margin-top:50px;border-top:1px solid var(--rule);padding-top:18px;color:v
 
 <section class="sec" id="nouveautes"><h2>Dernières mises à jour</h2>
 <table><tr><th>Version</th><th>Quoi de neuf</th></tr>
-<tr><td><b>0.9.18</b></td><td>Look par défaut : thème <b>STUDIO</b>, palette <b>GOLD</b> (nouvelles installations et remises à zéro) · <b>INVERTED</b> : texte noir · <b>PALETTE</b> juste sous THEME dans les options</td></tr>
+<tr><td><b>0.9.19</b></td><td><b>Un seul firmware</b> : <code>SYSTEM › ENGINES</code> choisit ESSENTIAL (4 moteurs, le défaut) ou ALL (8). La version B séparée disparaît.</td></tr>
+<tr><td>0.9.18</td><td>Look par défaut : thème <b>STUDIO</b>, palette <b>GOLD</b> (nouvelles installations et remises à zéro) · <b>INVERTED</b> : texte noir · <b>PALETTE</b> juste sous THEME dans les options</td></tr>
 <tr><td>0.9.17</td><td>La <b>question CLASSIC ou SHIFT</b> revient au tout premier démarrage (et une fois après la mise à jour) : choisis les listes classiques ou le mode SHIFT avec OCT− / OCT+. Aussi : LFO maintenu + un potard assigne le LFO 2 (ou le LFO 1, dans les options) ; GLIDE sous THEME dans les options.</td></tr>
 <tr><td><b>0.9.14</b></td><td><b>Versions inversées</b> : A est maintenant la version à 4 moteurs (efficaces pour les basses modernes), B celle à 8 moteurs (sound design plus poussé : pads, synthé et FX). Les liens et les noms suivent.</td></tr>
 <tr><td>0.9.13</td><td>Nouveau thème <b>TECH</b> : l'image (oscillateur, enveloppe, filtre…) sur presque toute la page, quatre tuiles, dégradés dans des sens différents (palettes VOLT et CYBER) · GLOW devient <b>CLASSIC GLOW</b> · <b>BRIGHTNESS</b> ECO / NORMAL / BRIGHT / <b>MAX</b></td></tr>
@@ -109,7 +110,7 @@ footer{margin-top:50px;border-top:1px solid var(--rule);padding-top:18px;color:v
 <section class="sec"><h2>Questions fréquentes</h2>
 <details><summary>Je perds KAWA ou le firmware d'origine ?</summary><p>Non. L'installation se fait comme celle de KAWA, avec le même chargeur : tu peux réinstaller KAWA (<code>kawa-0.5.fwsc</code>) ou le firmware officiel (M-UPGRADE) quand tu veux.</p></details>
 <details><summary>Pas de son sur le FM-1 ?</summary><p>Dans SYSTEM, regarde <code>AUDIO CORES</code> (essaie SINGLE) et le volume du MASTER. Si le FM-1 s'est éteint, regarde <code>LAST STOP</code> au démarrage et note ce qui s'affiche.</p></details>
-<details><summary>Version A ou B ?</summary><p>A : 4 moteurs efficaces pour les basses modernes (ANALOG, REESE, WAVE, FM). B : 8 moteurs pour un sound design plus poussé (pads, synthé et FX). Même reste.</p></details>
+<details><summary>4 ou 8 moteurs ?</summary><p>Il n'y a qu'un firmware. Dans <code>SYSTEM › ENGINES</code> on choisit <b>ESSENTIAL</b> (4 moteurs efficaces pour les basses modernes : ANALOG, SUPER/REESE, WAVE, FM, le choix par défaut) ou <b>ALL</b> (8 moteurs pour un sound design plus poussé : pads, synthé et FX). Un son garde son moteur dans les deux cas. Même reste.</p></details>
 <details><summary>C'est quoi le « beta » ?</summary><p>Le firmware est testé dans l'émulateur et par des tests automatiques, mais pas encore sur tous les FM-1. Dis-moi ce que tu constates (GitHub, onglet Issues).</p></details></section>
 
 <footer>K-WASUB · GPL-3.0 · né de <a href="https://github.com/Guizmoh/Kawa-Tracker-Fm1">KAWA</a> (Omnipotard / Leo Kuroshita, Hügelton Instruments), dont il reprend la plate-forme du FM-1. Pas affilié à M-VAVE. <a href="https://github.com/Guizmoh/K-WASUB_Firmware_for_FM1">Code source</a> · <a href="../LICENSE">Licence</a></footer>
@@ -120,10 +121,8 @@ var DONATE_URL = "https://ko-fi.com/omnipotard";
 (function(){
   var d=document.getElementById("donate");
   if(DONATE_URL){d.href=DONATE_URL;d.target="_blank";d.rel="noopener";d.removeAttribute("aria-disabled");document.getElementById("dnote").hidden=true;}
-  var fr=document.getElementById("fr"),go=document.getElementById("go"),ta=document.getElementById("ta"),tb=document.getElementById("tb"),op=document.getElementById("open"),ver="index.html";
+  var fr=document.getElementById("fr"),go=document.getElementById("go"),op=document.getElementById("open"),ver="index.html";
   function load(){fr.src="../emulator/"+ver+"?lang=fr";fr.style.display="block";go.style.display="none";}
   document.getElementById("start").onclick=load;
-  function pick(v){ver=v;ta.setAttribute("aria-pressed",v==="index.html");tb.setAttribute("aria-pressed",v==="b.html");op.href="../emulator/"+v+"?lang=fr";if(fr.style.display==="block")load();}
-  ta.onclick=function(){pick("index.html")};tb.onclick=function(){pick("b.html")};
 })();
 </script><a class="fab" href="https://ko-fi.com/omnipotard" target="_blank" rel="noopener">☕ Soutenir K-WASUB</a></body></html>

@@ -8,7 +8,7 @@ OUT = Path("../docs/img"); OUT.mkdir(parents=True, exist_ok=True)
 T = [0]
 def run(lines, tag):
     Path(f"build/{tag}.txt").write_text("\n".join(lines) + "\nend\n")
-    subprocess.run(["node", "tests/shots.mjs", f"build/{tag}.txt"], check=True, capture_output=True, env={**os.environ, "WASM": "build/web/ksub-b.wasm"})   # (the 8-engine build shows everything)
+    subprocess.run(["node", "tests/shots.mjs", f"build/{tag}.txt"], check=True, capture_output=True)
 def look(s, t, p):                              # the theme and the palette, from SYSTEM
     s.btn(GLO, 200); s.enc(0, -30, 100); s.enc(0, 3, 100); s.enc(1, -8, 100); s.enc(1, t, 100)
     s.enc(0, 1, 100); s.enc(1, -12, 100); s.enc(1, p, 100); s.btn(HOME, 200)
