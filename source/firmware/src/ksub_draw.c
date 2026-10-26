@@ -1241,6 +1241,22 @@ static int32_t rb_content(const view_t *v, uint32_t vi, int32_t x, int32_t y0, i
     }
     return y - y0 + 6;
 }
+static uint32_t hint_vi = 0xFFFFu, hint_ms;
+static void hint_overlay(const view_t *v, uint32_t vi)   /* (the themes with no footer) what the knobs do, then the buttons: see-through, at the bottom */
+{
+    const char *ff = foot_fixed(vi), *l2 = v->lay == LY_PRESET ? "SAVE: KEEP THIS SOUND \xB7 SAVE HELD: FAVORITE" :
+                     v->lay == LY_SAVE ? "SAVE AGAIN: WRITE \xB7 ANOTHER PAGE: CANCEL" : "SELECT: ROW \xB7 ALGO: VALUE \xB7 SAVE: SAVE";
+    char fb[64];
+    int32_t y, x;
+    if (vi != hint_vi) { hint_vi = vi; hint_ms = fm1_ms; }
+    if (v->lay != LY_PRESET && v->lay != LY_SAVE && fm1_ms - hint_ms > 4000u) return;   /* (4 s on a new view; always on PRESETS and SAVE) */
+    if (!g_vis(204, 34)) return;
+    for (y = 204; y < 238; y++) if (g_vis(y, 1)) for (x = 4; x < 236; x++) g_pxa(x, y, K_BG, y == 204 || y == 237 ? 140u : 200u);
+    g_rect(4, 204, 232, 1, g_mix(K_BG, K_LIME, 160));
+    if (ff) str_cat(fb, ff); else foot_text(v, fb, 224);
+    g_text_c(g_fit(T_XS, fb, 226), 120, 209, fb, K_WHITE);
+    g_text_c(g_fit(T_XS, l2, 226), 120, 223, l2, K_LIME);
+}
 static void th_ribbon(const view_t *v, uint32_t vi, int classic)
 {
     const int32_t wy = 26, wh = 206;
@@ -1304,6 +1320,7 @@ static void th_ribbon(const view_t *v, uint32_t vi, int classic)
         rows_g(v, wx + 6, ry, ww - 18, 22, 25, (uint32_t)((cy1 - ry) / 25), T_S);
     }
     g_clip(0, 0, 240, 240);
+    hint_overlay(v, vi);
 }
 
 /* ---------------------------------------------------------------- RACK */
