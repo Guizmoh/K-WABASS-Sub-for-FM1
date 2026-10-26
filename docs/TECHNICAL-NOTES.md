@@ -45,9 +45,9 @@ OSC C plays 8-bit mu-law sounds from flash (`KS_SMP`, 10 sounds at 22.05 kHz and
 
 ```sh
 cd source
-./build.sh --release 0.9.14                 # build/k-wasub-0.9.14.fwsc   (X.Y, X.Y.Z or X.Y.Z-suffix; identity FM-1_97Y)
-KSUB_DEFS=-DKS_FOUR=0 ./build.sh --release 0.9.14-b  # version B (8 engines)
-APP_VER=0.9.14 bash web/make_emulator.sh    # ../emulator/index.html   (KS_FOUR=0 for ../emulator/b.html)
+./build.sh --release 0.9.15                 # build/k-wasub-0.9.15.fwsc   (X.Y, X.Y.Z or X.Y.Z-suffix; identity FM-1_97Y)
+KSUB_DEFS=-DKS_FOUR=0 ./build.sh --release 0.9.15-b  # version B (8 engines)
+APP_VER=0.9.15 bash web/make_emulator.sh    # ../emulator/index.html   (KS_FOUR=0 for ../emulator/b.html)
 bash web/make_installer.sh                  # ../installer.html with the newest install/k-wasub-*.fwsc
 bash tests/run_stress.sh                    # 13 000 parameter runs under UBSan (KS_FOUR=0 for version B)
 python3 tests/manual_shots.py               # every screen of the manual -> docs/img

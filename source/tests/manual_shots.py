@@ -75,19 +75,19 @@ NM = {(0, 0): "neon", (0, 1): "amber", (1, 0): "studio", (1, 1): "ocean", (2, 0)
       (0, 2): "synthwave", (0, 3): "mint", (0, 4): "blackwhite", (0, 5): "inverted", (0, 6): "red", (0, 7): "ice", (0, 8): "fluo", (0, 9): "pink", (0, 10): "gold",
       (4, 0): "glow-green", (4, 1): "glow-toxic", (5, 0): "tech-volt", (5, 1): "tech-cyber", (5, 2): "tech-synthwave", (5, 8): "tech-fluo", (5, 9): "tech-pink", (5, 7): "tech-ice", (4, 8): "glow-fluo", (4, 9): "glow-pink", (4, 10): "glow-gold", (4, 2): "glow-synthwave", (4, 7): "glow-ice"}
 for t, p in combos:
-    s.btn(GLO, 200); s.enc(0, -30, 100); s.enc(0, 4, 100); s.enc(1, -8, 100); s.enc(1, t, 100)
-    s.enc(0, 1, 100); s.enc(1, -12, 100); s.enc(1, p, 100)
+    s.btn(GLO, 200); s.enc(0, -30, 100); s.enc(0, 3, 100); s.enc(1, -8, 100); s.enc(1, t, 100)
+    s.enc(0, 2, 100); s.enc(1, -12, 100); s.enc(1, p, 100)
     s.btn(HOME, 200); s.btn(EDIT, 200); s.shot("t-" + NM[(t, p)], 1300)
 finish(s, "m3")
 
 # 4. GLOW: the theme on several screens
-s = S(); s.btn(SEL, 400); s.btn(GLO, 200); s.enc(0, -30, 100); s.enc(0, 4, 100); s.enc(1, 4, 100); s.btn(HOME, 300)
+s = S(); s.btn(SEL, 400); s.btn(GLO, 200); s.enc(0, -30, 100); s.enc(0, 3, 100); s.enc(1, 4, 100); s.btn(HOME, 300)
 s.shot("g-home", 1300); s.btn(EDIT, 300); s.shot("g-osc", 300); s.btn(ENV, 300); s.shot("g-env", 300); s.btn(LFO, 300); s.shot("g-lfo", 300)
 s.btn(FX, 300); s.shot("g-fx", 300); s.btn(ARP, 300); s.shot("g-presets", 300); s.btn(SEQ, 300); s.shot("g-filter", 300)
 finish(s, "m4")
 
 # 5. TECH: the layout on its screens (the theme the 6th of the list)
-s = S(); s.btn(SEL, 400); s.btn(GLO, 200); s.enc(0, -30, 100); s.enc(0, 4, 100); s.enc(1, 8, 100); s.btn(HOME, 300)
+s = S(); s.btn(SEL, 400); s.btn(GLO, 200); s.enc(0, -30, 100); s.enc(0, 3, 100); s.enc(1, 8, 100); s.btn(HOME, 300)
 s.shot("k-home", 1300); s.btn(EDIT, 300); s.shot("k-osc", 300); s.btn(EDIT, 200); s.shot("k-oscb", 300); s.btn(ENV, 300); s.shot("k-env", 300)
 s.btn(LFO, 300); s.shot("k-lfo", 300); s.btn(FX, 300); s.shot("k-fx", 300); s.btn(FX, 200); s.btn(FX, 200); s.shot("k-fx3", 300)
 s.btn(SEQ, 300); s.shot("k-filter", 300); s.btn(ARP, 300); s.shot("k-presets", 300); s.btn(GLO, 300); s.shot("k-system", 300)
