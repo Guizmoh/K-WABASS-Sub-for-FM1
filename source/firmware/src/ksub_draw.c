@@ -2143,20 +2143,53 @@ static void draw_ask(void)
         {"CLASSIC", "PAGES OF LISTS, LIKE A SYNTH", "SELECT: ROW  ALGO: ITS VALUE", "K1-K4: THE FIRST 4 ROWS"},
         {"SHIFT", "12 SETTINGS A PAGE, 3 COLUMNS", "KNOBS: LEFT  HOLD OCT-: MIDDLE", "HOLD OCT+: RIGHT  TAP: OCTAVE"}};
     uint32_t k;
-    if (ask_on == 2u) {                         /* the very first start: the look (each one shown as it is chosen) */
-        static const char *const TT[4][2] = {{"CLASSIC", "LISTS, FLAT COLOURS"}, {"STUDIO", "A STATUS BAR, THE 8 PAGES IN VIEW"},
-                                              {"PURE", "A BIG WAVE, FOUR KNOB DIALS"}, {"RIBBON CLASSIC", "THE VIEWS SIDE BY SIDE"}};
-        g_text_c(T_XS, 120, 20, "CHOOSE A LOOK", K_GREY);
+    if (ask_on == 2u) {                         /* the very first start: the look, four little pictures (each in its own colours) */
+        static const char *const TT[4] = {"CLASSIC", "STUDIO", "PURE", "RIBBON CLASSIC"};
+        g_text_c(T_XS, 120, 6, "CHOOSE A LOOK", K_GREY);
         for (k = 0; k < 4u; k++) {
-            int32_t y = 32 + (int32_t)k * 44;
-            int on = k == ask_sel;
-            if (!g_vis(y, 40)) continue;
-            g_box(8, y, 224, 40, on ? K_LIMED : K_PANEL, on ? K_LIME : K_LINE);
-            g_text(T_M, 16, y + 5, TT[k][0], on ? K_LIME : K_WHITE);
-            g_text(T_XS, 16, y + 26, TT[k][1], K_GREY);
+            int32_t x = 4 + (int32_t)(k & 1u) * 118, y = 18 + (int32_t)(k >> 1) * 100, sx = x + 5, sy = y + 5, i;
+            if (!g_vis(y, 98)) continue;
+            theme_set(ASK_TH[k], set.pal);      /* (the tile in that look's colours) */
+            g_box(x, y, 114, 96, K_BG, K_LINE);
+            switch (k) {
+            case 0:                             /* CLASSIC: a title, a picture, the rows (flat) */
+                g_rect(sx, sy, 50, 3, K_LIME); g_rect(sx, sy + 6, 104, 1, K_LIME);
+                g_rect(sx, sy + 10, 70, 7, K_WHITE);
+                g_box(sx, sy + 21, 104, 22, K_PANEL, K_LINE);
+                for (i = 0; i < 100; i += 4) g_line(sx + 2 + i, sy + 32 - (int32_t)(sin32((uint32_t)i << 25) >> 12), sx + 6 + i, sy + 32 - (int32_t)(sin32((uint32_t)(i + 4) << 25) >> 12), K_LIME);
+                for (i = 0; i < 3; i++) g_box(sx, sy + 46 + i * 9, 104, 8, i ? K_PANEL : K_LIMED, i ? K_LINE : K_LIME);
+                break;
+            case 1:                             /* STUDIO: a status bar, the eight pages as tabs, rows with their colours */
+                g_rect(sx, sy, 104, 4, K_PANEL); g_rect(sx + 2, sy + 1, 40, 2, K_WHITE);
+                for (i = 0; i < 8; i++) g_rect(sx + i * 13, sy + 7, 11, 5, i ? K_PANEL : K_LIME);
+                g_rect(sx, sy + 15, 64, 6, K_WHITE);
+                g_box(sx, sy + 24, 104, 18, K_PANEL, K_LINE);
+                for (i = 0; i < 4; i++) {
+                    static const uint16_t KC[4] = {0xF20Au, 0xFE00u, 0x3F2Au, 0x3B7Fu};
+                    g_rect(sx, sy + 45 + i * 7, 4, 4, KC[i]); g_rect(sx + 7, sy + 45 + i * 7, 40, 2, K_WHITE);
+                    g_rect(sx + 7, sy + 48 + i * 7, 30 + i * 15, 1, KC[i]);
+                }
+                break;
+            case 2:                             /* PURE: a tab, a big wave, four knob rings */
+                g_rect(sx, sy, 30, 6, K_LIME);
+                for (i = 0; i < 100; i += 4) g_line(sx + 2 + i, sy + 26 - (int32_t)(sin32((uint32_t)i << 24) >> 11), sx + 6 + i, sy + 26 - (int32_t)(sin32((uint32_t)(i + 4) << 24) >> 11), K_LIME);
+                for (i = 0; i < 4; i++) { dk_dot(sx + 13 + i * 26, sy + 60, 20, K_LIME, 256); dk_dot(sx + 13 + i * 26, sy + 60, 14, K_BG, 256); }
+                break;
+            default:                            /* RIBBON CLASSIC: the views side by side, the one shown in the middle */
+                g_box(sx - 2, sy + 8, 18, 60, K_PANEL, K_LINE); g_box(sx + 88, sy + 8, 18, 60, K_PANEL, K_LINE);
+                g_box(sx + 20, sy, 64, 74, K_PANEL, K_LIME);
+                g_rect(sx + 24, sy + 4, 30, 4, K_LIME);
+                for (i = 0; i < 5; i++) g_box(sx + 24, sy + 12 + i * 11, 56, 9, i ? K_BG : K_LIMED, i ? K_LINE : K_LIME);
+                break;
+            }
+            g_text_c(T_S, x + 57, y + 79, TT[k], K_WHITE);
         }
-        g_text_c(T_XS, 120, 212, "OCT- / OCT+ OR A KNOB  \xB7  SEL: OK", K_WHITE);
-        g_text_c(T_XS, 120, 226, "LATER: SYSTEM > THEME", K_GREY);
+        theme_set(ASK_TH[ask_sel], set.pal);   /* (back to the one chosen: its frame) */
+        {
+            int32_t x = 4 + (int32_t)(ask_sel & 1u) * 118, y = 18 + (int32_t)(ask_sel >> 1) * 100;
+            if (g_vis(y - 2, 100)) { g_rect(x - 2, y - 2, 118, 2, K_LIME); g_rect(x - 2, y + 96, 118, 2, K_LIME); g_rect(x - 2, y - 2, 2, 100, K_LIME); g_rect(x + 114, y - 2, 2, 100, K_LIME); }
+        }
+        g_text_c(T_XS, 120, 222, "OCT- / OCT+ OR A KNOB \xB7 SEL: OK", K_WHITE);
         return;
     }
     if (rst_bad) { char t[40]; str_cat(str_cat(t, "LAST STOP: "), rst_why); g_text_c(T_XS, 120, 22, t, K_ORANGE); }
