@@ -1299,7 +1299,8 @@ static void sq_lock_at(uint32_t s, uint32_t w, int32_t d)   /* SEQ BASS: lock w 
     lk_toast(s, PLB_NAME[w], b);
 }
 /* ---- DRUMS (its view, no window open): BLACK keys 1-8 choose the instrument (and play it; REC LIVE: record it now),
- * 9 mutes it, 10 clears its track; WHITE keys 1-16: its steps on the page shown (OCT- / OCT+: the page) */
+ * 9 mutes it, 10 clears its track (OCT- held + a black key 1-8: that one muted / back); WHITE keys 1-16: its steps on
+ * the page shown (OCT- / OCT+: the page) */
 static int dk_view(void) { return page == PG_FILT && vidx() == V_DRUM && !win && !ask_on && !C3_ON; }   /* (SHIFT: not while its 3 columns show) */
 static void dk_key(uint32_t k)
 {
@@ -1307,6 +1308,15 @@ static void dk_key(uint32_t k)
     uint32_t i, s, len = dk_len(), t = dk_trk % NDK;
     for (i = 0; i < 11u && PK_BLACK[i] != k; i++) {}
     if (i < 11u) {
+        if (i < NDK && (fm1_in.buttons >> BTN_OCT_DOWN & 1u)) {   /* OCT- (SHIFT) held: that instrument muted / back */
+            char tt[32];
+            dk.mute ^= (uint8_t)(1u << i);
+            if (hb.b == BTN_OCT_DOWN) hb.used = 1;   /* (no page, no UNDO when OCT- is let go) */
+            dk_touch();
+            str_cat(str_cat(tt, dk_tname(i)), dk.mute >> i & 1u ? " MUTED" : " ON");
+            toast(tt);
+            return;
+        }
         if (i < NDK) {
             dk_trk = (uint8_t)i;
             ev_push(EV_DRUM, i, 110);
@@ -2448,6 +2458,7 @@ static uint32_t hold_time(uint32_t b)           /* how long until the held actio
     if (b == BTN_HOME || b == BTN_REC) return 800u;
     if (b == BTN_GLO) return 900u;
     if (b == BTN_OCT_UP && win == 7u) return 0u;   /* (PERFORM: OCT+ held is the pads) */
+    if (b <= BTN_OCT_UP && dk_view()) return 0u;   /* (DRUMS: OCT- held + a black key mutes; no UNDO there, SAVE held + OCT- still) */
     if (b <= BTN_OCT_UP) return 1000u;      /* (no knob turned: UNDO / REDO; with one it is SHIFT) */
     if (b == BTN_PLAY) return 600u;
     if (b == BTN_ARP) return 0u;
