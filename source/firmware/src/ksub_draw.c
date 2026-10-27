@@ -274,26 +274,27 @@ static void vis_seq(int32_t x, int32_t y, int32_t w, int32_t h)   /* SEQ BASS: 1
 
 /* DRUMS: the 8 tracks x the 16 steps of the cursor's page, each instrument its colour; the track chosen lit, the step
  * playing a column, the cursor underlined, the muted tracks grey, a dot where a chance or a condition is set */
-static uint16_t dk_hue(uint16_t c0, int32_t dh, uint32_t t)   /* the palette's accent turned dh (of 1536 a turn) in hue, lively; t: 0 .. 3 darker */
+static uint32_t isqrt32(uint32_t v) { uint32_t r = 0, b = 1u << 15; for (; b; b >>= 1) if ((r | b) * (r | b) <= v) r |= b; return r; }
+static void dk_orb(int32_t cx, int32_t cy, int32_t r2, uint16_t col, uint32_t a)   /* a sphere: lit from the top left, a shadowed side, no gleam */
 {
-    int32_t r = (c0 >> 11) * 255 / 31, g = ((c0 >> 5) & 63) * 255 / 63, b = (c0 & 31) * 255 / 31, mx = r > g ? (r > b ? r : b) : (g > b ? g : b), mn = r < g ? (r < b ? r : b) : (g < b ? g : b), d = mx - mn, h, sat, v, f, p, q, u, i;
-    if (!d) h = 0;
-    else if (mx == r) h = (g - b) * 256 / d;
-    else if (mx == g) h = 512 + (b - r) * 256 / d;
-    else h = 1024 + (r - g) * 256 / d;
-    h = ((h + dh) % 1536 + 1536) % 1536;
-    sat = d ? 235 : 0; v = 255 - (int32_t)t * 22;   /* (a grey accent stays grey) */
-    i = h / 256; f = h % 256;
-    p = v * (255 - sat) / 255; q = v * (255 - sat * f / 255) / 255; u = v * (255 - sat * (255 - f) / 255) / 255;
-    switch (i) { case 0: r = v; g = u; b = p; break; case 1: r = q; g = v; b = p; break; case 2: r = p; g = v; b = u; break;
-                 case 3: r = p; g = q; b = v; break; case 4: r = u; g = p; b = v; break; default: r = v; g = p; b = q; break; }
-    return RGB(r, g, b);
-}
-/* the tracks' colours follow the palette: two neighbours of its accent, alternating (green: green and yellow, violet:
- * violet and pink, red: red and orange), a touch darker down the list */
-static uint16_t dk_track_col(uint32_t t)
-{
-    return dk_hue(K_LIME, (t & 1u) ? 128 : -64 - (int32_t)(t >> 1) * 10, t >> 2);
+    int32_t dx, dy, e = (r2 + 3) / 2;
+    uint16_t dark = g_mix(0x0000u, col, 60), lite = g_mix(col, 0xFFFFu, 28);
+    if (!g_vis(cy - e, 2 * e + 1)) return;
+    for (dy = -e; dy <= e; dy++)
+        for (dx = -e; dx <= e; dx++) {
+            int32_t d2 = 4 * (dx * dx + dy * dy), in = (r2 - 1) * (r2 - 1), out = (r2 + 1) * (r2 + 1), nx, ny, nz, dot;
+            uint32_t al, z2, n2;
+            uint16_t c;
+            if (d2 >= out) continue;
+            al = d2 <= in ? a : a * (uint32_t)(out - d2) / (uint32_t)(out - in);
+            nx = dx * 512 / r2; ny = dy * 512 / r2;   /* (the surface's direction, 256 = 1) */
+            n2 = (uint32_t)(nx * nx + ny * ny);
+            z2 = n2 >= 65536u ? 0u : 65536u - n2;
+            nz = (int32_t)isqrt32(z2);
+            dot = (nx * -90 + ny * -128 + nz * 202) >> 8; if (dot < 0) dot = 0; if (dot > 256) dot = 256;
+            c = dot < 170 ? g_mix(dark, col, (uint32_t)dot * 256u / 170u) : g_mix(col, lite, (uint32_t)(dot - 170) * 256u / 86u);
+            g_pxa(cx + dx, cy + dy, c, al);
+        }
 }
 static inline int hold_dot_cursor(int sel, int32_t s) { return sel && s == (int32_t)dk_cur; }
 static void dk_dot(int32_t cx, int32_t cy, int32_t r2, uint16_t c, uint32_t a)   /* a soft round dot, radius r2 / 2 pixels (half pixels: 3 = 1.5) */
@@ -324,11 +325,11 @@ static void vis_drum(int32_t x, int32_t y, int32_t w, int32_t h)
     for (t = 0; t < (int32_t)NDK; t++) {
         int32_t ry = y + 3 + t * rh, cy = ry + rh / 2, mute = dk.mute >> t & 1u, sel = t == (int32_t)dk_trk;
         int32_t R = (bw < rh ? bw : rh) - 1;     /* (the dot's diameter, in pixels) */
-        uint16_t col = mute ? g_mix(K_BG, K_GREY, 150) : PAL_BW ? g_mix(K_BG, K_WHITE, (uint32_t)(255 - t * 18)) : dk_track_col((uint32_t)t);   /* (the palette's neighbours; BLACK / WHITE: shades of white) */
+        uint16_t col = mute ? g_mix(K_BG, K_GREY, 150) : K_LIME;   /* (every track the theme's accent) */
         if (!g_vis(ry, rh)) continue;
         if (sel) { g_rect(x + 2, ry, w - 4, rh, g_mix(K_BG, col, 26)); g_rect(x + 2, ry + 1, 2, rh - 2, col); }   /* (the track chosen: a tint, a bar at the left) */
-        dk_dot(x + 13, cy, (sel ? R + 2 : R - 1) + 2, K_BG, 256);   /* (the track's colour, a bigger dot when chosen, a black outline) */
-        dk_dot(x + 13, cy, sel ? R + 2 : R - 1, col, 256);
+        dk_dot(x + 13, cy, (sel ? R + 1 : R - 2) + 3, 0x0000u, 256);   /* (the track's mark: a bigger sphere when chosen, a thick black outline) */
+        dk_orb(x + 13, cy, sel ? R + 1 : R - 2, col, 256);
         for (i = 0; i < 16; i++) {
             int32_t s = pg * 16 + i, cx = x0 + i * bw + bw / 2;
             uint32_t on = s < len && (q->on[s] >> t & 1u), acc = q->acc[s] >> t & 1u, now = sq_play && s == (int32_t)dk_show;
@@ -339,8 +340,8 @@ static void vis_drum(int32_t x, int32_t y, int32_t w, int32_t h)
                 if (hold_dot_cursor(sel, s)) dk_dot(cx, cy, 3, K_WHITE, 200);
                 continue;
             }
-            dk_dot(cx, cy, (acc ? R + 1 : R - 1) + 2, K_BG, 256);   /* (a black outline, then the dot; an accent bigger and lighter) */
-            dk_dot(cx, cy, acc ? R + 1 : R - 1, now ? K_WHITE : acc ? g_mix(col, 0xFFFFu, 70) : col, 256);
+            dk_dot(cx, cy, (acc ? R : R - 2) + 3, 0x0000u, 256);   /* (a thick black outline, then the sphere; an accent bigger and lighter) */
+            dk_orb(cx, cy, acc ? R : R - 2, now ? K_WHITE : acc ? g_mix(col, 0xFFFFu, 60) : col, 256);
             if (q->pc[t][s] & 0xFFu) dk_dot(cx, cy, R / 2 > 2 ? R - 4 : 1, K_BG, 200);   /* (a chance or a condition: a hollow) */
             if (lkd[s] >> t & 1u) g_rect(cx + bw / 2 - 2, ry + 1, 2, 2, K_WHITE);   /* (locked: a white spark at the corner) */
             if (hold_dot_cursor(sel, s)) g_rect(cx - 2, ry + rh - 1, 5, 1, 0xFFFFu);
