@@ -13,7 +13,7 @@ js = Path("../install/webinstall.js").read_text()
 name = Path(pkg).name
 ver = re.search(r"k-wasub-([\d.]+)(?:-\w+)?\.fwsc", name).group(1)
 page = (Path("web/installer.html").read_text().replace("__WEBINSTALL_JS__", js).replace("__PKG_B64__", base64.b64encode(raw).decode())
-        .replace("__PKG_NAME__", name).replace("__PKG_ID__", "FM-1_9" + str(7 + int(ver.split(".")[0])) + ver.split(".")[1]))   # (0.Y: 97Y, 1.Y: 98Y, as tools/build.py)
+        .replace("__PKG_NAME__", name).replace("__PKG_ID__", "FM-1_1990" if ver.split(".")[0] == "1" else "FM-1_9" + str(7 + int(ver.split(".")[0])) + ver.split(".")[1]))   # (0.Y: 97Y, 1.Y: FM-1_1990, as tools/build.py)
 Path("../installer.html").write_text(page)
 print(name, len(page), "B")
 PY
