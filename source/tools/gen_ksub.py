@@ -169,6 +169,7 @@ def gen_fonts():
          "#pragma once\n#include <stdint.h>\n"
          "typedef struct { uint8_t h, first, last; const uint8_t *adv; const uint16_t *off; const uint8_t *data; uint8_t sc; } ks_font_t;\n"
          "/* the glyphs: 4 bits a pixel, two to a byte, row by row; the empty packed: a 0x00 byte is followed by how many 0x00 bytes (1..255) */\n"]
+    same = {}
     for fam, path, sizes in FONTS:
       for nm, sz, last in sizes:
         nm = nm if fam == "F" else fam + nm
@@ -197,13 +198,16 @@ def gen_fonts():
                     while i + n < len(g) and not g[i + n] and n < 255: n += 1
                     data += [0, n]; i += n
             advs.append(adv)
-        o.append(arr("uint8_t", f"KF_{nm}_ADV", advs, 24))
-        o.append(arr("uint16_t", f"KF_{nm}_OFF", offs, 16))
-        o.append(arr("uint8_t", f"KF_{nm}_DATA", data, 24))
-        o.append(f"static const ks_font_t F_{nm} = {{{h}, 32, {last + 1}, KF_{nm}_ADV, KF_{nm}_OFF, KF_{nm}_DATA, 1}};\n")
+        key = (tuple(advs), tuple(offs), tuple(data))
+        src = same.setdefault(key, nm)           # (a font that comes out the same as one before: its glyphs shared, not stored twice)
+        if src == nm:
+            o.append(arr("uint8_t", f"KF_{nm}_ADV", advs, 24))
+            o.append(arr("uint16_t", f"KF_{nm}_OFF", offs, 16))
+            o.append(arr("uint8_t", f"KF_{nm}_DATA", data, 24))
+        o.append(f"static const ks_font_t F_{nm} = {{{h}, 32, {last + 1}, KF_{src}_ADV, KF_{src}_OFF, KF_{src}_DATA, 1}};\n")
         if nm == "PS":                       # PIXEL's big sizes: its S, each pixel drawn 2 x 2 (the same as the 16 px font)
-            o.append(f"static const ks_font_t F_PB = {{{2 * h}, 32, {last + 1}, KF_PS_ADV, KF_PS_OFF, KF_PS_DATA, 2}};\n")
-            o.append(f"static const ks_font_t F_PL = {{{2 * h}, 32, {last + 1}, KF_PS_ADV, KF_PS_OFF, KF_PS_DATA, 2}};\n")
+            o.append(f"static const ks_font_t F_PB = {{{2 * h}, 32, {last + 1}, KF_{same[key]}_ADV, KF_{same[key]}_OFF, KF_{same[key]}_DATA, 2}};\n")
+            o.append(f"static const ks_font_t F_PL = {{{2 * h}, 32, {last + 1}, KF_{same[key]}_ADV, KF_{same[key]}_OFF, KF_{same[key]}_DATA, 2}};\n")
     return "\n".join(o)
 
 
