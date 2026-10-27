@@ -1361,6 +1361,7 @@ static void dk_key_up(uint32_t k)
 
 /* ---- SAVE (the patch's name): the keys are a letter keyboard, as drawn: black A B C | D E | F G H | I J | K, white L M N O P Q R S
  * T U V W X Y Z and a space; a key writes its letter where the cursor is and moves on (K2 the place, K3 digits and signs) */
+static uint32_t kb_down;                        /* the keys down (the SAVE screen lights them) */
 static int save_view(void) { return page == PG_PRE && VIEWS[vidx()].lay == LY_SAVE && !win && !ask_on && !C3_ON; }
 static void save_key(uint32_t k)
 {
@@ -2769,6 +2770,7 @@ static void ui_input(void)
             key_up(key_note[k]);
     }
     prev_keys = now;
+    kb_down = now;
 }
 
 /* ---- MIDI in: notes, CC (learnt ones first), bend, pressure, the clock, start / stop, program change */

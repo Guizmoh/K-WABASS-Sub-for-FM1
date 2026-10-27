@@ -2142,6 +2142,32 @@ static void draw_logo_pic(void)             /* the start-screen picture (216 x 2
         }
     }
 }
+/* SAVE: the keyboard the keys are, as on the FM-1: the 16 white keys (L .. Z, a space) with their letters at the foot, the
+ * 11 black ones (A .. K) with theirs on top; the keys down light up */
+static void draw_save_kbd(void)
+{
+    static const char BL[11] = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K'}, WH[16] = {'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '_'};
+    const int32_t kx = 4, ky = 176, kw = 14, kh = 48;
+    int32_t i;
+    char t[2] = {0, 0};
+    if (!g_vis(ky - 2, kh + 4)) return;
+    g_rect(kx - 2, ky - 2, 16 * kw + 4, kh + 4, 0x0000u);
+    for (i = 0; i < 16; i++) {                  /* the white keys */
+        int on = kb_down >> PK_WHITE[i] & 1u;
+        g_box(kx + i * kw, ky, kw - 1, kh, on ? K_LIME : K_PANEL, on ? K_WHITE : K_LINE);
+        t[0] = WH[i];
+        g_text_c(T_XS, kx + i * kw + kw / 2, ky + kh - 13, t, on ? K_INK : K_WHITE);
+    }
+    for (i = 0; i < 11; i++) {                  /* the black ones, between the white keys before and after them */
+        int32_t b = PK_BLACK[i], w = 0, bx;
+        int on = kb_down >> b & 1u;
+        while (w < 16 && PK_WHITE[w] != b - 1) w++;
+        bx = kx + (w + 1) * kw - 5;
+        g_box(bx, ky, 10, kh * 55 / 100, on ? K_LIME : K_BG, on ? K_WHITE : K_LIME);
+        t[0] = BL[i];
+        g_text_c(T_XS, bx + 5, ky + 6, t, on ? K_INK : K_LIME);
+    }
+}
 static void draw_all(void)
 {
     const view_t *v = view();
@@ -2182,6 +2208,7 @@ static void draw_all(void)
     case TH_RIBBONC: th_ribbon(v, vi, 1); break;
     default: th_glow(v, vi); break;
     }
+    if (VIEWS[vidx()].lay == LY_SAVE && !win && !ask_on && !C3_ON && !splash_until) draw_save_kbd();
     if (dpop_ms && g_vis(22, 200)) {            /* the destination list: the ones before and after, the group of each */
         static const char *const GR[] = {"", "FILTER", "FILTER", "PITCH", "OSC A", "OSC A", "OSC B", "OSC B", "OSC A", "OSC B",
                                          "MIX", "FILTER", "AMP", "MIX", "MIX", "MOD", "OSC A", "OSC B", "OSC A", "OSC B", "MIX",
