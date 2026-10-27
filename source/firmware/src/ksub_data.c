@@ -146,7 +146,7 @@ static const char *const ENG_TITLE[NENG] = {"ANALOG / VA", "CS / DUAL", "WAVETAB
 static const char *const ENG_SUB[NENG] = {"SUBTRACTIVE CORE", "2 CHANNELS: SAW + PULSE, PWM, DRIFT", "8 TABLES x 8 FRAMES",
                                           "4 OPERATORS, 8 ALGORITHMS", "CZ-STYLE PHASE DISTORTION", "-",
                                           "MASTER / SLAVE SYNC", "-", "SINE, PITCH DROP, DRIVE, CLICK",
-                                          "FM INTO 3 VOWEL FORMANTS", "24 PARTIALS, 8 REGISTERS"};
+                                          "FM INTO 3 VOWEL FORMANTS", "16 PARTIALS, 8 REGISTERS"};
 static const char *const L_WT[8] = {"BASIC", "HARMONIC", "GROWL", "VOCAL", "FM", "PWM", "DIGITAL", "SYNC"};
 static const char *const L_PDT[6] = {"SAW", "SQUARE", "PULSE", "RESO SAW", "RESO TRI", "RESO TRAP"};
 static const char *const L_RATIO[16] = {"0.50", "1.00", "1.50", "2.00", "2.50", "3.00", "3.50", "4.00", "5.00", "6.00",
@@ -160,7 +160,7 @@ static const growl_t GR_TYPE[8] = {{256, 40, 40, 0, 128}, {512, 30, 50, 0, 128},
                                    {361, 70, 80, 0, 140}, {256, 60, 70, 60, 166}, {768, 90, 110, 0, 190}, {256, 120, 255, 0, 128}};
 static const char *const L_GRT[8] = {"CLASSIC", "HOLLOW", "SUB GROWL", "SNARL", "METAL", "TALK", "SCREECH", "RIP"};
 static const uint16_t GR_VOW[5][3] = {{325, 700, 2530}, {450, 800, 2830}, {800, 1200, 2500}, {400, 2000, 2550}, {270, 2300, 3000}};   /* U O A E I, Hz */
-/* ADDITIVE: 24 partials on half the note (1: the 16' sub, 2: the note, 3: 5 1/3', 4: 4' ...); REGISTER: SAW (every
+/* ADDITIVE: 16 partials on half the note (1: the 16' sub, 2: the note, 3: 5 1/3', 4: 4' ...); REGISTER: SAW (every
  * harmonic at 1/h) or a drawbar setting (16' 8' 5 1/3' 4' 2 2/3' 2' 1 3/5' 1 1/3' 1', 0..8); TILT, HARMONICS, ODD/EVEN shape it */
 static const uint8_t ADD_BAR[9] = {1, 2, 3, 4, 6, 8, 10, 12, 16};
 static const char ADD_REG[8][10] = {"", "888000000", "880000000", "888888888", "888800000", "806000000", "008080800", "868446468"};

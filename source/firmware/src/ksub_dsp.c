@@ -239,12 +239,12 @@ static const uint16_t VOX_A[5][3] = {{32767, 16384, 8192}, {32767, 13107, 6554},
 
 static inline int64_t cs_pwc(int64_t w) { return w < 0x0CCCCCCCll ? 0x0CCCCCCCll : w > 0xF3333333ll ? 0xF3333333ll : w; }   /* (CS: a pulse width kept in 5 .. 95 %) */
 /* render n samples of one oscillator; pm (or 0): phase modulation per sample */
-static uint32_t add_amps(int32_t p1, int32_t p2, int32_t p3, uint32_t reg, int32_t *a)   /* ADDITIVE: the 24 partials' levels (a[1..24], Q15,
+static uint32_t add_amps(int32_t p1, int32_t p2, int32_t p3, uint32_t reg, int32_t *a)   /* ADDITIVE: the 16 partials' levels (a[1..16], Q15,
                                                  * their sum at most full level); returns the highest one sounding */
 {
     int32_t t = 14000 + ((p1 * 18767) >> 15), w = 32767, sum = 0, ev = p3 < 16384 ? 32767 - p3 * 2 : 32767, od = p3 < 16384 ? 32767 : 32767 - (p3 - 16384) * 2;
-    uint32_t k, j, nh = 1u + (((uint32_t)p2 * 11u) >> 15), top = 0;
-    for (k = 1; k <= 24u; k++) {
+    uint32_t k, j, nh = 1u + (((uint32_t)p2 * 7u) >> 15), top = 0;
+    for (k = 1; k <= 16u; k++) {
         int32_t r = 0;
         if (!reg) r = k & 1u ? 0 : 32767 / (int32_t)(k >> 1);   /* SAW: every harmonic of the note at 1/h */
         else for (j = 0; j < 9u; j++) if (ADD_BAR[j] == k) r = (ADD_REG[reg][j] - '0') * 4095;
@@ -254,7 +254,7 @@ static uint32_t add_amps(int32_t p1, int32_t p2, int32_t p3, uint32_t reg, int32
         a[k] = r; sum += r;
         if (r) top = k;
     }
-    if (sum > 32767) for (k = 1; k <= 24u; k++) a[k] = a[k] * 32767 / sum;
+    if (sum > 32767) for (k = 1; k <= 16u; k++) a[k] = a[k] * 32767 / sum;
     return top;
 }
 static void osc_core(osc_t *o, const oscp_t *q, int32_t *out, const int32_t *pm, uint32_t n)
@@ -405,8 +405,9 @@ static void osc_core(osc_t *o, const oscp_t *q, int32_t *out, const int32_t *pm,
         int32_t *lp = (int32_t *)&o->ph[1], *bp = (int32_t *)&o->ph[5], b3 = (int32_t)o->f[0];
         uint32_t im = (uint32_t)(((uint64_t)inc * gt->ratio) >> 8), pm2 = o->ph2, sp = o->ph[4];
         if (vi > 3) { vi = 3; fr = 32767; }
-        for (j = 0; j < 3; j++) lp[j] = clampi(lp[j], -2000000, 2000000);   /* (the slots another engine used: whatever it left) */
-        bp[0] = clampi(bp[0], -2000000, 2000000); bp[1] = clampi(bp[1], -2000000, 2000000); b3 = clampi(b3, -2000000, 2000000);
+        int32_t l0 = clampi(lp[0], -40000, 40000), l1 = clampi(lp[1], -40000, 40000), l2 = clampi(lp[2], -40000, 40000);   /* (the states, 1/32 scale:
+                                                 * 32-bit products, no clamp per sample; whatever another engine left in the slots, bounded) */
+        int32_t b0 = clampi(bp[0], -40000, 40000), b1 = clampi(bp[1], -40000, 40000), b2 = clampi(b3, -40000, 40000);
         for (j = 0; j < 3; j++) {               /* the formants now: the vowel's, shifted by TYPE; 2 sin(pi f / fs), Q15 */
             int32_t hz = GR_VOW[vi][j] + (((GR_VOW[vi + 1][j] - GR_VOW[vi][j]) * fr) >> 15);
             hz = (hz * gt->shift) >> 7;
@@ -414,7 +415,7 @@ static void osc_core(osc_t *o, const oscp_t *q, int32_t *out, const int32_t *pm,
             fc[j] = sin32((uint32_t)hz * 48695u) * 2;
         }
         for (i = 0; i < n; i++) {
-            int32_t m, c, x, y = 0, b[3];
+            int32_t m, c, x, y, hp;
             pm2 += im; sp += inc >> 1;
             m = sin32(pm2 + (uint32_t)((((o->fb1 + o->fb2) >> 1) * fk)));
             o->fb2 = o->fb1;
@@ -422,25 +423,20 @@ static void osc_core(osc_t *o, const oscp_t *q, int32_t *out, const int32_t *pm,
             SYNC_STEP();
             ph += inc;
             c = sin32(ph + (pm ? (uint32_t)pm[i] : 0u) + (uint32_t)((int64_t)m * ik));
-            x = sat15(mul15(c, dg));
-            b[0] = bp[0]; b[1] = bp[1]; b[2] = b3;
-            for (j = 0; j < 3; j++) {           /* (Chamberlin state variable, the band pass) */
-                int32_t hp;
-                lp[j] += mul15(fc[j], b[j]);
-                hp = x - lp[j] - mul15(qd, b[j]);
-                b[j] += mul15(fc[j], hp);
-                b[j] = clampi(b[j], -2000000, 2000000);   /* (kept bounded: a vowel or BITE jumped) */
-                lp[j] = clampi(lp[j], -2000000, 2000000);
-            }
-            bp[0] = b[0]; bp[1] = b[1]; b3 = b[2];
-            y = mul15(b[0], qd) + mul15(mul15(b[1], qd), 22000) + mul15(mul15(b[2], qd), 13000);
-            y = mul15(y, mk) + (c >> 2) + mul15(sin32(sp), sl);   /* (BITE's narrower formants made up: the level holds) */   /* (the note itself under it, and TYPE's sub: the low end stays) */
+            x = sat15(mul15(c, dg)) >> 5;
+            l0 += (fc[0] * b0) >> 15; hp = x - l0 - ((qd * b0) >> 15); b0 += (fc[0] * hp) >> 15;   /* (Chamberlin state variable, the band pass) */
+            l1 += (fc[1] * b1) >> 15; hp = x - l1 - ((qd * b1) >> 15); b1 += (fc[1] * hp) >> 15;
+            l2 += (fc[2] * b2) >> 15; hp = x - l2 - ((qd * b2) >> 15); b2 += (fc[2] * hp) >> 15;
+            y = (((b0 * qd) >> 15) + ((((b1 * qd) >> 15) * 22000) >> 15) + ((((b2 * qd) >> 15) * 13000) >> 15)) * 32;
+            y = mul15(y, mk) + (c >> 2) + ((sin32(sp) * sl) >> 15);   /* (BITE's narrower formants made up; the note itself under it, and TYPE's sub) */
             out[i] = sat15(y);
         }
+        lp[0] = clampi(l0, -40000, 40000); lp[1] = clampi(l1, -40000, 40000); lp[2] = clampi(l2, -40000, 40000);
+        bp[0] = clampi(b0, -40000, 40000); bp[1] = clampi(b1, -40000, 40000); b3 = clampi(b2, -40000, 40000);
         o->ph2 = pm2; o->ph[4] = sp; o->f[0] = (uint32_t)b3;
         break;
     }
-    case E_ADD: {                               /* 24 partials on half the note (the 16' sub first), by recursion: sin(k+1) = 2 cos sin(k) - sin(k-1) */
+    case E_ADD: {                               /* 16 partials on half the note (the 16' sub first), by recursion: sin(k+1) = 2 cos sin(k) - sin(k-1) */
         int32_t a[25];
         uint32_t k, hb = inc >> 1, top = add_amps(q->p1, q->p2, q->p3, ((uint32_t)q->p4 >> 12) & 7u, a), pb = o->ph2;
         uint32_t lim = 0x6C000000u / (hb + 1u);  /* (none past 0.42 of the sample rate) */
@@ -1592,7 +1588,8 @@ static void voices_render(int32_t *dst, uint32_t n, uint32_t t0, uint32_t budget
     binc = (ks_bpm10 * 664858u) >> 16;          /* beats per block, Q24: bpm10 x 16 x 2^24 / (600 x 44100) */
     for (i = 0; i < n; i += KS_CB) {
         int32_t *acc = dst + i;
-        if (i && fm1_ticks() - t0 > budget) {   /* out of time: the rest of the block stays silent */
+        if (i && fm1_ticks() - t0 > budget) {   /* out of time: the rest of the block stays silent (the last part faded: no click) */
+            for (k = 0; k < KS_CB; k++) dst[i - KS_CB + k] = dst[i - KS_CB + k] / (int32_t)KS_CB * (int32_t)(KS_CB - k);
             for (k = i; k < n; k++) dst[k] = 0;
             ks_late++;
             break;
@@ -2045,13 +2042,14 @@ static volatile uint32_t ks_load[2];            /* % of a block, per core (the S
  * out a step: 1 the reverb and the chorus, 2 two voices and 3 saws a SUPER, 3 one voice and 2 saws. Two seconds
  * under 45 %: a step back. The sound thins out instead of crackling, and the watchdog never sees a block that
  * does not end (voices_render stops at its budget) */
-static void governor(uint32_t pct)
+static void governor(uint32_t pct, uint32_t bad)   /* bad: a block late or cut short (1.0.33: a step at once, and 10 s before a step back) */
 {
     static uint8_t hist;
-    static uint32_t calm;
+    static uint32_t calm, hold;
     hist = (uint8_t)(hist << 1 | (pct > 70u));
-    if (((hist & 3u) == 3u || pct > 92u) && ks_shed < 3u) { ks_shed++; hist = 0; calm = 0; }   /* (past 92 %: at once) */
-    if (pct < 45u) { if (++calm > 344u && ks_shed) { ks_shed--; calm = 0; } }   /* 344 blocks: 2 s */
+    if ((bad || (hist & 3u) == 3u || pct > 92u) && ks_shed < 3u) { ks_shed++; hist = 0; calm = 0; }   /* (past 92 %: at once) */
+    if (bad) { hold = 1720u; calm = 0; }        /* (1720 blocks: 10 s) */
+    if (pct < 45u && !bad) { if (++calm > (hold ? hold : 344u) && ks_shed) { ks_shed--; calm = 0; hold = 0; } }   /* 344 blocks: 2 s */
     else calm = 0;
 }
 
@@ -2103,7 +2101,7 @@ static void fm1_cpu1_stop(void) {}
 static void app_audio(int32_t *out, uint32_t n)
 {
     static uint32_t hist, cut0, warm, fx_t;     /* fx_t: what the effects took last block (the voices get the rest) */
-    uint32_t t0 = fm1_ticks(), l1 = 0, t1, room = BLOCK_TICKS * 8u / 10u > fx_t + BLOCK_TICKS / 4u ? BLOCK_TICKS * 8u / 10u - fx_t : BLOCK_TICKS / 4u;
+    uint32_t t0 = fm1_ticks(), l1 = 0, t1, room = BLOCK_TICKS * 8u / 10u > fx_t + BLOCK_TICKS / 4u ? BLOCK_TICKS * 8u / 10u - fx_t : BLOCK_TICKS / 4u, late0 = ks_late, bad1 = 0;
     if (dual_on && !c1_park_req) {              /* core 1 did this block's voices during the last one */
         uint32_t cur = c1_req, bad, k, nb = 0;
         while (c1_done != cur && fm1_ticks() - t0 < (room < BLOCK_TICKS / 2u ? room : BLOCK_TICKS / 2u)) { KS_SYNC(); }   /* (never past what the effects leave) */
@@ -2111,6 +2109,7 @@ static void app_audio(int32_t *out, uint32_t n)
         bad = c1_done != cur || c1_cut != cut0; /* (late, or a block it cut short) */
         cut0 = c1_cut;
         if (warm < 64u) { warm++; bad = c1_done != cur; }   /* (its first blocks: only lateness counts) */
+        bad1 = warm >= 64u && bad;
         hist = hist << 1 | bad;
         for (k = hist; k; k &= k - 1u) nb++;
         if (c1_done == cur && nb < 6u) {        /* (6 bad blocks in the last 32: core 1 does not keep up) */
@@ -2141,5 +2140,5 @@ static void app_audio(int32_t *out, uint32_t n)
         fx_t = fm1_ticks() - t1;
     }
     ks_load[0] = (fm1_ticks() - t0) / BLOCK_TICKS100;
-    governor(ks_load[0] > l1 ? ks_load[0] : l1);
+    governor(ks_load[0] > l1 ? ks_load[0] : l1, bad1 || ks_late != late0);
 }

@@ -487,13 +487,13 @@ static void vis_growl(const int8_t *o, uint32_t al, int32_t x, int32_t y, int32_
     str_cat(str_cat(t, "TYPE "), L_GRT[al]);
     g_text(T_XS, x + 4, y + 3, t, K_GREY);
 }
-static void vis_add(const int8_t *o, uint32_t reg, int32_t x, int32_t y, int32_t w, int32_t h)   /* ADDITIVE: the 24 partials as drawbars */
+static void vis_add(const int8_t *o, uint32_t reg, int32_t x, int32_t y, int32_t w, int32_t h)   /* ADDITIVE: the 16 partials as drawbars */
 {
-    int32_t a[25], k, bw = (w - 10) / 24, H = h - 16, mx = 1;
+    int32_t a[25], k, bw = (w - 10) / 16, H = h - 16, mx = 1;
     char t[20];
     add_amps(o[2] * 258, o[3] * 258, o[4] * 258, reg, (int32_t *)a);
-    for (k = 1; k <= 24; k++) if (a[k] > mx) mx = a[k];
-    for (k = 1; k <= 24; k++) {
+    for (k = 1; k <= 16; k++) if (a[k] > mx) mx = a[k];
+    for (k = 1; k <= 16; k++) {
         int32_t bh = a[k] * H / mx, bx = x + 5 + (k - 1) * bw;
         uint16_t c = k == 1 ? K_ORANGE : k & 1 ? K_CYAN : K_WAVE;
         g_rect(bx, y + h - 4 - H, bw - 1, H, g_mix(K_BG, K_LINE, 60));

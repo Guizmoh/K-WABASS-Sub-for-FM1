@@ -1963,7 +1963,7 @@ static void item_text(uint32_t id, char *b)
             if (fr > 28672) b[-1] = "UOAEI"[vi + 1];
             else if (fr > 4096) { *b++ = '>'; *b++ = "UOAEI"[vi + 1]; }
             *b = 0;
-        } else if (e == E_ADD && k == 2) { b = fmt_u(b, 1u + (((uint32_t)q * 11u) >> 15), 0); str_cat(b, " HARM"); }
+        } else if (e == E_ADD && k == 2) { b = fmt_u(b, 1u + (((uint32_t)q * 7u) >> 15), 0); str_cat(b, " HARM"); }
         else if (e == E_ADD && k == 3) {
             if (!v) str_cat(b, "ALL");
             else { b = str_cat(b, v < 64 ? "ODD " : "EVEN "); b = fmt_u(b, (uint32_t)(v < 64 ? v : v - 63) * 100u / 64u, 0); str_cat(b, "%"); }
