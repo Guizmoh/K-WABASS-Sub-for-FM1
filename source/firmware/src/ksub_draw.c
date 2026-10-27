@@ -2163,7 +2163,7 @@ static void draw_save_kbd(void)
         int on = kb_down >> b & 1u;
         while (w < 16 && PK_WHITE[w] != b - 1) w++;
         bx = kx + (w + 1) * kw - 5;
-        g_box(bx, ky, 10, kh * 55 / 100, on ? K_LIME : K_BG, on ? K_WHITE : K_LIME);
+        g_rect(bx, ky, 10, kh * 55 / 100, on ? K_LIME : 0x0000u);   /* (no outline: the letter reads better) */
         t[0] = BL[i];
         g_text_c(T_XS, bx + 5, ky + 6, t, on ? K_INK : K_LIME);
     }
