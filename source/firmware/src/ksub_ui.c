@@ -2074,6 +2074,11 @@ static void ui_leds(void)
     led(BTN_PLAY, sq_play ? (beat ? 2u : 1u) : hold ? 1u : 0u);
     led(BTN_REC, sq_rec ? 2u : beat ? 1u : 0u);
     led(BTN_SAVE, VIEWS[vidx()].lay == LY_SAVE ? 2u : 0u);
+    if (dk_view()) {                            /* DRUMS: the white keys light where the chosen instrument hits on the page shown (a landmark, as the dots on the screen) */
+        const dkpat_t *q = dk_pp();
+        uint32_t len = dk_len(), t = dk_trk % NDK, base = dk_cur / 16u * 16u;
+        for (i = 0; i < 16u; i++) if (base + i < len && (q->on[base + i] >> t & 1u)) led(KEY_LED(PK_WHITE[i]), 2u);
+    }
     for (i = 0; i < 27u; i++) if (fm1_in.notes & (1u << i)) led(KEY_LED(i), 2u);
     leds_flush();
 }
