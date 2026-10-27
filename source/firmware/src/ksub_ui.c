@@ -2260,6 +2260,14 @@ static void edit_item(uint32_t id, int32_t d)
         item_set(id, ORD[clampi(at + d, 0, 28)]);
         return;
     }
+    {                                           /* WAVETABLE: the table (WAVE's 2nd setting) one per click: the 8 tables sit 16 values apart */
+        uint32_t e2;
+        if (osc_pk(id, &e2) == 2 && e2 == E_WAVE) {
+            int32_t t = clampi(((v * 258) >> 12) + (d > 0 ? 1 : d < 0 ? -1 : 0), 0, 7);
+            item_set(id, (t * 4096 + 257) / 258);    /* (the first value of table t) */
+            return;
+        }
+    }
     item_range(id, &lo, &hi);
     if (id != turn_id || fm1_ms - last_turn_ms > 150u) turn_start_ms = fm1_ms;   /* (a turn that goes on: ULTRA speeds it up) */
     if (set.accel && hi - lo > 24 && id == turn_id) {   /* ACCEL: the faster the turn, the bigger the step */
