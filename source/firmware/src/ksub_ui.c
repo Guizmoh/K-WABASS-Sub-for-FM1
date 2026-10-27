@@ -30,6 +30,7 @@ enum { I_L1RATE = 140, I_L2RATE, I_ABMIX, G_MIDICH, G_BPM, G_CLOCK, G_OCT, G_COR
        G_SYNC,                                                                       /* SYNC OUT (POCKET OPERATOR, VOLCA) */
        G_SQ_LKP, G_SQ_LKV,                                                           /* SEQ BASS: the step's PARAMETER LOCK (what, its value) */
        G_SQ_ON,                                                                      /* SEQ BASS: the sequence ON / OFF (OFF: the drums play, the bass is free to play live) */
+       G_NEWSONG,                                                                    /* SYSTEM: NEW SONG (the sound, every pattern, the locks and the automation back to empty) */
        I_NONE = 255 };
 
 typedef struct {
@@ -73,8 +74,8 @@ static const view_t VIEWS[] = {
     {LY_PRESET, "PRESET BANK B", 0, {0}, "PRESET"},
     {LY_SAVE, "SAVE PATCH", 0, {0}, "PRESET"},
     {LY_LIST, "ARPEGGIATOR", 5, {G_AR_ON, G_AR_MODE, G_AR_RATE, G_AR_OCT, G_AR_GATE}, "ARP"},
-    {LY_SYS, "GLOBAL SETUP", 24, {G_BPM, V_MODE, G_UI, G_THEME, G_PAL, V_GLIDE, G_QLFO, G_BRI, G_ASAVE, G_LANG, G_ENG8, G_DEEP, G_NORM, G_ACCEL, G_GRID, V_BEND, V_VEL,
-                                  G_FONT, G_ZOOM, G_C3COL, G_BROWSE, G_ASK, G_CPU, G_RST}, "SYSTEM"},
+    {LY_SYS, "GLOBAL SETUP", 25, {G_BPM, V_MODE, G_UI, G_THEME, G_PAL, V_GLIDE, G_QLFO, G_BRI, G_ASAVE, G_LANG, G_ENG8, G_DEEP, G_NORM, G_ACCEL, G_GRID, V_BEND, V_VEL,
+                                  G_FONT, G_ZOOM, G_C3COL, G_BROWSE, G_ASK, G_NEWSONG, G_CPU, G_RST}, "SYSTEM"},
     {LY_SYS, "MIDI", 8, {G_MLEARN, G_MMAP, G_MIDICH, G_CLOCK, G_MSTART, G_MPROG, G_MCLK, G_SYNC}, "SYSTEM"},
 };
 /* what K1..K4 turn: the first four rows (the preset lists and SAVE have their own) */
@@ -107,7 +108,7 @@ static struct {                                 /* the user slots' settings past
     uint8_t magic, sum;
     int8_t p[NUSER][NP_MAX - NP_STORE];
 } uext;
-typedef char ids_fit[G_SQ_ON < I_NONE ? 1 : -1];
+typedef char ids_fit[G_NEWSONG < I_NONE ? 1 : -1];
 typedef char np_fits[NP <= I_L1RATE && NP <= NP_MAX ? 1 : -1];   /* (the patch's ids under the others') */
 #define CC_MAGIC 0x44u                          /* (0x43: before 0.9.55, the ids past the patch 4 lower) */
 #define WK_AT 0xC00u                            /* (the 2nd sector, after the slots' rest: the sound being made, AUTOSAVE) */
@@ -1391,7 +1392,7 @@ static void item_range(uint32_t id, int32_t *lo, int32_t *hi)
         return;
     }
     *lo = 0;
-    *hi = id == G_MIDICH ? 16 : id == G_BPM ? 2400 : id == G_CLOCK || id == G_QLFO || id == G_ENG8 || id == G_ASAVE || id == G_LANG || id == G_NORM || id == G_RS_GO || id == G_GRID || id == G_BROWSE || id == G_C3COL || id == G_UI || id == G_ASK || id == G_ZOOM || id == G_MLEARN || id == G_MSTART || id == G_MPROG || id == G_MCLK || id == G_SYNC || id == G_SQ_ON ? 1 : id == G_MMAP ? 16 : id == I_ABMIX ? 127 : id == G_BRI ? 3 : id == G_ACCEL || id == G_CON || id == G_DEEP || id == G_RS_LEN ? 2 : id == G_THEME ? 6 : id == G_FONT ? (int32_t)NFONT - 1 : id == G_PAL ? (int32_t)(2u * NPAL_BASE - 1u) : id == G_OCT ? 6 : 0;
+    *hi = id == G_MIDICH ? 16 : id == G_BPM ? 2400 : id == G_CLOCK || id == G_QLFO || id == G_ENG8 || id == G_ASAVE || id == G_LANG || id == G_NORM || id == G_RS_GO || id == G_GRID || id == G_BROWSE || id == G_C3COL || id == G_UI || id == G_ASK || id == G_ZOOM || id == G_MLEARN || id == G_MSTART || id == G_MPROG || id == G_MCLK || id == G_SYNC || id == G_SQ_ON || id == G_NEWSONG ? 1 : id == G_MMAP ? 16 : id == I_ABMIX ? 127 : id == G_BRI ? 3 : id == G_ACCEL || id == G_CON || id == G_DEEP || id == G_RS_LEN ? 2 : id == G_THEME ? 6 : id == G_FONT ? (int32_t)NFONT - 1 : id == G_PAL ? (int32_t)(2u * NPAL_BASE - 1u) : id == G_OCT ? 6 : 0;
     if (id == G_ACCEL) *hi = 3;                 /* (OFF, ON, FAST, ULTRA) */
     if (id == G_LANG) *hi = 2;                  /* (ENGLISH, FRANCAIS, ESPANOL) */
     if (id == G_BPM) *lo = 600;
@@ -1487,6 +1488,7 @@ static int32_t item_get(uint32_t id)
     case G_DK_VOL: return dk.vol;
     case G_DK_MODE: return dk.mode & 3u;
     case G_SQ_ON: return !(dk.mode & 4u);
+    case G_NEWSONG: return 0;
     case G_DK_SWING: return dk_pp()->swing;
     case G_SQ_PAT: return perf.cur;
     case G_SQ_LEN: return sq_pat()->len;
@@ -1513,9 +1515,11 @@ static int32_t item_get(uint32_t id)
     default: return 0;
     }
 }
+static void new_step(uint32_t which);
 static void item_set(uint32_t id, int32_t v)
 {
     int32_t lo, hi;
+    if (id == G_NEWSONG) { new_step(2u); return; }   /* (a button: turn it twice) */
     if (id == I_L1RATE || id == I_L2RATE) id = rate_id(id);
     item_range(id, &lo, &hi);
     v = clampi(v, lo, hi);
@@ -1753,6 +1757,7 @@ static const char *item_name(uint32_t id)
     case G_DK_VOL: return "DRUM VOLUME";
     case G_DK_MODE: return "PLAYS";
     case G_SQ_ON: return "SEQUENCE";
+    case G_NEWSONG: return "NEW SONG";
     case G_DK_SWING: return "SWING";
     case G_SQ_RATE: return "RATE";
     case G_SQ_SWING: return "SWING";
@@ -1936,6 +1941,7 @@ static void item_text(uint32_t id, char *b)
         case G_DK_LEN: b = fmt_u(b, (uint32_t)v, 0); str_cat(b, " STEPS"); break;
         case G_DK_KIT: str_cat(b, dk_kname((uint32_t)v)); break;
         case G_SQ_ON: str_cat(b, v ? "ON" : "OFF (BASS LIVE)"); break;
+        case G_NEWSONG: str_cat(b, new_arm == 2u ? "TURN AGAIN: ERASES ALL" : "TURN ALGO"); break;
         case G_DK_MODE: str_cat(b, v == 2 ? "BASS ONLY" : v ? "DRUMS ONLY" : "BASS + DRUMS"); break;
         case G_DK_SWING: if (v) { b = fmt_u(b, 50u + (uint32_t)v / 2u, 0); str_cat(b, "%"); } else str_cat(b, "OFF"); break;
         case G_SQ_PAT: b = str_cat(b, "P"); b = fmt_u(b, (uint32_t)v + 1u, 2); if (v < 8) { b = str_cat(b, " "); str_cat(b, SQ_DEF[v][0]); } break;
@@ -2242,12 +2248,10 @@ static void save_open(void)
     page = PG_PRE;
     vcur[PG_PRE] = 2;
 }
-static void save_new(void)                    /* SAVE, K4: a new preset: the INIT sound (turn twice in 3 s; SAVE held + OCT- brings the old one back) and an empty name */
+static void init_sound(void)                    /* the INIT factory sound, an empty name, the first empty slot (undo: SAVE held + OCT-) */
 {
     uint32_t k, i;
     char nm[14];
-    if (!new_arm || fm1_ms - new_ms > 3000u) { new_arm = 1; new_ms = fm1_ms; g_force = 1; return; }
-    new_arm = 0;
     for (k = 0; k < NFACTORY; k++) { int8_t pp[NP_MAX]; preset_factory(k, pp, nm); if (nm[0] == 'I' && nm[1] == 'N' && nm[2] == 'I' && nm[3] == 'T' && !nm[4]) break; }
     if (k >= NFACTORY) { toast("NO INIT SOUND"); return; }
     load_preset(0, k);
@@ -2255,7 +2259,33 @@ static void save_new(void)                    /* SAVE, K4: a new preset: the INI
     pname[13] = 0;
     save_pos = 0;
     for (save_slot = 0; save_slot < NUSER - 1u && up_valid(save_slot); save_slot++) {}
-    toast("NEW PRESET: TYPE A NAME");
+}
+static void song_new(void)                      /* NEW SONG: the INIT sound, the drums, SEQ BASS, the locks and the automation empty; the saved patches, the macros, the EQ and the settings stay */
+{
+    uint32_t k;
+    ev_push(EV_SEQ, 0, 0);
+    sq_rec = 0; rec_hold.on = 0; dk_hold = 0; aut_erasing = 0; aut_any = 0; aut_last = 0xFF;
+    memset(aut_saved, 0, sizeof aut_saved);
+    notes_all_off();
+    init_sound();
+    dk_defaults(); pl_defaults(); sqx_defaults();
+    for (k = 0; k < SQ_NPAT; k++) { memset(&perf.pat[k], 0, sizeof perf.pat[k]); perf.pat[k].len = 16; perf.pat[k].rate = 3; }
+    perf.cur = 0; sq_cur_step = 0; sq_psel = dk_psel = 0; sq_bk.ok = dk_bk.ok = 0;
+    dk_cur = dk_trk = 0;
+    sqx_touch(); dk_touch(); pl_mark(); perf_touch();
+    toast("NEW SONG");
+    g_force = 1;
+}
+static void new_step(uint32_t which)            /* 1 NEW PRESET, 2 NEW SONG: the first turn asks, the second (within 3 s) does it */
+{
+    if (new_arm != which || fm1_ms - new_ms > 3000u) {
+        new_arm = (uint8_t)which; new_ms = fm1_ms; g_force = 1;
+        if (which == 2u) toast("NEW SONG? TURN AGAIN TO ERASE ALL");
+        return;
+    }
+    new_arm = 0;
+    if (which == 2u) song_new();
+    else { init_sound(); toast("NEW PRESET: TYPE A NAME"); }
     g_force = 1;
 }
 static void name_trim(void) { int32_t i; for (i = 12; i >= 0 && pname[i] == ' '; i--) pname[i] = 0; }
@@ -2472,7 +2502,7 @@ static void on_enc(uint32_t e, int32_t d)
             for (i = 0; i < n && CH[i] != pname[save_pos]; i++) {}
             pname[save_pos] = CH[((i + d) % n + n) % n];
         } else if (e == ENC_ALGORITHM) patch[P_STYLE] = (int8_t)clampi(patch[P_STYLE] + d, 0, NSTYLE - 1);
-        else if (e == ENC_KNOB4) save_new();
+        else if (e == ENC_KNOB4) new_step(d < 0 ? 2u : 1u);   /* (right: NEW PRESET, left: NEW SONG) */
         return;
     }
     if (e == ENC_SELECT) {

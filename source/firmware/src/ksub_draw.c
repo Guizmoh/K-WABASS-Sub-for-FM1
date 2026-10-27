@@ -940,7 +940,7 @@ static void save_g(int32_t x, int32_t y0, int32_t w, int32_t ty)   /* the name b
         char v1[24], v2[8], v3[8], *q;
         int32_t kx = x + w * 45 / 100, r;
         static const char *const KN[5] = {"K1", "K2", "K3", "ALGO", "K4"};
-        const char *lab[5] = {"SLOT", "PLACE", "LETTER", "STYLE", "NEW PRESET"}, *val[5];
+        const char *lab[5] = {"SLOT", "PLACE", "LETTER", "STYLE", "NEW"}, *val[5];
         q = str_cat(v1, "B");
         q = fmt_u(q, save_slot + 1u, 2);
         q = str_cat(q, " \xB7 ");
@@ -949,7 +949,7 @@ static void save_g(int32_t x, int32_t y0, int32_t w, int32_t ty)   /* the name b
         str_cat(q, "/13");
         v3[0] = pname[save_pos] && pname[save_pos] != ' ' ? pname[save_pos] : '_'; v3[1] = 0;
         val[0] = v1; val[1] = v2; val[2] = v3; val[3] = L_STYLE[clampi(patch[P_STYLE], 0, NSTYLE - 1)];
-        val[4] = new_arm ? "TURN K4 AGAIN" : "INIT";
+        val[4] = new_arm == 1u ? "PRESET: AGAIN >" : new_arm == 2u ? "< SONG: AGAIN" : "<SONG PRESET>";
         for (i = 0; i < 5; i++) {
             r = y0 + i * 20;
             row_g(x - 2, r, w, 18, lab[i], val[i], i == 0, i == 4 && new_arm ? K_LIME : K_CYAN, T_S);
