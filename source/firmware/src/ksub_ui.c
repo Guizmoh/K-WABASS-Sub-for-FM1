@@ -1922,7 +1922,14 @@ static void item_text(uint32_t id, char *b)
             b = fmt_u(b, c / 10u, 0); *b++ = '.'; b = fmt_u(b, c % 10u, 0); str_cat(b, " CT");
         }
         else if (e == E_WAVE && k == 2) str_cat(b, L_WT[q >> 12]);
-        else if (e == E_FM && k == 2) str_cat(b, L_RATIO[q >> 11]);
+        else if (e == E_FM && k == 2) {          /* FM RATIO: operator 2's, then 3's and 4's when the ALGO uses them */
+            b = str_cat(b, L_RATIO[q >> 11]);
+            if (patch[id >= B_ENG ? B_P4 : A_P4] >= 16) {
+                const uint16_t *r = FM_R34[q >> 11];
+                uint32_t j;
+                for (j = 0; j < 2u; j++) { *b++ = ' '; b = fmt_u(b, r[j] >> 8, 0); if (r[j] & 255u) { *b++ = '.'; b = fmt_u(b, (r[j] & 255u) * 10u >> 8, 0); } }
+            }
+        } else if (e == E_FM && k == 4) str_cat(b, L_ALG[v >> 4]);
         else if (e == E_PHASE && k == 2) str_cat(b, L_PDT[(q * 6) >> 15]);
         else if (e == E_SYNC && k == 1) { uint32_t r = 10u + (uint32_t)v * 70u / 127u; b = str_cat(b, "x"); b = fmt_u(b, r / 10u, 0); *b++ = '.'; fmt_u(b, r % 10u, 0); }
         else { b = fmt_u(b, (uint32_t)v * 100u / 127u, 0); str_cat(b, "%"); }
@@ -2281,6 +2288,10 @@ static void edit_item(uint32_t id, int32_t d)
     }
     {                                           /* WAVETABLE: the table (WAVE's 2nd setting) one per click: the 8 tables sit 16 values apart */
         uint32_t e2;
+        if (osc_pk(id, &e2) == 4 && e2 == E_FM) {   /* (and FM's ALGO, one per click) */
+            item_set(id, clampi((v >> 4) + (d > 0 ? 1 : d < 0 ? -1 : 0), 0, 7) * 16);
+            return;
+        }
         if (osc_pk(id, &e2) == 2 && e2 == E_WAVE) {
             int32_t t = clampi(((v * 258) >> 12) + (d > 0 ? 1 : d < 0 ? -1 : 0), 0, 7);
             item_set(id, (t * 4096 + 257) / 258);    /* (the first value of table t) */
@@ -2345,7 +2356,7 @@ static void init_sound(void)                    /* the INIT factory sound, an em
     save_pos = 0;
     for (save_slot = 0; save_slot < NUSER - 1u && up_valid(save_slot); save_slot++) {}
 }
-static void song_new(void)                      /* NEW SONG: the INIT sound, the drums, SEQ BASS, the locks and the automation empty; the saved patches, the macros, the EQ and the settings stay */
+static void song_new(void)                      /* NEW SONG: the INIT sound, the drums, SEQ BASS, the locks and the automation empty; the EQ back flat; the saved patches, the macros and the settings stay */
 {
     uint32_t k;
     ev_push(EV_SEQ, 0, 0);
@@ -2353,7 +2364,7 @@ static void song_new(void)                      /* NEW SONG: the INIT sound, the
     memset(aut_saved, 0, sizeof aut_saved);
     notes_all_off();
     init_sound();
-    dk_defaults(); pl_defaults(); sqx_defaults();
+    dk_defaults(); pl_defaults(); sqx_defaults(); eq_defaults(); eq_dirty = 1;
     for (k = 0; k < SQ_NPAT; k++) { memset(&perf.pat[k], 0, sizeof perf.pat[k]); perf.pat[k].len = 16; perf.pat[k].rate = 3; }
     perf.cur = 0; sq_cur_step = 0; sq_psel = dk_psel = 0; sq_bk.ok = dk_bk.ok = 0;
     dk_cur = dk_trk = 0;
@@ -2587,7 +2598,7 @@ static void on_enc(uint32_t e, int32_t d)
             for (i = 0; i < n && CH[i] != pname[save_pos]; i++) {}
             pname[save_pos] = CH[((i + d) % n + n) % n];
         } else if (e == ENC_ALGORITHM) patch[P_STYLE] = (int8_t)clampi(patch[P_STYLE] + d, 0, NSTYLE - 1);
-        else if (e == ENC_KNOB4) new_step(d < 0 ? 2u : 1u);   /* (right: NEW PRESET, left: NEW SONG) */
+        else if (e == ENC_KNOB4) new_step(d > 0 ? 2u : 1u);   /* (left: NEW PRESET, right: NEW SONG) */
         return;
     }
     if (e == ENC_SELECT) {

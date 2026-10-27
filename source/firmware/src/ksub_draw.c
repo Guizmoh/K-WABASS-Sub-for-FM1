@@ -393,11 +393,54 @@ static void vis_wt(const int8_t *o, int32_t x, int32_t y, int32_t w, int32_t h) 
     str_cat(p, "%");
     if (h >= 34) g_text_r(T_XS, x + w - 4, y + h - 11, t, K_GREY);
 }
+static void vis_fm4(const int8_t *o, uint32_t al, int32_t x, int32_t y, int32_t w, int32_t h)   /* FM, 4 operators: the ALGO drawn,
+                                                 * the heard ones on the right, each modulator one column further left */
+{
+    uint32_t a = FM_ALG[al], to[5], dep[5], j, c, nc[4] = {0, 0, 0, 0}, row[5], rk = (uint32_t)(o[3] * 258) >> 11 & 15u;
+    int32_t bx[5], byy[5], bw, bh, top = y + 12;
+    char t[20];
+    to[1] = 0; to[2] = a >> 6 & 1u; to[4] = a & 7u;   /* (bits: 1, 2, 3 = the operators it modulates) */
+    to[3] = (a >> 3 & 1u) | (a >> 4 & 1u) << 1;
+    for (j = 1; j <= 4u; j++) {                  /* the depth: 0 heard, else one more than the deepest it modulates */
+        uint32_t d = 0, m = to[j], b;
+        for (b = 0; b < 3u; b++) if (m >> b & 1u) { uint32_t e = dep[b + 1] + 1u; if (e > d) d = e; }
+        dep[j] = d; row[j] = nc[d]++;
+    }
+    for (c = 0; c < 4u && nc[c]; c++) {}
+    if (c == 1u) { c = 4; for (j = 1; j <= 4u; j++) { dep[j] = j - 1u; row[j] = 0; nc[j - 1u] = 1; } }   /* (all heard: side by side) */
+    bw = (w - 8) / (int32_t)c - 10; if (bw > 44) bw = 44;
+    for (j = 1; j <= 4u; j++) {
+        int32_t rh = (y + h - 2 - top) / (int32_t)nc[dep[j]];
+        bh = rh - 3 > 16 ? 16 : rh - 3;
+        bx[j] = x + w - 6 - bw - (int32_t)dep[j] * (bw + 10);
+        byy[j] = top + (int32_t)row[j] * rh + (rh - bh) / 2;
+    }
+    for (j = 2; j <= 4u; j++) {                  /* the modulations: right to the operator modulated */
+        uint32_t b;
+        for (b = 0; b < 3u; b++) if (to[j] >> b & 1u) g_line(bx[j] + bw, byy[j] + bh / 2, bx[b + 1], byy[b + 1] + bh / 2, g_mix(K_LINE, K_CYAN, 120 + o[2]));
+    }
+    for (j = 1; j <= 4u; j++) {
+        uint16_t col = to[j] ? K_CYAN : K_WAVE;
+        char *p = t;
+        *p++ = (char)('0' + j); *p++ = ' '; *p++ = 'x'; *p = 0;
+        if (j == 1u) str_cat(p, "1");
+        else if (j == 2u) str_cat(p, L_RATIO[rk]);
+        else { uint32_t r = FM_R34[rk][j - 3u]; p = fmt_u(p, r >> 8, 0); if (r & 255u) { *p++ = '.'; fmt_u(p, (r & 255u) * 10u >> 8, 0); } }
+        g_box(bx[j], byy[j], bw, bh, K_PANEL, col);
+        g_text_c(T_XS, bx[j] + bw / 2, byy[j] + bh / 2 - 4, t, col);
+        if (!to[j]) g_rect(bx[j] + bw, byy[j] + bh / 2, x + w - 2 - bx[j] - bw, 1, K_WAVE);   /* heard: out */
+    }
+    if (o[4]) { uint16_t cf = g_mix(K_LINE, K_MOD, 100 + o[4]); g_rect(bx[4] + 2, byy[4] - 2, bw - 4, 1, cf); g_rect(bx[4] + 2, byy[4] - 2, 1, 2, cf); g_rect(bx[4] + bw - 3, byy[4] - 2, 1, 2, cf); }
+    str_cat(str_cat(t, "ALGO "), L_ALG[al]);
+    g_text(T_XS, x + 4, y + 3, t, K_GREY);
+}
 static void vis_fm(const int8_t *o, uint32_t k, int32_t x, int32_t y, int32_t w, int32_t h)   /* FM: the two operators */
 {
     int32_t bw = w * 30 / 100, bh = h > 46 ? 22 : h - 16, by = y + (h - bh) / 2 + (h > 46 ? 4 : 2), mx = x + 8, cx = x + w - bw - 26;
     int32_t th = 1 + o[2] / 32, fbk = o[4], i;
     char t[16];
+    uint32_t al = (uint32_t)patch[k ? B_P4 : A_P4] >> 4 & 7u;
+    if (al) { vis_fm4(o, al, x, y, w, h); return; }
     if (bh < 12) bh = 12;
     g_box(mx, by, bw, bh, K_PANEL, K_CYAN);     /* the modulator, its ratio */
     str_cat(str_cat(t, "MOD x"), L_RATIO[(o[3] * 258) >> 11 & 15]);
@@ -980,7 +1023,7 @@ static void save_g(int32_t x, int32_t y0, int32_t w, int32_t ty)   /* the name b
         str_cat(q, "/13");
         v3[0] = pname[save_pos] && pname[save_pos] != ' ' ? pname[save_pos] : '_'; v3[1] = 0;
         val[0] = v1; val[1] = v2; val[2] = v3; val[3] = L_STYLE[clampi(patch[P_STYLE], 0, NSTYLE - 1)];
-        val[4] = new_arm == 1u ? "PRESET: AGAIN >" : new_arm == 2u ? "< SONG: AGAIN" : "<SONG PRESET>";
+        val[4] = new_arm == 1u ? "< PRESET: AGAIN" : new_arm == 2u ? "SONG: AGAIN >" : "<PRESET SONG>";
         for (i = 0; i < 5; i++) {
             r = y0 + i * 20;
             row_g(x - 2, r, w, 18, lab[i], val[i], i == 0, i == 4 && new_arm ? K_LIME : K_CYAN, T_S);

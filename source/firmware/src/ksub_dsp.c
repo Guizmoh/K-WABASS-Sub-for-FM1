@@ -340,18 +340,41 @@ static void osc_core(osc_t *o, const oscp_t *q, int32_t *out, const int32_t *pm,
         }
         break;
     }
-    case E_FM: {                                /* a carrier, a modulator at a ratio, its feedback */
+    case E_FM: {                                /* 4 operators: ALGO (P4) sets who modulates whom; INDEX, the ratios (RATIO's set), FEEDBACK on the top one */
         int32_t ik = (int32_t)((((q->p1 * q->p1) >> 15) * 6366) >> 10), fk = (q->p3 * 978) >> 10;
-        uint32_t im = (uint32_t)(((uint64_t)inc * RATIO_Q8[q->p2 >> 11]) >> 8), pm2 = o->ph2;
-        for (i = 0; i < n; i++) {
-            int32_t m;
-            pm2 += im;
-            m = sin32(pm2 + (uint32_t)((((o->fb1 + o->fb2) >> 1) * fk)));
-            o->fb2 = o->fb1;
-            o->fb1 = m;
-            SYNC_STEP();
-            ph += inc;
-            out[i] = sin32(ph + (pm ? (uint32_t)pm[i] : 0u) + (uint32_t)((int64_t)m * ik));
+        uint32_t al = (uint32_t)q->p4 >> 12, rk = (uint32_t)q->p2 >> 11, pm2 = o->ph2;
+        uint32_t im = (uint32_t)(((uint64_t)inc * RATIO_Q8[rk]) >> 8);
+        if (!al) {                              /* ALGO 1, 2>1: the classic pair, the feedback on the modulator */
+            for (i = 0; i < n; i++) {
+                int32_t m;
+                pm2 += im;
+                m = sin32(pm2 + (uint32_t)((((o->fb1 + o->fb2) >> 1) * fk)));
+                o->fb2 = o->fb1;
+                o->fb1 = m;
+                SYNC_STEP();
+                ph += inc;
+                out[i] = sin32(ph + (pm ? (uint32_t)pm[i] : 0u) + (uint32_t)((int64_t)m * ik));
+            }
+        } else {
+            uint32_t a = FM_ALG[al], p3 = o->ph[1], p4 = o->ph[2];
+            uint32_t i3 = (uint32_t)(((uint64_t)inc * FM_R34[rk][0]) >> 8), i4 = (uint32_t)(((uint64_t)inc * FM_R34[rk][1]) >> 8);
+            int32_t a43 = a >> 2 & 1, a42 = a >> 1 & 1, a41 = a & 1, a32 = a >> 4 & 1, a31 = a >> 3 & 1, a21 = a >> 6 & 1;
+            int32_t c2 = !(a >> 6 & 1), c3 = !(a >> 3 & 3), c4 = !(a & 7), lv = a ? 32767 : q->p1;   /* (1+2+3+4: INDEX sets 2, 3, 4's level, drawbars) */
+            int32_t g = a ? 32767 / (1 + c2 + c3 + c4) : (int32_t)(1073676289u / (uint32_t)(32767 + 3 * lv));
+            for (i = 0; i < n; i++) {
+                int32_t s4, s3, s2, s1;
+                p4 += i4; p3 += i3; pm2 += im;
+                s4 = sin32(p4 + (uint32_t)((((o->fb1 + o->fb2) >> 1) * fk)));
+                o->fb2 = o->fb1;
+                o->fb1 = s4;
+                s3 = sin32(p3 + (uint32_t)((int64_t)(s4 * a43) * ik));
+                s2 = sin32(pm2 + (uint32_t)((int64_t)(s4 * a42 + s3 * a32) * ik));
+                SYNC_STEP();
+                ph += inc;
+                s1 = sin32(ph + (pm ? (uint32_t)pm[i] : 0u) + (uint32_t)((int64_t)(s4 * a41 + s3 * a31 + s2 * a21) * ik));
+                out[i] = ((s1 + (int32_t)(((int64_t)(s2 * c2 + s3 * c3 + s4 * c4) * lv) >> 15)) * g) >> 15;
+            }
+            o->ph[1] = p3; o->ph[2] = p4;
         }
         o->ph2 = pm2;
         break;
@@ -448,7 +471,7 @@ static void osc_render(osc_t *o, const oscp_t *q, int32_t *out, const int32_t *p
 {
     uint32_t i;
     osc_core(o, q, out, pm, n);
-    if (q->p4 && q->eng != E_CS && q->eng != E_KICK) {              /* FOLD: the engine's wave driven into a triangle folder, 1 to 6 times (west coast, after any engine) */
+    if (q->p4 && q->eng != E_CS && q->eng != E_KICK && q->eng != E_FM) {              /* FOLD: the engine's wave driven into a triangle folder, 1 to 6 times (west coast, after any engine) */
         int32_t g = 32768 + q->p4 * 5;
         for (i = 0; i < n; i++) {               /* (the wave as it is inside +-1; past it, reflected back, as often as it takes) */
             int32_t y = (int32_t)(((int64_t)out[i] * g) >> 15);

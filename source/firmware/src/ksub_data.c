@@ -139,11 +139,11 @@ static const char *const ENG_P[NENG][3] = {
     {"WAVE", "PWIDTH", "DRIVE"}, {"WAVE", "DETUNE", "MOTION"}, {"POSITION", "TABLE", "WARP"},
     {"INDEX", "RATIO", "FEEDBACK"}, {"AMOUNT", "TYPE", "BODY"}, {"-", "-", "-"},
     {"SYNC", "WAVE", "SOFT"}, {"-", "-", "-"}, {"PUNCH", "DROP", "DRIVE"}};
-static const char *const ENG_P4[NENG] = {"FOLD", "RING", "FOLD", "FOLD", "FOLD", "-", "FOLD", "-", "CLICK"};   /* each engine's 4th setting */
+static const char *const ENG_P4[NENG] = {"FOLD", "RING", "FOLD", "ALGO", "FOLD", "-", "FOLD", "-", "CLICK"};   /* each engine's 4th setting */
 static const char *const ENG_TITLE[NENG] = {"ANALOG / VA", "CS / DUAL", "WAVETABLE", "FM / GROWL",
                                             "PHASE DIST", "-", "HARD SYNC", "-", "808 / KICK"};
 static const char *const ENG_SUB[NENG] = {"SUBTRACTIVE CORE", "2 CHANNELS: SAW + PULSE, PWM, DRIFT", "8 TABLES x 8 FRAMES",
-                                          "2-OP FM + FEEDBACK", "CZ-STYLE PHASE DISTORTION", "-",
+                                          "4 OPERATORS, 8 ALGORITHMS", "CZ-STYLE PHASE DISTORTION", "-",
                                           "MASTER / SLAVE SYNC", "-", "SINE, PITCH DROP, DRIVE, CLICK"};
 static const char *const L_WT[8] = {"BASIC", "HARMONIC", "GROWL", "VOCAL", "FM", "PWM", "DIGITAL", "SYNC"};
 static const char *const L_PDT[6] = {"SAW", "SQUARE", "PULSE", "RESO SAW", "RESO TRI", "RESO TRAP"};
@@ -151,6 +151,12 @@ static const char *const L_RATIO[16] = {"0.50", "1.00", "1.50", "2.00", "2.50", 
                                         "7.00", "8.00", "9.00", "11.0", "1.41", "3.14"};
 static const uint16_t RATIO_Q8[16] = {128, 256, 384, 512, 640, 768, 896, 1024, 1280, 1536, 1792, 2048, 2304, 2816, 361, 804};
 static const char *const L_VOX = "AEIOU";
+/* FM's 4 operators: ALGO, who modulates whom (bits: 4>1 4>2 4>3, 3>1 3>2, -, 2>1; an operator that modulates nobody is heard);
+ * RATIO's set: operator 2 at L_RATIO, 3 and 4 at these (Q8) */
+static const uint8_t FM_ALG[8] = {0x40, 0x54, 0x52, 0x51, 0x4C, 0x44, 0x07, 0x00};
+static const char *const L_ALG[8] = {"2>1", "4>3>2>1", "34>2>1", "3>2>1<4", "4>3>1<2", "2>1 4>3", "4>123", "1+2+3+4"};
+static const uint16_t FM_R34[16][2] = {{256, 512}, {512, 768}, {256, 768}, {256, 1024}, {256, 1280}, {256, 512}, {256, 1792}, {512, 256},
+                                       {256, 768}, {512, 256}, {256, 768}, {512, 256}, {256, 768}, {512, 256}, {722, 256}, {361, 512}};
 
 typedef struct {
     const char *name, *sname;                   /* the row's name, the knob's (footer) */
