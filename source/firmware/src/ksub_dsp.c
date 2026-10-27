@@ -122,6 +122,17 @@ static volatile int32_t step_val;               /* the STEP effect: its level no
 static volatile uint8_t step_pos;
 static volatile uint8_t ks_straight;            /* LFO GRID: round divisions only */
 static volatile int32_t gmod[ND];               /* the global destinations' modulation (Q8 units), once a block */
+static int8_t gval[ND - D_N0];                  /* the parameters of the destinations from D_AEA, modulated (gv_update, once a block) */
+#define GP(d) gval[(d) - D_N0]
+static void gv_update(void)
+{
+    uint32_t k;
+    for (k = 0; k < ND - D_N0; k++) {
+        uint32_t id = GD_ID[k];
+        int32_t g = gmod[D_N0 + k];               /* (the whole depth: the whole range) */
+        gval[k] = (int8_t)(g ? clampi(patch[id] + (int32_t)(((int64_t)g * (PD[id].hi - PD[id].lo)) >> 15), PD[id].lo, PD[id].hi) : patch[id]);
+    }
+}
 static volatile int32_t meter_pk, meter_gr;     /* the output's peak and the glue's gain (Q15), for MASTER */
 #define BEATS_WRAP (48u << 24)
 /* RESAMPLE: the output, 11025 Hz mu-law, into RAM; OSC C plays it as its 16th sample (lost at power off) */
@@ -641,8 +652,8 @@ static void voice_mods(voice_t *v, int32_t *m, int32_t fenv, int32_t menv)
     src[SR_STEP] = step_val;
     route(m, src);
     m[D_CUT] += ((LKB(PB_ENV, patch[F_ENV]) + (m[D_FENV] >> 8)) * fenv) >> 6;
-    m[D_CUT] += (int32_t)((((int64_t)(v->pitch - 60 * 256) * 276) >> 8) * patch[F_KEY] >> 7);
-    m[D_CUT] += (patch[F_VEL] * (v->vel - 64)) >> 1;
+    m[D_CUT] += (int32_t)((((int64_t)(v->pitch - 60 * 256) * 276) >> 8) * GP(D_FKEY) >> 7);
+    m[D_CUT] += (GP(D_FVEL) * (v->vel - 64)) >> 1;
 }
 /* the matrix, the two LFOs, the STEP effect and the mod envelope into m (param units x 256, Q8 semitones) */
 static void route(int32_t *m, const int32_t *src)
@@ -666,13 +677,13 @@ static void route(int32_t *m, const int32_t *src)
         if (IS_PITCH(dst)) m[dst] += (int32_t)(((int64_t)(d < 0 ? -d * d : d * d) * 3 * lfo[k].out) >> 15);
         else m[dst] += (d * lfo[k].out) >> 6;
     }
-    if (patch[ST_ON] && patch[ST_DST] && patch[ST_DEP]) {   /* the STEP effect's own destination */
-        int32_t a = patch[ST_DEP];
+    if (patch[ST_ON] && patch[ST_DST] && GP(D_STDEP)) {   /* the STEP effect's own destination */
+        int32_t a = GP(D_STDEP);
         if (IS_PITCH(patch[ST_DST])) m[patch[ST_DST]] += (int32_t)(((int64_t)(a < 0 ? -a * a : a * a) * 3 * step_val) >> 15);
         else m[patch[ST_DST]] += (a * step_val) >> 6;
     }
-    if (patch[ME_DST] && patch[ME_AMT]) {
-        int32_t a = patch[ME_AMT];
+    if (patch[ME_DST] && GP(D_MEAMT)) {
+        int32_t a = GP(D_MEAMT);
         if (IS_PITCH(patch[ME_DST])) m[patch[ME_DST]] += (int32_t)(((int64_t)(a < 0 ? -a * a : a * a) * 3 * src[SR_MENV]) >> 15);
         else m[patch[ME_DST]] += (a * src[SR_MENV]) >> 6;
     }
@@ -723,15 +734,15 @@ static void voice_block(voice_t *v, int32_t *acc)
     uint32_t inc_sub, rsub, ft = (uint32_t)P[F_TYPE];
     int32_t amp_t, g_t, dg, da, gain;
 
-    fenv = env_run(&v->ef, (uint32_t)P[FE_A], (uint32_t)P[FE_D], P[FE_S] << 23, (uint32_t)P[FE_R]);
-    menv = env_run(&v->em, (uint32_t)P[ME_A], (uint32_t)P[ME_D], 0, (uint32_t)P[ME_D]);
-    amp = env_run(&v->ea, (uint32_t)P[AE_A], (uint32_t)P[AE_D], P[AE_S] << 23, (uint32_t)P[AE_R]);
+    fenv = env_run(&v->ef, (uint32_t)GP(D_FEA), (uint32_t)GP(D_FED), GP(D_FES) << 23, (uint32_t)GP(D_FER));   /* (GP: the LFOs can move them) */
+    menv = env_run(&v->em, (uint32_t)GP(D_MEA), (uint32_t)GP(D_MED), 0, (uint32_t)GP(D_MED));
+    amp = env_run(&v->ea, (uint32_t)GP(D_AEA), (uint32_t)GP(D_AED), GP(D_AES) << 23, (uint32_t)GP(D_AER));
     if (!v->ea.st && !v->ea.lv) { v->on = 0; v->amp = 0; return; }
-    if (P[V_GLIDE] || v->slide)                 /* (a SEQ slide without GLIDE: ~60 ms) */
-        v->pitch = v->target + (int32_t)(((int64_t)(v->pitch - v->target) * KS_GLIDE_DEC[P[V_GLIDE] ? P[V_GLIDE] : 50]) >> 24);   /* (the time shown) */
+    if (GP(D_GLIDE) || v->slide)                /* (a SEQ slide without GLIDE: ~60 ms) */
+        v->pitch = v->target + (int32_t)(((int64_t)(v->pitch - v->target) * KS_GLIDE_DEC[GP(D_GLIDE) ? GP(D_GLIDE) : 50]) >> 24);   /* (the time shown) */
     else v->pitch = v->target;
     voice_mods(v, m, fenv, menv);
-    if (P[X_DRIFT]) {                           /* slow wandering of each oscillator */
+    if (GP(D_DRIFT)) {                          /* slow wandering of each oscillator */
         v->drift_a = clip(v->drift_a + ((int32_t)(rnd() >> 24) - 128) - (v->drift_a >> 6), 4000);
         v->drift_b = clip(v->drift_b + ((int32_t)(rnd() >> 24) - 128) - (v->drift_b >> 6), 4000);
     }
@@ -742,12 +753,12 @@ static void voice_block(voice_t *v, int32_t *acc)
     qa.p1 = q8to15(pv(LKB(PB_SHAPE, P[A_P1]), m[D_AP1]));
     qa.p2 = q8to15(pv(P[A_P2], m[D_AP2]));
     qa.p3 = q8to15(pv(P[A_P3], m[D_AP3]));
-    qa.inc = pitch_inc(p + m[D_APIT] + ((P[A_OCT] * 12 + P[A_SEMI]) << 8) + P[A_FINE] * 256 / 100 + ((v->drift_a * P[X_DRIFT]) >> 9));
+    qa.inc = pitch_inc(p + m[D_APIT] + ((P[A_OCT] * 12 + P[A_SEMI]) << 8) + P[A_FINE] * 256 / 100 + ((v->drift_a * GP(D_DRIFT)) >> 9));
     qb.eng = (uint8_t)P[B_ENG];
     qb.p1 = q8to15(pv(P[B_P1], m[D_BP1]));
     qb.p2 = q8to15(pv(P[B_P2], m[D_BP2]));
     qb.p3 = q8to15(pv(P[B_P3], m[D_BP3]));
-    qb.inc = pitch_inc(p + m[D_BPIT] + ((P[B_OCT] * 12 + P[B_SEMI]) << 8) + P[B_FINE] * 256 / 100 + ((v->drift_b * P[X_DRIFT]) >> 9)
+    qb.inc = pitch_inc(p + m[D_BPIT] + ((P[B_OCT] * 12 + P[B_SEMI]) << 8) + P[B_FINE] * 256 / 100 + ((v->drift_b * GP(D_DRIFT)) >> 9)
                        + (P[X_MODE] == 3 ? (pv(P[X_AMT], m[D_XMOD]) >> 8) * 6144 / 127 : 0));   /* (SYNC: X-MOD = +0..24 semitones) */
     qa.sync = 0;
     qb.sync = P[X_MODE] == 3;
@@ -791,22 +802,22 @@ static void voice_block(voice_t *v, int32_t *acc)
         }
     }
     for (i = 0; i < (int32_t)KS_CB; i++) smb[i] = 0;
-    if (P[SM_SEL] && P[SM_LVL] && (P[SM_SEL] != SM_RS || rs_desc.len)) {   /* OSC C: the sample (after the filter, as the sub), from the keys (C3 as made) or fixed */
+    if (P[SM_SEL] && GP(D_SMLVL) && (P[SM_SEL] != SM_RS || rs_desc.len)) {   /* OSC C: the sample (after the filter, as the sub), from the keys (C3 as made) or fixed */
         const ks_smp_t *sm = sm_desc(P[SM_SEL]);
         const uint8_t *d = P[SM_SEL] == SM_RS ? rs_buf : KS_SMP_DATA + sm->off;
         int keys = P[SM_KEY] == 1 || (P[SM_KEY] == 0 && sm->keys);
-        uint32_t st = (uint32_t)(((uint64_t)pitch_inc((keys ? p : 48 * 256) + P[SM_TUNE] * 256) * sm->k) >> 32);
+        uint32_t st = (uint32_t)(((uint64_t)pitch_inc((keys ? p : 48 * 256) + GP(D_SMTUNE) * 256) * sm->k) >> 32);
         uint32_t len = sm->len, s0, e0, l0, S, E, L, hinc, sp, dir = (uint32_t)P[SM_DIR] % 3u;
         int loop = P[SM_MODE] == 1 || (P[SM_MODE] == 0 && sm->loop < len);
-        int32_t lv = lvl15(pv(P[SM_LVL], 0) >> 8);
-        s0 = (uint32_t)LKB(PB_SMP, P[SM_START]) * len >> 7;  /* START / END: the part played */
-        e0 = len - ((uint32_t)P[SM_END] * len >> 7);
+        int32_t lv = lvl15(pv(GP(D_SMLVL), 0) >> 8);
+        s0 = (uint32_t)LKB(PB_SMP, GP(D_SMSTART)) * len >> 7;  /* START / END: the part played */
+        e0 = len - ((uint32_t)GP(D_SMEND) * len >> 7);
         if (e0 < s0 + 32u) e0 = s0 + 32u < len ? s0 + 32u : len;
         if (s0 + 32u > e0) s0 = e0 > 32u ? e0 - 32u : 0u;
         l0 = sm->loop < len ? sm->loop : 0u;    /* (the loop: from the sample's loop point, inside the part) */
         if (l0 < s0 || l0 >= e0) l0 = s0;
         S = s0 << 16; E = e0 << 16; L = l0 << 16;
-        sp = P[SM_SPEED] >= 0 ? 256u - (uint32_t)P[SM_SPEED] * 230u / 127u : 256u + (uint32_t)(-P[SM_SPEED]) * 12u;   /* SPEED, Q8: 0.1 .. 1 .. 4 (the same pitch) */
+        { int32_t spd = GP(D_SMSPEED); sp = spd >= 0 ? 256u - (uint32_t)spd * 230u / 127u : 256u + (uint32_t)(-spd) * 12u; }   /* SPEED, Q8: 0.1 .. 1 .. 4 (the same pitch) */
         if (st > (8u << 16)) st = 8u << 16;
         hinc = sp == 256u ? st : (uint32_t)(((uint64_t)st * sp) >> 8);
         if (!v->sm_d) { v->sm_d = dir == 1u ? -1 : 1; v->sm_pos = v->sm_g[0] = v->sm_g[1] = dir == 1u ? E - 1u : S; v->sm_gd[0] = v->sm_gd[1] = v->sm_d; }   /* (the grain half way in: the attack at once) */
@@ -1389,6 +1400,7 @@ static void seq_clock(uint32_t beats)
 static void voices_render(int32_t *dst, uint32_t n, uint32_t t0, uint32_t budget)
 {
     uint32_t i, k, binc, any = 0, lim = ks_shed >= 3u ? 1u : ks_shed >= 2u ? 2u : NVOICE, on = 0;
+    gv_update();
     while (ev_r != ev_w) {
         uint32_t e = evq[ev_r % 64u], t = e & 255u, a = (e >> 8) & 255u, b = e >> 16;
         ev_r++;
@@ -1513,22 +1525,22 @@ static void fx_render(const int32_t *in, int32_t *out, uint32_t n)
     int32_t thr = 32767 - glue * 180, makeup = 4096 + glue * 24;
     int32_t dj_f = 0, dj_q = 0, dj_mix = 0;
     static const int32_t MB_A[7] = {0, 267, 356, 445, 534, 667, 889};   /* one pole at 60 .. 200 Hz, Q15 */
-    int32_t mba = MB_A[(uint32_t)P[MB_MONO] % 7u], ot_amt = P[OT_AMT] * 258, ot_sum[3] = {0, 0, 0}, ot_gl, ot_gm, ot_gh;
+    int32_t mba = MB_A[(uint32_t)P[MB_MONO] % 7u], ot_amt = GP(D_OTAMT) * 258, ot_sum[3] = {0, 0, 0}, ot_gl, ot_gm, ot_gh;
     int32_t shelf = ks_deep == 2u ? 300 : ks_deep ? 150 : 0, ng = fx.ng ? fx.ng : 4096, lg = fx.lg ? fx.lg : 32768, nsum = 0;
     if (!fx.ot_g[0]) fx.ot_g[0] = fx.ot_g[1] = fx.ot_g[2] = 4096;
-    ot_gl = (int32_t)(((int64_t)fx.ot_g[0] * (4096 + P[OT_LOW] * 32)) >> 12);   /* (LOW / HIGH BAND: +-0.5) */
+    ot_gl = (int32_t)(((int64_t)fx.ot_g[0] * (4096 + GP(D_OTLOW) * 32)) >> 12);   /* (LOW / HIGH BAND: +-0.5) */
     ot_gm = fx.ot_g[1];
-    ot_gh = (int32_t)(((int64_t)fx.ot_g[2] * (4096 + P[OT_HIGH] * 32)) >> 12);
+    ot_gh = (int32_t)(((int64_t)fx.ot_g[2] * (4096 + GP(D_OTHIGH) * 32)) >> 12);
     dk_render(n > HALF_FRAMES ? HALF_FRAMES : n);
     if (eq_new) { memcpy(eq_c, eq_n, sizeof eq_c); if (eq_nmask & ~eq_mask) memset(eq_st, 0, sizeof eq_st); eq_mask = eq_nmask; eq_new = 0; }
     uint32_t pb = ks_beats, pinc = (ks_bpm10 * 41546u) >> 16;   /* (the beat, Q24, and its step a sample: PUMP) */
     int32_t cp_amt = fpv(CP_AMT, D_CPAMT), cp_thr = 32767 - cp_amt * 200, cp_r = 2 + cp_amt / 16, cp_mk = 32768 + cp_amt * 150;
-    int32_t cp_atk = 32768 / (1 + P[CP_ATK] * 11), cp_rel = 1048576 / (441 + P[CP_REL] * 270), cp_pump = P[CP_ON] ? P[CP_PUMP] : 0;
-    int32_t ph_dep = fpv(PH_DEP, D_PHDEP) * 160, ph_fb = P[PH_FB] * 200, ph_mix = fpv(PH_MIX, D_PHMIX) * 258;
+    int32_t cp_atk = 32768 / (1 + GP(D_CPATK) * 11), cp_rel = 1048576 / (441 + GP(D_CPREL) * 270), cp_pump = P[CP_ON] ? GP(D_CPPUMP) : 0;
+    int32_t ph_dep = fpv(PH_DEP, D_PHDEP) * 160, ph_fb = GP(D_PHFB) * 200, ph_mix = fpv(PH_MIX, D_PHMIX) * 258;
     uint32_t ph_inc = KS_LFO_INC[fpv(PH_RATE, D_PHRATE)] / KS_CB, rvt = (uint32_t)P[RV_TYPE] & 3u, dlt = (uint32_t)P[DL_TYPE] & 3u;
     int32_t rv_fb2 = clampi(rv_fb + RV_FBA[rvt], 0, 31800), rv_d2 = clampi(rv_d + RV_DA[rvt], 0, 32000);
     {                                           /* the delay time from the tempo */
-        uint32_t cpb = DIV_CPB[P[DL_TIME] & 15], spb = 26460000u / (ks_bpm10 | 1u), t = (spb << 8) / (cpb >> 8);
+        uint32_t cpb = DIV_CPB[GP(D_DLTIME) & 15], spb = 26460000u / (ks_bpm10 | 1u), t = (spb << 8) / (cpb >> 8);
         dl_t = (int32_t)(t > DL_N - 4u ? DL_N - 4u : t) << 8;
         if (!fx.dl_t) fx.dl_t = dl_t;
     }

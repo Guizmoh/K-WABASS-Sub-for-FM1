@@ -422,10 +422,13 @@ static int eq_live(uint32_t k)                  /* a band that does something */
     uint32_t t = perf.eq_t[k];
     return t == EQ_LOCUT || t == EQ_HICUT || t == EQ_NOTCH || ((t == EQ_LOSH || t == EQ_BELL || t == EQ_HISH) && perf.eq_g[k]);
 }
-static void eq_coef(uint32_t k, int32_t *o)     /* RBJ's biquads, Q24, a0 taken out without a 64-bit division */
-{
+static void eq_coef(uint32_t k, int32_t *o, int32_t fq8, int32_t gdb)   /* RBJ's biquads, Q24, a0 taken out without a 64-bit division; */
+{                                                                        /* fq8: the frequency step, Q8 (between two steps: in between) */
     const int64_t ONE = 1 << 24;
-    uint32_t ph = KS_EQ_INC[perf.eq_f[k] % 48u], gi = (uint32_t)clampi(perf.eq_g[k] + 12, 0, 24);
+    uint32_t fi, fr, ph, gi = (uint32_t)clampi(gdb + 12, 0, 24);
+    fq8 = clampi(fq8, 0, 47 * 256);
+    fi = (uint32_t)fq8 >> 8; fr = (uint32_t)fq8 & 255u;
+    ph = fi < 47u ? KS_EQ_INC[fi] + (uint32_t)(((uint64_t)(KS_EQ_INC[fi + 1u] - KS_EQ_INC[fi]) * fr) >> 8) : KS_EQ_INC[47];
     int64_t s = (int64_t)sin32(ph) << 9, c = (int64_t)sin32(ph + 0x40000000u) << 9;
     int64_t al = (s * KS_EQ_IQ[perf.eq_q[k] & 7u]) >> 14, A = (int64_t)KS_EQ_A[gi] << 10, IA = (int64_t)KS_EQ_IA[gi] << 10;
     int64_t Ap = A + ONE, Am = A - ONE, sa = ((int64_t)KS_EQ_SQ[gi] << 10) * al >> 23, b0, b1, b2, a0, a1, a2;
@@ -457,16 +460,30 @@ static void p_eqhead(char *t)                  /* the band being set, its type a
     p = fmt_u(p, KS_EQ_Q10[perf.eq_q[eq_cur & 3u] & 7u] / 10u, 0);
     *p++ = '.'; fmt_u(p, KS_EQ_Q10[perf.eq_q[eq_cur & 3u] & 7u] % 10u, 0);
 }
-static void eq_update(void)                     /* the coefficients to the audio (once it took the last), the curve */
+static int eq_coefs(void)                       /* the coefficients to the audio (once it took the last), an LFO's move included */
 {
     int32_t q[4][5];
-    uint32_t k, x, mask = 0;
-    if (eq_new) return;                         /* (the audio has not taken the last ones yet: next time) */
-    for (k = 0; k < 4u; k++) if (eq_live(k)) { eq_coef(k, q[k]); mask |= 1u << k; }
+    uint32_t k, mask = 0;
+    if (eq_new) return 0;                       /* (the audio has not taken the last ones yet: next time) */
+    for (k = 0; k < 4u; k++) {
+        int32_t mf = gmod[D_EQ1F + k], mg = gmod[D_EQ1G + k];   /* (the whole depth: +-48 steps, +-12 dB) */
+        int32_t gdb = perf.eq_g[k] + ((mg * 3) >> 13);
+        uint32_t t = perf.eq_t[k];
+        if (!eq_live(k) && !(mg && (t == EQ_LOSH || t == EQ_BELL || t == EQ_HISH))) continue;
+        eq_coef(k, q[k], (int32_t)(perf.eq_f[k] % 48u) * 256 + ((mf * 3) >> 3), gdb);
+        mask |= 1u << k;
+    }
     memcpy(eq_n, q, sizeof q);
     eq_nmask = (uint8_t)mask;
     eq_new = 1;
+    return 1;
+}
+static void eq_update(void)                     /* the coefficients, the curve */
+{
+    uint32_t k, x, mask = 0;
+    if (!eq_coefs()) return;
     eq_dirty = 0;
+    for (k = 0; k < 4u; k++) if (eq_live(k)) mask |= 1u << k;
     for (x = 0; x < 112u; x++) {                /* the curve: each band's shape in octaves from its frequency (the sound */
         int32_t fq8 = (int32_t)(x * 47u * 256u / 111u), db = 0;   /* itself is the biquads: this is their picture) */
         for (k = 0; k < 4u; k++) {
@@ -2614,9 +2631,18 @@ static void aut_play(void)                      /* the main loop: a new SEQ BASS
         if (e->pat == (PL_AUTO | k) && e->step == st && e->tp < NP) { aut_hold_base(e->tp); patch[e->tp] = e->v; prev_dirty = 1; }
     }
 }
-static void quick_assign(uint32_t src, uint32_t id, int32_t d)
+static void qa_dst(uint32_t src, int32_t dst, int32_t d);
+static void quick_assign(uint32_t src, uint32_t id, int32_t d) { qa_dst(src, dest_of(id), d); }
+static int32_t win_dest(uint32_t e)             /* the windows: what this knob moves, as a destination (-1: none) */
 {
-    int32_t dst = dest_of(id);
+    if (win == 3u) return e == ENC_KNOB1 || e == ENC_ALGORITHM ? (int32_t)(D_EQ1F + (eq_cur & 3u)) : e == ENC_KNOB2 ? (int32_t)(D_EQ1G + (eq_cur & 3u)) : -1;
+    if (win == 6u) return e == ENC_KNOB1 ? D_CUT : e == ENC_KNOB2 ? D_RES : e == ENC_KNOB4 ? D_MORPH : -1;
+    if (win == 4u || win == 5u) return e == ENC_KNOB1 ? D_MORPHX : e == ENC_KNOB2 ? D_MORPHY : -1;
+    if (win == 7u) return e == ENC_SELECT ? D_MORPHX : e == ENC_ALGORITHM ? D_MORPHY : -1;
+    return -1;
+}
+static void qa_dst(uint32_t src, int32_t dst, int32_t d)
+{
     uint32_t l2 = qa_lfo2(), o = src == BTN_LFO && l2 ? (uint32_t)LFO_2 : 0u;
     uint32_t pd = src == BTN_LFO ? L1_DST + o : ME_DST, pa = src == BTN_LFO ? L1_DEP + o : ME_AMT;
     char t[32], *p;
@@ -2787,10 +2813,11 @@ static void ui_input(void)
         if (hb.b != 0xFF && (hb.b == BTN_LFO || hb.b == BTN_ENV || (hb.b == BTN_OCT_DOWN && (fm1_in.buttons >> BTN_LFO & 1u))) && ((b >= ENC_KNOB1 && b <= ENC_KNOB4) || b == ENC_ALGORITHM)) {   /* (OCT- then LFO held: LFO 1 too) */
             const view_t *v = view();
             uint32_t id = b == ENC_ALGORITHM ? (v->n ? v->it[cursor[vidx()]] : I_NONE) : vknob(v, b - ENC_KNOB1);
-            if (win) id = I_NONE;
-            else if (C3_ON) id = b == ENC_ALGORITHM ? COL3[page].id[c3_cur >> 2][c3_cur & 3u] : COL3[page].id[0][b - ENC_KNOB1];
             hb.used = 1;
+            if (win) { qa_dst(hb.b == BTN_ENV ? BTN_ENV : BTN_LFO, win_dest(b), d); continue; }   /* (the EQ, FX PADS, MORPH: their knobs too) */
+            if (C3_ON) id = b == ENC_ALGORITHM ? COL3[page].id[c3_cur >> 2][c3_cur & 3u] : COL3[page].id[0][b - ENC_KNOB1];
             if (id != I_NONE) quick_assign(hb.b == BTN_ENV ? BTN_ENV : BTN_LFO, rate_like(id), d);
+            else toast("NOT A DESTINATION");
             continue;
         }
         if (hb.b != 0xFF && page_of_btn(hb.b) >= 0 && b >= ENC_KNOB1 && b <= ENC_KNOB4) {   /* SHIFT: that page's knobs */
@@ -3046,6 +3073,13 @@ static void app_step(void)
 {
     ui_input();
     if (eq_dirty) eq_update();
+    else {                                      /* an LFO on the EQ: the coefficients again (every 2 ms), and once more when it stops */
+        static uint8_t eq_moved;
+        static uint32_t eq_ms;
+        uint32_t k, any = 0;
+        for (k = 0; k < 8u; k++) any |= gmod[D_EQ1F + k] != 0;
+        if ((any || eq_moved) && fm1_ms - eq_ms >= 2u && eq_coefs()) { eq_ms = fm1_ms; eq_moved = (uint8_t)any; }
+    }
     mx_tick();
     if (rs_rec_on && !rs_want) {                /* RESAMPLE done: OSC C plays it */
         rs_rec_on = 0;

@@ -115,7 +115,12 @@ static int32_t dest_of(uint32_t id)             /* the destination that moves th
     case RV_DAMP: return D_RVDAMP; case RV_MIX: return D_RVMIX; case MS_GLUE: return D_GLUE; case MS_SUB: return D_SUBB;
     case MS_VOL: return D_VOL; case I_L1RATE: return D_L1RATE; case I_L2RATE: return D_L2RATE;
     case CP_AMT: return D_CPAMT; case PH_RATE: return D_PHRATE; case PH_DEP: return D_PHDEP; case PH_MIX: return D_PHMIX;
-    default: return -1;
+    case G_EQ_F: return (int32_t)(D_EQ1F + (eq_cur & 3u)); case G_EQ_G: return (int32_t)(D_EQ1G + (eq_cur & 3u));   /* (the band being set) */
+    default: {                                  /* the others (1.0.16): one destination each */
+        uint32_t k;
+        for (k = 0; k < ND - D_N0; k++) if (GD_ID[k] == id) return (int32_t)(D_N0 + k);
+        return -1;
+    }
     }
 }
 static const char *mod_tag(uint32_t id)         /* what modulates it, in two or three letters */

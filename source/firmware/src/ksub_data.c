@@ -43,6 +43,10 @@ enum { D_OFF, D_CUT, D_RES, D_PITCH, D_AP1, D_AP2, D_BP1, D_BP2, D_ALVL, D_BLVL,
        D_CPAMT, D_PHRATE, D_PHDEP, D_PHMIX,
        D_MORPHX, D_MORPHY, D_MORPH,               /* MORPH X/Y and A/B (the main loop reads them: ksub_ui.c) */
        D_ABMIX,                                   /* the A/B MIX of the oscillators (per voice: A one way, B the other) */
+       D_EQ1F, D_EQ2F, D_EQ3F, D_EQ4F, D_EQ1G, D_EQ2G, D_EQ3G, D_EQ4G,   /* the EQ's bands (the main loop works the coefficients out again) */
+       D_AEA, D_AED, D_AES, D_AER, D_FEA, D_FED, D_FES, D_FER, D_MEA, D_MED, D_MEAMT,   /* (1.0.16: from D_AEA, one parameter each: GD_ID) */
+       D_GLIDE, D_DRIFT, D_FKEY, D_FVEL, D_STDEP, D_SMLVL, D_SMTUNE, D_SMSPEED, D_SMSTART, D_SMEND,
+       D_CPATK, D_CPREL, D_CPPUMP, D_PHFB, D_OTAMT, D_OTLOW, D_OTHIGH, D_DLTIME,
        ND };   /* (stored in patches: append only) */
 #define IS_PITCH(d) ((d) == D_PITCH || (d) == D_APIT || (d) == D_BPIT)
 /* the order DEST steps through: the oscillators' EDIT rows together (ksub_ui.c skips an oscillator that is off) */
@@ -50,7 +54,16 @@ static const uint8_t DST_ORDER[ND] = {D_OFF, D_CUT, D_RES, D_MORPHX, D_MORPHY, D
                                       D_BP1, D_BP2, D_BP3, D_BPIT, D_XMOD, D_SUB, D_NOISE, D_NCOL, D_AMP, D_WOB, D_L1RATE,
                                       D_L2RATE, D_L2DEP, D_GATE, D_DRMIX, D_CRBITS, D_CRRATE, D_CRMIX, D_CHRATE,
                                       D_CHDEP, D_CHMIX, D_PHRATE, D_PHDEP, D_PHMIX, D_DLFB, D_DLTONE, D_DLMIX, D_RVSIZE, D_RVDAMP,
-                                      D_RVMIX, D_CPAMT, D_GLUE, D_SUBB, D_VOL};
+                                      D_RVMIX, D_CPAMT, D_GLUE, D_SUBB, D_VOL,
+                                      D_EQ1F, D_EQ1G, D_EQ2F, D_EQ2G, D_EQ3F, D_EQ3G, D_EQ4F, D_EQ4G,
+                                      D_AEA, D_AED, D_AES, D_AER, D_FEA, D_FED, D_FES, D_FER, D_MEA, D_MED, D_MEAMT, D_GLIDE, D_DRIFT, D_FKEY, D_FVEL,
+                                      D_STDEP, D_SMLVL, D_SMTUNE, D_SMSPEED, D_SMSTART, D_SMEND, D_CPATK, D_CPREL, D_CPPUMP, D_PHFB, D_OTAMT, D_OTLOW,
+                                      D_OTHIGH, D_DLTIME};
+/* the parameter each of the destinations from D_AEA moves (the DSP reads them modulated: GP) */
+#define D_N0 D_AEA
+static const uint8_t GD_ID[ND - D_N0] = {AE_A, AE_D, AE_S, AE_R, FE_A, FE_D, FE_S, FE_R, ME_A, ME_D, ME_AMT, V_GLIDE, X_DRIFT, F_KEY, F_VEL,
+                                         ST_DEP, SM_LVL, SM_TUNE, SM_SPEED, SM_START, SM_END, CP_ATK, CP_REL, CP_PUMP, PH_FB, OT_AMT, OT_LOW,
+                                         OT_HIGH, DL_TIME};
 /* the parameter each global destination moves */
 #define D_G0 D_L1RATE
 
@@ -81,7 +94,12 @@ static const char *const L_DST[ND] = {"OFF", "CUTOFF", "RESO", "PITCH", "A SHAPE
                                       "CRUSH RATE", "CRUSH MIX", "CHORUS RATE", "CHORUS DEPTH", "CHORUS MIX", "DELAY FDBK",
                                       "DELAY TONE", "DELAY MIX", "VERB SIZE", "VERB DAMP", "VERB MIX", "GLUE", "SUB BOOST",
                                       "VOLUME", "COMP AMOUNT", "PHASER RATE", "PHASER DEPTH", "PHASER MIX",
-                                      "MORPH X", "MORPH Y", "MORPH A/B", "A/B MIX"};
+                                      "MORPH X", "MORPH Y", "MORPH A/B", "A/B MIX",
+                                      "EQ1 FREQ", "EQ2 FREQ", "EQ3 FREQ", "EQ4 FREQ", "EQ1 GAIN", "EQ2 GAIN", "EQ3 GAIN", "EQ4 GAIN",
+                                      "AMP ATTACK", "AMP DECAY", "AMP SUSTAIN", "AMP RELEASE", "FENV ATTACK", "FENV DECAY", "FENV SUSTAIN",
+                                      "FENV RELEASE", "MENV ATTACK", "MENV DECAY", "MENV AMOUNT", "GLIDE", "DRIFT", "KEY TRACK", "FILT VELO",
+                                      "STEP DEPTH", "C LEVEL", "C TUNE", "C SPEED", "C START", "C END", "COMP ATTACK", "COMP RELEASE",
+                                      "COMP PUMP", "PHASER FDBK", "OTT AMOUNT", "OTT LOW", "OTT HIGH", "DELAY TIME"};
 static const char *const L_SRC[NSRC] = {"OFF", "LFO 1", "LFO 2", "FILT ENV", "MOD ENV", "VELOCITY", "MOD WHEEL",
                                         "PRESSURE", "NOTE", "RANDOM", "STEP"};
 /* the STEP patterns: 16 steps, a level 0..F each ("RANDOM": a new one every bar) */
