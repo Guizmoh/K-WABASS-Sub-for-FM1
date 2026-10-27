@@ -16,7 +16,7 @@ Ce document dit où en est le projet : ce qui est fait, ce qui est à vérifier,
 ### Son
 | Domaine | Détail | Version |
 |---|---|---|
-| Moteurs | 6 moteurs par oscillateur (analog, CS, wavetable, FM, phase dist, hard sync), chacun suivi d’un FOLD (CS : RING) ; SUPER, WAVEFOLDER et VOCAL retirés en 1.0.26 | 1.0.26 |
+| Moteurs | 7 moteurs par oscillateur (analog, 808 / kick bass (1.0.27), CS, wavetable, FM, phase dist, hard sync), chacun suivi d’un FOLD (CS : RING) ; SUPER, WAVEFOLDER et VOCAL retirés en 1.0.26 | 1.0.26 |
 | Oscillateurs | A + B (ADD, RING, X-MOD, SYNC), sub, bruit, **OSC C sample** (10 sons, 5 textures, boucle / une fois, vitesse) | 0.9.9-4 |
 | Filtre | 7 caractères (LP24, LP12, BAND, HIGH, NOTCH, VOWEL, COMB), drive, mod par enveloppe, clavier, vélocité | ≤ 0.9 |
 | Modulation | 3 enveloppes, 3 LFO calés sur le tempo (le 3e global, quel que soit le patch) (grille ronde en option), STEP FX (16 motifs), matrice 4 slots, 4 MACROS × 4 cibles | ≤ 0.9 |

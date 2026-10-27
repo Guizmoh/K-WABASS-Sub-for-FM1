@@ -19,7 +19,7 @@
 
 ## Key features
 
-1. **6 engines** per oscillator (ANALOG, CS, WAVETABLE, FM, PHASE DIST, HARD SYNC), each with a **FOLD** (CS: **RING**) after it.
+1. **7 engines** per oscillator (ANALOG, **808**, CS, WAVETABLE, FM, PHASE DIST, HARD SYNC), each with a 4th setting: **FOLD** (CS: **RING**, 808: **CLICK**).
 2. **Drum sequencer with conditions & parameter locks** (on the bass too: hold a step, turn a knob) and **automation** (hold REC while it plays and turn any knob; hold REC alone to erase): 8 coloured tracks (808, 909, dub techno, acoustic kits), chance and trig conditions on every step, black keys choose the instrument, white keys (pads) place its steps, OCT−/OCT+ turn the pages; live REC; sync out for Pocket Operators and Volcas.
 3. **LFO learn**: hold `LFO` and turn any knob, LFO 2 is assigned to that setting in one gesture (`OCT−` too: LFO 1, `OCT+` too: LFO 3).
 4. **CLASSIC** or **SHIFT** mode (`OCT−` / `OCT+`) for a faster workflow, chosen in the options.
@@ -46,8 +46,8 @@ You can go back to KAWA (`install/kawa-0.5.fwsc`) or to the stock firmware (M-UP
 
 ```sh
 cd source
-./build.sh --release 1.0.26          # -> build/k-wasub-1.0.26.fwsc
-APP_VER=1.0.26 bash web/make_emulator.sh      # emulator
+./build.sh --release 1.0.27          # -> build/k-wasub-1.0.27.fwsc
+APP_VER=1.0.27 bash web/make_emulator.sh      # emulator
 bash web/make_installer.sh                    # installer.html with the newest package
 bash tests/run_stress.sh                      # load tests (UBSan)
 python3 tests/manual_shots.py                 # the manual's screenshots (docs/img)

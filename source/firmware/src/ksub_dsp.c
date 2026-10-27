@@ -412,6 +412,32 @@ static void osc_core(osc_t *o, const oscp_t *q, int32_t *out, const int32_t *pm,
         o->ph2 = ps;
         break;
     }
+    case E_KICK: {                              /* 808: a sine that falls from PUNCH (up to 4 octaves above) back to the note over DROP
+                                                 * (5 .. 300 ms), DRIVE (a soft clip, 1 to 8 times), CLICK (a 3 ms bite at the start);
+                                                 * f[1] the drop (Q24), f[2] the click (Q15): set at every attack (note_on) */
+        int32_t semi = q->p1 * 48, tau = 5 + (int32_t)(((int64_t)q->p2 * q->p2 * 295) >> 30);   /* (semi: Q15 x 48 = semitones Q15) */
+        uint32_t r = (1u << 20) / ((uint32_t)tau * 44u + 1u), e0 = o->f[1], e1, i0, i1, a12, b12;
+        int32_t g = 32768 + q->p3 * 7, cl = q->p4, ce = (int32_t)o->f[2], di;
+        e1 = e0 - (uint32_t)(((uint64_t)e0 * r * n) >> 20);   /* (the drop at the block's end: one step, the block is short) */
+        if (e1 > e0) e1 = 0;
+        a12 = pitch_inc(48 * 256 + (int32_t)(((int64_t)(e0 >> 9) * semi) >> 22));   /* (Q8 semitones: up to 48 x 256 at the top of the drop) */
+        b12 = pitch_inc(48 * 256);
+        i0 = (uint32_t)(((uint64_t)inc * (a12 / ((b12 >> 12) | 1u))) >> 12);
+        a12 = pitch_inc(48 * 256 + (int32_t)(((int64_t)(e1 >> 9) * semi) >> 22));
+        i1 = (uint32_t)(((uint64_t)inc * (a12 / ((b12 >> 12) | 1u))) >> 12);
+        di = ((int32_t)(i1 >> 4) - (int32_t)(i0 >> 4)) / (int32_t)n;   /* (from one to the other across the block) */
+        for (i = 0; i < n; i++) {
+            int32_t x;
+            uint32_t p;
+            ph += i0 + (uint32_t)(di * (int32_t)i) * 16u;
+            p = ph + (pm ? (uint32_t)pm[i] : 0u);
+            x = sin32(p);
+            if (cl && ce > 0) { x += mul15(mul15(sin32(p * 7u + 0x40000000u), ce), cl); ce -= ce >> 6; if (ce < 64) ce = 0; }   /* (the click: 7 times up, gone in ~3 ms) */
+            out[i] = q->p3 ? sat15(mul15(x, g) >> 0) : x;
+        }
+        o->f[1] = e1; o->f[2] = (uint32_t)ce;
+        break;
+    }
     default:                                    /* (1.0.26: FOLD and VOCAL gone: patch_sanitize moves the sounds; silence here) */
         for (i = 0; i < n; i++) out[i] = 0;
         break;
@@ -422,7 +448,7 @@ static void osc_render(osc_t *o, const oscp_t *q, int32_t *out, const int32_t *p
 {
     uint32_t i;
     osc_core(o, q, out, pm, n);
-    if (q->p4 && q->eng != E_CS) {              /* FOLD: the engine's wave driven into a triangle folder, 1 to 6 times (west coast, after any engine) */
+    if (q->p4 && q->eng != E_CS && q->eng != E_KICK) {              /* FOLD: the engine's wave driven into a triangle folder, 1 to 6 times (west coast, after any engine) */
         int32_t g = 32768 + q->p4 * 5;
         for (i = 0; i < n; i++) {               /* (the wave as it is inside +-1; past it, reflected back, as often as it takes) */
             int32_t y = (int32_t)(((int64_t)out[i] * g) >> 15);
@@ -573,6 +599,10 @@ static void voice_start(voice_t *v, uint32_t note, uint32_t vel, int legato)
     glide_from = v->target;
     v->age = ++vage;
     if (legato && (patch[V_MODE] == VM_LEGATO || v->slide) && v->on && v->gate) return;   /* legato: no new attack */
+    v->oa.f[1] = v->ob.f[1] = 1u << 24;          /* (808: the drop and the click start again) */
+    v->oa.f[2] = v->ob.f[2] = 32767u;
+    if (patch[A_ENG] == E_KICK) v->oa.ph[0] = 0;   /* (and its sine from 0: the same punch every time) */
+    if (patch[B_ENG] == E_KICK) v->ob.ph[0] = 0;
     if (patch[X_RESET] && (!v->on || !v->ea.lv)) {
         uint32_t k;
         for (k = 0; k < 7u; k++) v->oa.ph[k] = v->ob.ph[k] = k * 0x24924924u;

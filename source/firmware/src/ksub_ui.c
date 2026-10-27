@@ -705,9 +705,9 @@ static void user_get(uint32_t k, int8_t *p)     /* a user slot, whole: sector 1,
 static char *eng_str(char *p, const int8_t *pp)
 {
     int a = pp[A_LVL] || pp[X_MODE] == 1, b = pp[B_LVL] || pp[X_MODE];
-    if (a) p = str_cat(p, L_ENG[pp[A_ENG] & 7]);
+    if (a) p = str_cat(p, L_ENG[(uint32_t)pp[A_ENG] % NENG]);
     if (a && b) p = str_cat(p, pp[X_MODE] == 1 ? " x " : pp[X_MODE] == 2 ? " < " : " + ");
-    if (b) p = str_cat(p, L_ENG[pp[B_ENG] & 7]);
+    if (b) p = str_cat(p, L_ENG[(uint32_t)pp[B_ENG] % NENG]);
     if (!a && !b) p = str_cat(p, "SUB");
     return p;
 }
@@ -1422,7 +1422,7 @@ static void item_range(uint32_t id, int32_t *lo, int32_t *hi)
     if (id == I_L1RATE || id == I_L2RATE) id = rate_id(id);
     if (item_patch(id)) {
         *lo = PD[id].lo; *hi = PD[id].hi;
-        if (id == A_ENG || id == B_ENG) *hi = E_SYNC;   /* (the six: ENG_ORDER, edit_item) */
+        if (id == A_ENG || id == B_ENG) *hi = NENG - 1;   /* (the ones there are: ENG_ORDER, edit_item) */
         return;
     }
     *lo = 0;
@@ -1741,7 +1741,7 @@ static const char *item_name(uint32_t id)
     static char b[20];
     uint32_t e;
     int k = osc_pk(id, &e);
-    if (k) { char *p = str_cat(b, id >= B_ENG && id != A_P4 ? "B " : "A "); str_cat(p, k == 4 ? ENG_P4[e & 7u] : ENG_P[e][k - 1]); return b; }
+    if (k) { char *p = str_cat(b, id >= B_ENG && id != A_P4 ? "B " : "A "); str_cat(p, k == 4 ? ENG_P4[e % NENG] : ENG_P[e][k - 1]); return b; }
     if (id == I_L1RATE || id == I_L2RATE) return PD[rate_id(id)].name;
     if (item_patch(id)) return PD[id].name;
     switch (id) {
@@ -1863,12 +1863,12 @@ static const char *dst_name(uint32_t d)
     int32_t k = d == D_AP1 || d == D_BP1 ? 0 : d == D_AP2 || d == D_BP2 ? 1 : d == D_AP3 || d == D_BP3 ? 2 : -1;
     if (k >= 0) {
         char *p = nb[t ^= 1u];
-        str_cat(str_cat(p, o ? "B " : "A "), ENG_P[patch[A_ENG + o] & 7][k]);
+        str_cat(str_cat(p, o ? "B " : "A "), ENG_P[(uint32_t)patch[A_ENG + o] % NENG][k]);
         return p;
     }
     if (d == D_AP4 || d == D_BP4) {             /* (the 4th: FOLD, or RING on CS) */
         char *p = nb[t ^= 1u];
-        str_cat(str_cat(p, d == D_BP4 ? "B " : "A "), ENG_P4[patch[d == D_BP4 ? B_ENG : A_ENG] & 7]);
+        str_cat(str_cat(p, d == D_BP4 ? "B " : "A "), ENG_P4[(uint32_t)patch[d == D_BP4 ? B_ENG : A_ENG] % NENG]);
         return p;
     }
     return d < ND ? L_DST[d] : "";
@@ -1912,7 +1912,9 @@ static void item_text(uint32_t id, char *b)
             static const char *const W[4] = {"SINE", "TRI", "SAW", "SQUARE"};
             if ((v * 3) % 127 != 0) *b++ = '~';
             str_cat(b, W[(v * 3 + 63) / 127]);
-        } else if (e == E_CS && k == 1) {          /* CS WAVE: SAW, BOTH, PULSE (~ in between) */
+        } else if (e == E_KICK && k == 1) { b = str_cat(b, "+"); b = fmt_u(b, (uint32_t)v * 48u / 127u, 0); str_cat(b, " ST"); }   /* 808: PUNCH, DROP */
+        else if (e == E_KICK && k == 2) { b = fmt_u(b, 5u + (uint32_t)(((uint64_t)q * q * 295u) >> 30), 0); str_cat(b, " ms"); }
+        else if (e == E_CS && k == 1) {          /* CS WAVE: SAW, BOTH, PULSE (~ in between) */
             static const char *const W[3] = {"SAW", "BOTH", "PULSE"};
             str_cat(b, W[(v * 2 + 63) / 127]);
         } else if (e == E_CS && k == 2) {          /* CS DETUNE: the two channels apart, cents */
@@ -2266,8 +2268,8 @@ static void edit_item(uint32_t id, int32_t d)
     vpop_ms = fm1_ms | 1u;
     if (id == A_ENG || id == B_ENG) {           /* the engines, in their order (FOLD and VOCAL gone) */
         int32_t i, at = 0;
-        for (i = 0; i < 6; i++) if (ENG_ORDER[i] == v) at = i;
-        item_set(id, ENG_ORDER[clampi(at + d, 0, 5)]);
+        for (i = 0; i < (int32_t)NENGO; i++) if (ENG_ORDER[i] == v) at = i;
+        item_set(id, ENG_ORDER[clampi(at + d, 0, (int32_t)NENGO - 1)]);
         return;
     }
     if (id == SM_SEL) {                         /* SAMPLE: the samples in order, RESAMPLE (its value kept: 16) last */

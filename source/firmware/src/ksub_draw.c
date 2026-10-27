@@ -417,6 +417,23 @@ static void vis_fm(const int8_t *o, uint32_t k, int32_t x, int32_t y, int32_t w,
     g_rect(cx + bw, by + bh / 2, x + w - 4 - cx - bw, 1, K_WAVE);   /* out */
     if (patch[X_MODE] == 2 && !k) g_text_r(T_XS, x + w - 4, y + 3, "+ B X-MOD", K_ORANGE);
 }
+static void vis_kick(const int8_t *o, int32_t x, int32_t y, int32_t w, int32_t h)   /* 808: the pitch falling from PUNCH to the note over DROP */
+{
+    char t[24], *p;
+    int32_t i, px = 0, py = 0, tau = 5 + (int32_t)(((int64_t)(o[3] * 258) * (o[3] * 258) * 295) >> 30), top = y + 4 + (h - 8) * (127 - o[2]) / 127;
+    uint32_t e = 1u << 15;                     /* (the drop, Q15, over 400 ms across the width) */
+    if (!g_vis(y, h)) return;
+    for (i = 0; i <= w - 8; i++) {
+        int32_t xx = x + 4 + i, yy = y + h - 5 - (int32_t)(((int64_t)(y + h - 5 - top) * e) >> 15);
+        if (i) g_line(px, py, xx, yy, K_WAVE);
+        px = xx; py = yy;
+        e -= (uint32_t)(((uint64_t)e * (uint32_t)(400 * 32768 / (w - 8))) / (uint32_t)(tau * 32768 + 1)) ;
+    }
+    if (h < 40) return;
+    p = str_cat(t, "+"); p = fmt_u(p, (uint32_t)o[2] * 48u / 127u, 0); p = str_cat(p, " ST \xB7 "); p = fmt_u(p, (uint32_t)tau, 0); str_cat(p, " ms");
+    g_text(T_XS, x + 4, y + 3, t, K_GREY);
+    if (o[4]) { str_cat(fmt_u(str_cat(t, "DRIVE "), (uint32_t)o[4] * 100u / 127u, 0), "%"); g_text_r(T_XS, x + w - 4, y + 3, t, K_LIME); }
+}
 static void vis_cs(const int8_t *o, const int16_t *wv, int32_t x, int32_t y, int32_t w, int32_t h)   /* CS: the two channels' wave, their gap, the motion */
 {
     char t[24], *p;
@@ -473,10 +490,11 @@ static void vis_smp(int32_t x, int32_t y, int32_t w, int32_t h)   /* OSC C: the 
 static void vis_osc(uint32_t k, int32_t x, int32_t y, int32_t w, int32_t h)
 {
     const int8_t *o = patch + k * OSC_B;
-    switch (o[0] & 7) {
+    switch ((uint32_t)o[0] % NENG) {
     case E_WAVE: vis_wt(o, x, y, w, h); break;
     case E_FM: vis_fm(o, k, x, y, w, h); break;
     case E_CS: vis_cs(o, k ? prev_b : prev_a, x, y, w, h); break;
+    case E_KICK: vis_kick(o, x, y, w, h); break;
     case E_ANALOG: vis_analog(o, k ? prev_b : prev_a, x, y, w, h); break;
     default: draw_poly(x + 3, y + 2, w - 6, h - 4, k ? prev_b : prev_a, 112, K_WAVE); break;
     }
@@ -719,7 +737,7 @@ static const char *view_title(uint32_t vi, char *t, char *sub)
         str_cat(p, perf.ar_on ? L_ARMODE[perf.ar_mode % 5u] : "OFF");
         return t;
     }
-    if (page == PG_BASS && vi <= 3u && vi >= 2u) { uint32_t e = (uint32_t)patch[vi == 2u ? A_ENG : B_ENG] & 7u; str_cat(sub, ENG_SUB[e]); return ENG_TITLE[e]; }
+    if (page == PG_BASS && vi <= 3u && vi >= 2u) { uint32_t e = (uint32_t)patch[vi == 2u ? A_ENG : B_ENG] % NENG; str_cat(sub, ENG_SUB[e]); return ENG_TITLE[e]; }
     if (page == PG_BASS && vi == V_SMP) {       /* OSC C: the sample, how it plays */
         if (!patch[SM_SEL]) { str_cat(sub, "18 SOUNDS \xB7 9 TEXTURES \xB7 RESAMPLE"); return "NO SAMPLE"; }
         if (patch[SM_SEL] == SM_RS && !rs_desc.len) { str_cat(sub, "THE OUTPUT, 2 .. 4 s, INTO OSC C"); return "RESAMPLE"; }
@@ -1614,7 +1632,7 @@ static void draw_c3(void)
             const char *ti;
             *sub = 0;
             if (page == PG_BASS) {
-                p = str_cat(t, L_ENG[patch[A_ENG] & 7]); p = str_cat(p, " + "); str_cat(p, L_ENG[patch[B_ENG] & 7]);
+                p = str_cat(t, L_ENG[(uint32_t)patch[A_ENG] % NENG]); p = str_cat(p, " + "); str_cat(p, L_ENG[(uint32_t)patch[B_ENG] % NENG]);
                 p = str_cat(sub, "MODE "); str_cat(p, L_XMODE[patch[X_MODE] & 3]);
                 ti = t;
             } else if (page == PG_FX) {
