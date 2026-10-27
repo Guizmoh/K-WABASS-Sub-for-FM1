@@ -62,8 +62,8 @@ OSC C joue des sons µ-law 8 bits depuis la flash (`KS_SMP`, 10 sons à 22,05 kH
 
 ```sh
 cd source
-./build.sh --release 1.0.22                 # build/k-wasub-1.0.22.fwsc   (X.Y, X.Y.Z ou X.Y.Z-suffixe ; identité FM-1_97Y pour 0.Y, FM-1_1990 pour 1.Y (depuis 1.0.22))
-APP_VER=1.0.22 bash web/make_emulator.sh    # ../emulator/index.html  
+./build.sh --release 1.0.23                 # build/k-wasub-1.0.23.fwsc   (X.Y, X.Y.Z ou X.Y.Z-suffixe ; identité FM-1_97Y pour 0.Y, FM-1_1990 pour 1.Y (depuis 1.0.23))
+APP_VER=1.0.23 bash web/make_emulator.sh    # ../emulator/index.html  
 sh web/make_data.sh                         # ../data.html (sauvegarde, export WAV, samples)
 node tests/link.mjs                         # le lien Données contre l'émulateur
 bash web/make_installer.sh                  # ../installer.html avec le dernier install/k-wasub-*.fwsc
