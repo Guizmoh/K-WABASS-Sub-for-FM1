@@ -4,7 +4,7 @@
    python3 source/tools/make_manual.py      (the pictures: source/tests/manual_shots.py -> docs/img)"""
 from pathlib import Path
 
-EXTRA_CSS = """.grid.sm{grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}.grid.sm figcaption{font-size:.8rem}
+EXTRA_CSS = """.card h3{margin-top:0}.chips{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}.chips span{border:1px solid var(--rule);border-radius:999px;padding:3px 11px;font-size:.82rem;color:var(--ink)}\n.grid.sm{grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}.grid.sm figcaption{font-size:.8rem}
 ul.tight{margin:.4rem 0;padding-left:1.2rem}ul.tight li{margin:.15rem 0}
 .layout{display:grid;grid-template-columns:230px 1fr;align-items:start;max-width:1280px;margin:0 auto}
 .layout main{max-width:900px;margin:0;padding:30px 28px 80px}
@@ -126,7 +126,7 @@ def build(L):
 
     # 6 sequencers -- the drums' grid and the keys that fill it
     chaps.append(("seq", t(T("6 · SEQ BASS and DRUMS", "6 · SEQ BASS et DRUMS")),
-                  grid([("d-drums", "DRUMS · TECHNO"), ("d-lock", "PARAMETER LOCK"), ("d-drums-dub", T("DUB TECHNO kit", "kit DUB TECHNO")), ("d-seq", "SEQ BASS"), ("v-sample-cut", T("OSC C: START / END", "OSC C : START / END"))])
+                  grid([("d-drums", "DRUMS · TECHNO"), ("d-lock", "PARAMETER LOCK"), ("d-seq", "SEQ BASS")])
                   + t(T('<p><b>PLAY</b> starts both sequencers (SEQ BASS and DRUMS) on the tempo; <b>REC</b> on their views records: stopped, step by step; playing, live. '
                         'DRUMS is the 4th view of SEQ (press SEQ until it shows).</p>'
                         '<table><tr><td>Black keys 1–8</td><td>choose the instrument and play it (REC + PLAY: record it now)</td></tr>'
@@ -168,14 +168,24 @@ def build(L):
                         '<p><b>Synchro</b> : SYSTEM › MIDI › SYNC OUT = PO / VOLCA met une impulsion par croche sur la sortie gauche pendant la lecture, le son en mono à droite : '
                         'un câble stéréo vers deux mono jusqu’à un Pocket Operator (mode SY qui suit) ou le SYNC IN d’une Volca. L’horloge MIDI in / out est dans la même vue.</p>'))))
 
-    # 6 looks -- pictures are the point here (what a palette looks like cannot be said in words): kept
+    # 6 looks -- the THEME (the look) and the PALETTE (the colours) apart, each in its own window, so they are not mixed up
+    def chips(names): return '<div class="chips">' + "".join(f"<span>{n}</span>" for n in names) + "</div>"
     chaps.append(("looks", t(T("7 · Themes, palettes, fonts", "7 · Thèmes, palettes, polices")),
-                  f'<p>{t(T("SYSTEM › THEME, PALETTE (13, then their RAD gradient versions), THEME (CLASSIC GLOW by default), PALETTE (FLUO GREEN by default), FONT (9; TEKTUR by default), LOUPE (on by default), BRIGHTNESS. Two modes: CLASSIC (lists) and SHIFT (3 columns, OCT− / OCT+ held for the middle and right ones).", "SYSTEM › THEME, PALETTE (13, puis leurs versions dégradé RAD), THEME (CLASSIC GLOW par défaut), PALETTE (FLUO GREEN par défaut), FONT (9 ; TEKTUR par défaut), LOUPE (active par défaut), BRIGHTNESS. Deux modes : CLASSIC (listes) et SHIFT (3 colonnes, OCT− / OCT+ maintenus pour celles du milieu et de droite)."))}</p>'
-                  + grid([("t-glow-green", "CLASSIC GLOW"), ("t-studio", "STUDIO"), ("t-pure", "PURE"), ("t-rack", "RACK"), ("t-tech-volt", "TECH"),
-                          ("rb-osc", "RIBBON"), ("rbc-osc", "RIBBON CLASSIC"), ("s-osc", "SHIFT")])
-                  + grid([("t-red", "RED"), ("t-gold", "GOLD"), ("t-synthwave", "SYNTHWAVE"), ("t-fluo", "FLUO"), ("t-pink", "PINK"), ("t-ice", "ICE"),
-                          ("t-mint", "MINT"), ("t-blackwhite", "BLACK / WHITE"), ("t-inverted", "INVERTED"), ("t-sky", "SKY"), ("t-blaze", "BLAZE"),
-                          ("t-ribbon-ice", "ICE NEON"), ("t-rad-red", "RED RAD"), ("t-rad-synthwave", "SYNTHWAVE RAD"), ("t-rad-glow-green", "FLUO GREEN RAD"), ("t-rad-sky", "SKY RAD")])))
+                  t(T('<p>Two different settings, in SYSTEM: the <b>THEME</b> changes the <i>look</i> of the screens (shapes, cards, ribbons), the <b>PALETTE</b> changes only the <i>colours</i>. Any palette works with any theme, and you can change one without touching the other.</p>',
+                      '<p>Deux réglages différents, dans SYSTEM : le <b>THEME</b> change l’<i>aspect</i> des écrans (formes, cartes, rubans), la <b>PALETTE</b> change seulement les <i>couleurs</i>. Toute palette va avec tout thème, et on change l’un sans toucher à l’autre.</p>'))
+                  + '<div class="card tip" id="themes"><h3>' + t(T("THEME", "THÈME")) + '</h3><p>'
+                  + t(T("The look of the screens: 7 themes. <b>CLASSIC GLOW</b> by default.", "L’aspect des écrans : 7 thèmes. <b>CLASSIC GLOW</b> par défaut.")) + '</p>'
+                  + grid([("t-glow-green", "CLASSIC GLOW")])
+                  + chips(["CLASSIC GLOW", "STUDIO", "PURE", "RACK", "TECH", "RIBBON", "RIBBON CLASSIC"]) + '</div>'
+                  + '<div class="card warn" id="palettes"><h3>PALETTE</h3><p>'
+                  + t(T("The colours: 13 palettes, then their <b>RAD</b> versions (a gradient background). <b>FLUO GREEN</b> by default. The first two of the list follow the theme (for example FLUO GREEN and TOXIC with CLASSIC GLOW).",
+                        "Les couleurs : 13 palettes, puis leurs versions <b>RAD</b> (fond en dégradé). <b>FLUO GREEN</b> par défaut. Les deux premières de la liste suivent le thème (par exemple FLUO GREEN et TOXIC avec CLASSIC GLOW).")) + '</p>'
+                  + grid([("t-fluo", "FLUO")])
+                  + chips(["RED", "GOLD", "SYNTHWAVE", "FLUO", "PINK", "ICE", "MINT", "BLACK / WHITE", "INVERTED", "SKY", "BLAZE", "ICE NEON", "RED RAD", "SYNTHWAVE RAD", "FLUO GREEN RAD", "SKY RAD"]) + '</div>'
+                  + '<div class="card" id="uimode"><h3>' + t(T("Display mode and the rest", "Mode d’affichage et le reste")) + '</h3><p>'
+                  + t(T("SYSTEM also holds FONT (9; TEKTUR by default), LOUPE (on by default) and BRIGHTNESS. Two modes: <b>CLASSIC</b> (lists) and <b>SHIFT</b> (3 columns, OCT− / OCT+ held for the middle and right ones).",
+                        "SYSTEM contient aussi FONT (9 ; TEKTUR par défaut), LOUPE (active par défaut) et BRIGHTNESS. Deux modes : <b>CLASSIC</b> (listes) et <b>SHIFT</b> (3 colonnes, OCT− / OCT+ maintenus pour celles du milieu et de droite).")) + '</p>'
+                  + grid([("s-osc", "SHIFT")]) + '</div>'))
 
     # 7 sound
     chaps.append(("sound", t(T("8 · The sound", "8 · Le son")),
