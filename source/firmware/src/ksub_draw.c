@@ -790,7 +790,8 @@ static void rows_g(const view_t *v, int32_t x, int32_t y0, int32_t w, int32_t h,
 {
     uint32_t c = cursor[vidx()], top = 0, i;
     if (v->n > vis) {
-        top = c >= 2u ? c - 2u : 0u;
+        uint32_t at = vis >= 3u ? 2u : vis - 1u;   /* (the row chosen: third from the top, or the last one shown in a short list) */
+        top = c >= at ? c - at : 0u;
         if (top + vis > v->n) top = v->n - vis;
         if (g_vis(y0, (int32_t)vis * step)) {   /* where we are in the list */
             int32_t hh = (int32_t)vis * step - (step - h), bh = hh * (int32_t)vis / v->n;
@@ -1009,6 +1010,9 @@ static void th_glow(const view_t *v, uint32_t vi)
     else if (v->lay == LY_BOX) {
         glow_vis(vz, 6, 60, 228, 58);
         for (i = 0; i < 4u; i++) draw_vbox(i & 1u ? 123 : 6, 122 + (int32_t)(i >> 1) * 50, 111, 46, v->it[i], i == c, 0);
+    } else if (vz && vi == V_SMP) {             /* (the sample: a lower picture, three rows under it, the one chosen lit) */
+        glow_vis(vz, 6, 60, 228, 74);
+        rows_g(v, 6, 138, 228, 23, 26, 3, T_S);
     } else if (vz && big_vis(vi)) {
         glow_vis(vz, 6, 60, 228, 100);
         rows_g(v, 6, 164, 228, 23, 26, 2, T_S);
