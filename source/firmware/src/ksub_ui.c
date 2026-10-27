@@ -29,6 +29,7 @@ enum { I_L1RATE = 140, I_L2RATE, I_ABMIX, G_MIDICH, G_BPM, G_CLOCK, G_OCT, G_COR
        G_DK_PAT, G_DK_PRE, G_DK_LEN, G_DK_KIT, G_DK_VOL, G_DK_MODE, G_DK_SWING,       /* DRUMS: the pattern, the kit */
        G_SYNC,                                                                       /* SYNC OUT (POCKET OPERATOR, VOLCA) */
        G_SQ_LKP, G_SQ_LKV,                                                           /* SEQ BASS: the step's PARAMETER LOCK (what, its value) */
+       G_SQ_ON,                                                                      /* SEQ BASS: the sequence ON / OFF (OFF: the drums play, the bass is free to play live) */
        I_NONE = 255 };
 
 typedef struct {
@@ -51,7 +52,7 @@ static const view_t VIEWS[] = {
     {LY_BOX, "MOD ENVELOPE", 4, {ME_A, ME_D, ME_AMT, ME_DST}, "ENV"},
     {LY_BOX, "FILTER / COLOUR", 4, {F_CUT, F_RES, F_DRV, F_TYPE}, "FX"},
     {LY_LIST, "FILTER MOD", 6, {F_ENV, F_KEY, F_VEL, F_TYPE, F_CUT, F_RES}, "FX"},
-    {LY_LIST, "SEQ BASS", 13, {G_SQ_STEP, G_SQ_NOTE, G_SQ_GATE, G_SQ_TYPE, G_SQ_PROB, G_SQ_COND, G_SQ_LKP, G_SQ_LKV, G_SQ_PAT, G_SQ_PRESET, G_SQ_LEN, G_SQ_RATE, G_SQ_SWING}, "SEQ"},
+    {LY_LIST, "SEQ BASS", 14, {G_SQ_ON, G_SQ_STEP, G_SQ_NOTE, G_SQ_GATE, G_SQ_TYPE, G_SQ_PROB, G_SQ_COND, G_SQ_LKP, G_SQ_LKV, G_SQ_PAT, G_SQ_PRESET, G_SQ_LEN, G_SQ_RATE, G_SQ_SWING}, "SEQ"},
     {LY_LIST, "DRUMS", 16, {G_DK_LVL, G_DK_TUNE, G_DK_DEC, G_DK_TONE, G_DK_TRK, G_DK_STEP, G_DK_HIT, G_DK_PROB, G_DK_COND, G_DK_PAT, G_DK_PRE,
                             G_DK_LEN, G_DK_KIT, G_DK_VOL, G_DK_MODE, G_DK_SWING}, "SEQ"},   /* (black keys: the track, white: its steps, OCT: the page) */
     {LY_LFO, "LFO 1 \xB7 WOBBLE", 9, {I_L1RATE, L1_DEP, L1_SHP, L1_DST, G_GRID, L1_SYNC, L1_TRIG, L1_PH, L1_SMO}, "LFO"},
@@ -106,7 +107,7 @@ static struct {                                 /* the user slots' settings past
     uint8_t magic, sum;
     int8_t p[NUSER][NP_MAX - NP_STORE];
 } uext;
-typedef char ids_fit[G_SQ_LKV < I_NONE ? 1 : -1];
+typedef char ids_fit[G_SQ_ON < I_NONE ? 1 : -1];
 typedef char np_fits[NP <= I_L1RATE && NP <= NP_MAX ? 1 : -1];   /* (the patch's ids under the others') */
 #define CC_MAGIC 0x44u                          /* (0x43: before 0.9.55, the ids past the patch 4 lower) */
 #define WK_AT 0xC00u                            /* (the 2nd sector, after the slots' rest: the sound being made, AUTOSAVE) */
@@ -1388,7 +1389,7 @@ static void item_range(uint32_t id, int32_t *lo, int32_t *hi)
         return;
     }
     *lo = 0;
-    *hi = id == G_MIDICH ? 16 : id == G_BPM ? 2400 : id == G_CLOCK || id == G_QLFO || id == G_ENG8 || id == G_ASAVE || id == G_LANG || id == G_NORM || id == G_RS_GO || id == G_GRID || id == G_BROWSE || id == G_C3COL || id == G_UI || id == G_ASK || id == G_ZOOM || id == G_MLEARN || id == G_MSTART || id == G_MPROG || id == G_MCLK || id == G_SYNC ? 1 : id == G_MMAP ? 16 : id == I_ABMIX ? 127 : id == G_BRI ? 3 : id == G_ACCEL || id == G_CON || id == G_DEEP || id == G_RS_LEN ? 2 : id == G_THEME ? 6 : id == G_FONT ? (int32_t)NFONT - 1 : id == G_PAL ? (int32_t)(2u * NPAL_BASE - 1u) : id == G_OCT ? 6 : 0;
+    *hi = id == G_MIDICH ? 16 : id == G_BPM ? 2400 : id == G_CLOCK || id == G_QLFO || id == G_ENG8 || id == G_ASAVE || id == G_LANG || id == G_NORM || id == G_RS_GO || id == G_GRID || id == G_BROWSE || id == G_C3COL || id == G_UI || id == G_ASK || id == G_ZOOM || id == G_MLEARN || id == G_MSTART || id == G_MPROG || id == G_MCLK || id == G_SYNC || id == G_SQ_ON ? 1 : id == G_MMAP ? 16 : id == I_ABMIX ? 127 : id == G_BRI ? 3 : id == G_ACCEL || id == G_CON || id == G_DEEP || id == G_RS_LEN ? 2 : id == G_THEME ? 6 : id == G_FONT ? (int32_t)NFONT - 1 : id == G_PAL ? (int32_t)(2u * NPAL_BASE - 1u) : id == G_OCT ? 6 : 0;
     if (id == G_ACCEL) *hi = 3;                 /* (OFF, ON, FAST, ULTRA) */
     if (id == G_LANG) *hi = 2;                  /* (ENGLISH, FRANCAIS, ESPANOL) */
     if (id == G_BPM) *lo = 600;
@@ -1482,7 +1483,8 @@ static int32_t item_get(uint32_t id)
     case G_DK_LEN: return (int32_t)dk_len();
     case G_DK_KIT: return dk.kit;
     case G_DK_VOL: return dk.vol;
-    case G_DK_MODE: return dk.mode;
+    case G_DK_MODE: return dk.mode & 3u;
+    case G_SQ_ON: return !(dk.mode & 4u);
     case G_DK_SWING: return dk_pp()->swing;
     case G_SQ_PAT: return perf.cur;
     case G_SQ_LEN: return sq_pat()->len;
@@ -1563,6 +1565,11 @@ static void item_set(uint32_t id, int32_t v)
         sqx_touch();
         return;
     }
+    if (id == G_SQ_ON) {                        /* the sequence on / off (the drums go on) */
+        dk.mode = (uint8_t)(v ? dk.mode & 3u : dk.mode | 4u);
+        dk_touch();
+        return;
+    }
     if (id == G_SQ_PRESET) {                    /* the library: at once; back to 0 puts the pattern back as it was */
         if (!sq_psel && v) sq_backup(0);
         if (v) sq_load_preset((uint32_t)v);
@@ -1592,7 +1599,7 @@ static void item_set(uint32_t id, int32_t v)
         case G_DK_LEN: q->len = (uint8_t)v; if (dk_cur >= v) dk_cur = (uint8_t)(v - 1); dk_edited(); break;
         case G_DK_KIT: dk.kit = (uint8_t)v; break;
         case G_DK_VOL: dk.vol = (uint8_t)v; break;
-        case G_DK_MODE: dk.mode = (uint8_t)v; break;
+        case G_DK_MODE: dk.mode = (uint8_t)((dk.mode & 4u) | (uint32_t)v); break;
         case G_DK_SWING: q->swing = (uint8_t)v; break;
         default: dk.prm[t][id - G_DK_LVL] = (int8_t)v; break;
         }
@@ -1743,6 +1750,7 @@ static const char *item_name(uint32_t id)
     case G_DK_KIT: return "KIT";
     case G_DK_VOL: return "DRUM VOLUME";
     case G_DK_MODE: return "PLAYS";
+    case G_SQ_ON: return "SEQUENCE";
     case G_DK_SWING: return "SWING";
     case G_SQ_RATE: return "RATE";
     case G_SQ_SWING: return "SWING";
@@ -1925,6 +1933,7 @@ static void item_text(uint32_t id, char *b)
         case G_DK_PAT: b = str_cat(b, "P"); fmt_u(b, (uint32_t)v + 1u, 0); break;
         case G_DK_LEN: b = fmt_u(b, (uint32_t)v, 0); str_cat(b, " STEPS"); break;
         case G_DK_KIT: str_cat(b, dk_kname((uint32_t)v)); break;
+        case G_SQ_ON: str_cat(b, v ? "ON" : "OFF (BASS LIVE)"); break;
         case G_DK_MODE: str_cat(b, v == 2 ? "BASS ONLY" : v ? "DRUMS ONLY" : "BASS + DRUMS"); break;
         case G_DK_SWING: if (v) { b = fmt_u(b, 50u + (uint32_t)v / 2u, 0); str_cat(b, "%"); } else str_cat(b, "OFF"); break;
         case G_SQ_PAT: b = str_cat(b, "P"); b = fmt_u(b, (uint32_t)v + 1u, 2); if (v < 8) { b = str_cat(b, " "); str_cat(b, SQ_DEF[v][0]); } break;

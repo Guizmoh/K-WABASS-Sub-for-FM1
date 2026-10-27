@@ -72,10 +72,11 @@ static const uint32_t SQ_GL[16] = {0x800000u, 0x200000u, 0x400000u, 0xC00000u, 1
 enum { DK_KICK, DK_SNARE, DK_CLAP, DK_CH, DK_OH, DK_TOM, DK_PERC, DK_CYM };
 typedef struct { uint8_t len, swing, pad[2], on[DK_MAX], acc[DK_MAX], pc[NDK][DK_MAX]; } dkpat_t;   /* pc: chance (high nibble) | condition */
 static struct {
-    uint8_t magic, sum, cur, kit, vol, mode, mute, pad;   /* kit 0 808, 1 909; mode 0 bass + drums, 1 drums only, 2 bass only */
+    uint8_t magic, sum, cur, kit, vol, mode, mute, pad;   /* kit 0 808, 1 909; mode & 3: 0 bass + drums, 1 drums only, 2 bass only; mode & 4: SEQ BASS OFF */
     int8_t prm[NDK][4];                         /* each track's LEVEL 0..127, TUNE -64..63, DECAY 0..127, TONE 0..127 */
     dkpat_t pat[DK_NPAT];
 } dk;
+#define SQ_BASS_ON (!(dk.mode & 4u) && (dk.mode & 3u) != 1u)   /* mode bit 2: the SEQ BASS sequence OFF (bass free to play live while the drums run) */
 static const uint8_t DK_PROB[16] = {100, 95, 90, 85, 80, 75, 70, 65, 60, 50, 40, 33, 25, 20, 10, 5};
 /* PARAMETER LOCKS (0.9.57): a step's own value for a setting, on the drums (per track) and SEQ BASS; one list of 512 for
  * all their patterns, on the store's sixth sector. pat: SEQ BASS's (PL_BASS | 0..15) or a drum pattern (0..7); tp: the
@@ -1015,7 +1016,7 @@ static void seq_step_on(void)
         sq_last = (uint8_t)ok;
         sq_show = (uint8_t)i;
         f = *sq_fp(k, i);
-        if (ok && dk.mode != 1u) {
+        if (ok && SQ_BASS_ON) {
             int slide = sq_slide;
             uint32_t q, n = pl.n <= PL_MAX ? pl.n : 0u, mk = 0;   /* (its locks, until the next note) */
             for (q = 0; q < n; q++) {
@@ -1025,7 +1026,7 @@ static void seq_step_on(void)
             sq_lkm = (uint8_t)mk;
             sq_sound((uint32_t)clampi(24 + *sq_np(k, i) + sq_tr, 0, 127), f & SF_ACC ? 127u : 90u, slide, SQ_GL[sqx.p[k].cond[i] >> 4]);
             sq_slide = (uint8_t)(f & SF_SLIDE);
-        } else if (sq_slide || dk.mode == 1u) sq_off();   /* (a rest: a slide stops; a long note goes on to its end) */
+        } else if (sq_slide || !SQ_BASS_ON) sq_off();   /* (a rest: a slide stops; a long note goes on to its end) */
         return;
     }
     {                                           /* ARP */
@@ -1084,7 +1085,7 @@ static void dk_step_on(void)
     }
     dk_last = (uint8_t)ok;
     dk_show = (uint8_t)i;
-    if (dk.mode == 2u) return;                  /* (BASS ONLY) */
+    if ((dk.mode & 3u) == 2u) return;                  /* (BASS ONLY) */
     ok &= ~(uint32_t)dk.mute;
     {                                           /* this step's locks, track by track */
         uint32_t q, n = pl.n <= PL_MAX ? pl.n : 0u;
@@ -1391,13 +1392,14 @@ static void voices_render(int32_t *dst, uint32_t n, uint32_t t0, uint32_t budget
     while (ev_r != ev_w) {
         uint32_t e = evq[ev_r % 64u], t = e & 255u, a = (e >> 8) & 255u, b = e >> 16;
         ev_r++;
+        uint32_t sqb = sq_play && SQ_BASS_ON;   /* (the bass sequence runs: SEQ BASS OFF, or DRUMS ONLY, leaves the keys free to play) */
         if (t == EV_ON) {
-            if (sq_play && !sq_rec) sq_tr = (int32_t)a - 60;   /* (the SEQ plays: the keys transpose it) */
-            else if (perf.ar_on && !sq_play) ar_add(a);
+            if (sqb && !sq_rec) sq_tr = (int32_t)a - 60;   /* (the SEQ plays: the keys transpose it) */
+            else if (perf.ar_on && !sqb) ar_add(a);
             else note_on(a, b);
         } else if (t == EV_OFF) {
-            if (sq_play && !sq_rec) {}
-            else if (perf.ar_on && !sq_play) ar_del(a);
+            if (sqb && !sq_rec) {}
+            else if (perf.ar_on && !sqb) ar_del(a);
             else note_off(a);
         } else if (t == EV_SEQ) {
             sq_off();
