@@ -2264,26 +2264,30 @@ static void draw_all(void)
     }
 }
 
-/* ---------------------------------------------------------------- the update screen (ota.c's ota_show hook): the same
- * start-screen picture, a rounded loading bar in place of the patch name and "press any button", drawn straight to
+/* ---------------------------------------------------------------- the update screen (ota.c's ota_show hook): the name,
+ * the step and a rounded loading bar on black (the start picture until 1.0, which did not show), drawn straight to
  * the LCD (no g_frame_send: that polls USB and could re-enter the flash write this runs during). Real hardware only:
  * on KAWA_WASM / DINGHY_HOST, platform.c never includes ota.c or lcd.c (no OTA, no LCD SPI), so nothing here is built
  * (or called) there either. */
 #if !defined(DINGHY_HOST)
 static uint8_t ota_step_g;
 static int32_t ota_code_g;
-static void draw_ota_pic(void)
+static void draw_ota_pic(void)                  /* (1.0.1: text and a bar only, no picture: the start picture did not show during installs) */
 {
-    draw_logo_pic();
-    if (g_vis(212, 28)) {
+    g_rect(0, g_y0, 240, (int32_t)BAND_H, 0x0000u);
+    if (g_vis(70, 40)) {
+        g_text_c(T_L, 120, 72, "K-WASUB", RGB(255, 255, 255));
+        g_text_c(T_XS, 120, 100, "UPDATE \xB7 DO NOT UNPLUG", RGB(150, 150, 150));
+    }
+    if (g_vis(120, 50)) {
         if (ota_step_g < 9u) {
             static const char *const OL[6] = {"", "READING THE PACKAGE", "CHECKING IT", "STAGING THE LOADER", "CONFIRMING", "RESTARTING"};
             int32_t w = 192 * (int32_t)ota_step_g / 5;
-            g_text_c(T_XS, 120, 213, OL[ota_step_g < 6u ? ota_step_g : 0], RGB(150, 150, 150));
-            rb_frame(20, 224, 200, 14, 7, RGB(90, 90, 90), RGB(0, 0, 0), RGB(0, 0, 0));
-            if (w > 0) rb_rrect(24, 227, w, 8, 4, RGB(255, 255, 255), RGB(255, 255, 255));
+            g_text_c(T_XS, 120, 126, OL[ota_step_g < 6u ? ota_step_g : 0], RGB(200, 200, 200));
+            rb_frame(20, 142, 200, 14, 7, RGB(90, 90, 90), RGB(0, 0, 0), RGB(0, 0, 0));
+            if (w > 0) rb_rrect(24, 145, w, 8, 4, RGB(255, 255, 255), RGB(255, 255, 255));
         } else
-            g_text_c(T_XS, 120, 225, ota_code_g == 1 ? "DRY RUN OK" : "FAILED", RGB(255, 255, 255));
+            g_text_c(T_S, 120, 136, ota_code_g == 1 ? "DRY RUN OK" : "FAILED", RGB(255, 255, 255));
     }
 }
 static void ota_push(void (*draw)(void))    /* like g_frame_send, but no polling and no diff-skip: a few redraws only, glitch-free */
