@@ -44,8 +44,8 @@ Puedes volver a KAWA (`install/kawa-0.5.fwsc`) o al firmware de fábrica (M-UPGR
 
 ```sh
 cd source
-./build.sh --release 1.0.2          # -> build/k-wasub-1.0.2.fwsc
-APP_VER=1.0.2 bash web/make_emulator.sh      # emulador
+./build.sh --release 1.0.3          # -> build/k-wasub-1.0.3.fwsc
+APP_VER=1.0.3 bash web/make_emulator.sh      # emulador
 bash web/make_installer.sh                    # installer.html con el último paquete
 bash tests/run_stress.sh                      # pruebas de carga (UBSan)
 python3 tests/manual_shots.py                 # capturas del manual (docs/img)

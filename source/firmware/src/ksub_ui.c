@@ -2606,7 +2606,7 @@ static void ask_done(uint32_t sel)
 {
     ask_on = 0;
     splash_until = 0;
-    if (set.ui != sel || first_run || set.askv < 2u) { set.ui = (uint8_t)sel; set.askv = 5; set_dirty = 1; set_ms = fm1_ms; first_run = 0; }
+    if (set.ui != sel || first_run || set.askv < 2u) { set.ui = (uint8_t)sel; set.askv = 6; set_dirty = 1; set_ms = fm1_ms; first_run = 0; }
     toast(sel ? "SHIFT MODE" : "CLASSIC MODE");
     g_force = 1;
 }
@@ -2887,9 +2887,9 @@ static void app_init(void)
     }
     first_run = !ok || set.askv < 2u;           /* (the very first start, or a save from before 0.9.17: the question once) */
     if (!ok) {
-        set.grid = set.browse = 0; set.font = 4; set.theme = 1; set.pal = 6;   /* (STUDIO, RED, OUTFIT) */
+        set.grid = set.browse = 0; set.font = 6; set.theme = 0; set.pal = 0;   /* (CLASSIC GLOW, FLUO GREEN, TEKTUR) */
         memset(set.fav, 0, sizeof set.fav);
-        set.ver = 6; set.midich = 0; set.clock = 0; set.oct = 0xFF; set.bpm10 = 1400; set.bank = 0; set.idx = 0; set.cores = 1; set.accel = 1; set.c3col = 0; set.ui = 0; set.ask = 0; set.zoom = 1; set.mstart = 1; set.mprog = 1; set.mclk = 0; set.contrast = 1; set.norm = 1; set.deep = 1; set.bri = 3; set.qlfo = 1; set.eng8 = 0; set.asave = 1; set.lang = 0; set.askv = 5;
+        set.ver = 6; set.midich = 0; set.clock = 0; set.oct = 0xFF; set.bpm10 = 1400; set.bank = 0; set.idx = 0; set.cores = 1; set.accel = 1; set.c3col = 0; set.ui = 0; set.ask = 0; set.zoom = 1; set.mstart = 1; set.mprog = 1; set.mclk = 0; set.contrast = 1; set.norm = 1; set.deep = 1; set.bri = 3; set.qlfo = 1; set.eng8 = 0; set.asave = 1; set.lang = 0; set.askv = 6;
     }
     set.eng8 = set.eng8 ? 1u : 0u;
     set.qlfo = set.qlfo ? 1u : 0u;
@@ -2901,7 +2901,8 @@ static void app_init(void)
         set.zoom = 1; set.askv = 4; set.qlfo = 1; set_dirty = 1; set_ms = fm1_ms;
         if (set.pal >= 11u && set.pal < 22u) set.pal = (uint8_t)(set.pal + 2u);
     }   /* (0.10: no more question at each start; SYSTEM > ASK brings it back) */
-    if (set.askv == 4u) { set.font = 4; set.zoom = 1; set.askv = 5; set_dirty = 1; set_ms = fm1_ms; }   /* (0.9.56: OUTFIT and LOUPE, once) */
+    if (set.askv == 4u) { set.askv = 5; set_dirty = 1; set_ms = fm1_ms; }   /* (0.9.56's OUTFIT step: folded into the next) */
+    if (set.askv == 5u) { set.theme = 0; set.pal = 0; set.font = 6; set.zoom = 1; set.askv = 6; set_dirty = 1; set_ms = fm1_ms; }   /* (1.0.3: CLASSIC GLOW, FLUO GREEN, TEKTUR, LOUPE, once) */
     set.norm = set.norm ? 1u : 0u; set.deep = set.deep < 3u ? set.deep : 1u;
     ks_norm = set.norm; ks_deep = set.deep;
     set.sync = set.sync ? 1u : 0u; ks_sync = set.sync;

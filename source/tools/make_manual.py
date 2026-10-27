@@ -170,7 +170,7 @@ def build(L):
 
     # 6 looks -- pictures are the point here (what a palette looks like cannot be said in words): kept
     chaps.append(("looks", t(T("7 · Themes, palettes, fonts", "7 · Thèmes, palettes, polices")),
-                  f'<p>{t(T("SYSTEM › THEME, PALETTE (13, then their RAD gradient versions), FONT (9; OUTFIT by default), LOUPE (on by default), BRIGHTNESS. Two modes: CLASSIC (lists) and SHIFT (3 columns, OCT− / OCT+ held for the middle and right ones).", "SYSTEM › THEME, PALETTE (13, puis leurs versions dégradé RAD), FONT (9 ; OUTFIT par défaut), LOUPE (active par défaut), BRIGHTNESS. Deux modes : CLASSIC (listes) et SHIFT (3 colonnes, OCT− / OCT+ maintenus pour celles du milieu et de droite)."))}</p>'
+                  f'<p>{t(T("SYSTEM › THEME, PALETTE (13, then their RAD gradient versions), THEME (CLASSIC GLOW by default), PALETTE (FLUO GREEN by default), FONT (9; TEKTUR by default), LOUPE (on by default), BRIGHTNESS. Two modes: CLASSIC (lists) and SHIFT (3 columns, OCT− / OCT+ held for the middle and right ones).", "SYSTEM › THEME, PALETTE (13, puis leurs versions dégradé RAD), THEME (CLASSIC GLOW par défaut), PALETTE (FLUO GREEN par défaut), FONT (9 ; TEKTUR par défaut), LOUPE (active par défaut), BRIGHTNESS. Deux modes : CLASSIC (listes) et SHIFT (3 colonnes, OCT− / OCT+ maintenus pour celles du milieu et de droite)."))}</p>'
                   + grid([("t-glow-green", "CLASSIC GLOW"), ("t-studio", "STUDIO"), ("t-pure", "PURE"), ("t-rack", "RACK"), ("t-tech-volt", "TECH"),
                           ("rb-osc", "RIBBON"), ("rbc-osc", "RIBBON CLASSIC"), ("s-osc", "SHIFT")])
                   + grid([("t-red", "RED"), ("t-gold", "GOLD"), ("t-synthwave", "SYNTHWAVE"), ("t-fluo", "FLUO"), ("t-pink", "PINK"), ("t-ice", "ICE"),
