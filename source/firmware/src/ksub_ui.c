@@ -40,7 +40,7 @@ typedef struct {
     uint8_t n, it[25];                          /* the rows, in the order shown: K1..K4 are the first four */
     const char *tag;
 } view_t;
-#define OSCV(L, X) {LY_LIST, "OSCILLATOR " L, 10, {X##_ENG, X##_P1, X##_P2, X##_P3, X##_LVL, X##_OCT, X##_SEMI, X##_FINE, V_MODE, V_GLIDE}, "EDIT"}   /* (the voice mode and the glide at the bottom: one voice plays both oscillators) */
+#define OSCV(L, X) {LY_LIST, "OSCILLATOR " L, 11, {X##_ENG, X##_P1, X##_P2, X##_P3, X##_P4, X##_LVL, X##_OCT, X##_SEMI, X##_FINE, V_MODE, V_GLIDE}, "EDIT"}   /* (the voice mode and the glide at the bottom: one voice plays both oscillators) */
 #define FXV(...) {LY_LIST, "FX RACK", 4, {__VA_ARGS__}, "FX"}
 static const view_t VIEWS[] = {
     {LY_PLAY, "CURRENT PATCH", 4, {F_CUT, I_L1RATE, L1_DEP, F_RES}, "HOME"},
@@ -76,7 +76,7 @@ static const view_t VIEWS[] = {
     {LY_PRESET, "PRESET BANK B", 0, {0}, "PRESET"},
     {LY_SAVE, "SAVE PATCH", 0, {0}, "PRESET"},
     {LY_LIST, "ARPEGGIATOR", 5, {G_AR_ON, G_AR_MODE, G_AR_RATE, G_AR_OCT, G_AR_GATE}, "ARP"},
-    {LY_SYS, "GLOBAL SETUP", 25, {G_BPM, V_MODE, G_UI, G_THEME, G_PAL, V_GLIDE, G_QLFO, G_BRI, G_ASAVE, G_LANG, G_ENG8, G_DEEP, G_NORM, G_ACCEL, G_GRID, V_BEND, V_VEL,
+    {LY_SYS, "GLOBAL SETUP", 24, {G_BPM, V_MODE, G_UI, G_THEME, G_PAL, V_GLIDE, G_QLFO, G_BRI, G_ASAVE, G_LANG, G_DEEP, G_NORM, G_ACCEL, G_GRID, V_BEND, V_VEL,
                                   G_FONT, G_ZOOM, G_C3COL, G_BROWSE, G_ASK, G_NEWSONG, G_CPU, G_RST}, "SYSTEM"},
     {LY_SYS, "MIDI", 8, {G_MLEARN, G_MMAP, G_MIDICH, G_CLOCK, G_MSTART, G_MPROG, G_MCLK, G_SYNC}, "SYSTEM"},
 };
@@ -873,7 +873,7 @@ static uint32_t tag_of(const int8_t *p)
         int32_t e = p[k ? B_ENG : A_ENG];
         if (!(k ? gb : ga)) continue;
         if (e == E_CS && p[k ? B_P2 : A_P2] >= 40) t |= 1u << TG_REESE;   /* (CS, two channels well apart: the reese's beating) */
-        if (e == E_FM || e == E_VOCAL || e == E_FOLD || e == E_PHASE) t |= 1u << TG_GROWL;
+        if (e == E_FM || e == E_PHASE || p[k ? B_P4 : A_P4] >= 40) t |= 1u << TG_GROWL;   /* (FM, PHASE, or folded hard) */
     }
     if (p[F_TYPE] == FT_VOWEL) t |= 1u << TG_GROWL;
     if (p[S_LVL] >= 70 || (p[F_CUT] <= 45 && !ga && !gb)) t |= 1u << TG_SUB;
@@ -1422,7 +1422,7 @@ static void item_range(uint32_t id, int32_t *lo, int32_t *hi)
     if (id == I_L1RATE || id == I_L2RATE) id = rate_id(id);
     if (item_patch(id)) {
         *lo = PD[id].lo; *hi = PD[id].hi;
-        if (id == A_ENG || id == B_ENG) *hi = set.eng8 ? 7 : 3;   /* ENGINES: the list the knobs walk (a sound keeps its own engine) */
+        if (id == A_ENG || id == B_ENG) *hi = E_SYNC;   /* (the six: ENG_ORDER, edit_item) */
         return;
     }
     *lo = 0;
@@ -1728,9 +1728,10 @@ static void item_set(uint32_t id, int32_t v)
     set_dirty = 1;
     set_ms = fm1_ms;
 }
-static int osc_pk(uint32_t id, uint32_t *eng)   /* 1..3: the oscillator's P1..P3 */
+static int osc_pk(uint32_t id, uint32_t *eng)   /* 1..4: the oscillator's P1..P3, and P4 (FOLD / RING) */
 {
     uint32_t b = id >= B_ENG && id <= B_FINE ? OSC_B : 0u, k = id - b;
+    if (id == A_P4 || id == B_P4) { *eng = (uint32_t)patch[id == A_P4 ? A_ENG : B_ENG]; return 4; }
     if (id > B_FINE || k < A_P1 || k > A_P3) return 0;
     *eng = (uint32_t)patch[A_ENG + b];
     return (int)(k - A_P1 + 1u);
@@ -1740,7 +1741,7 @@ static const char *item_name(uint32_t id)
     static char b[20];
     uint32_t e;
     int k = osc_pk(id, &e);
-    if (k) { char *p = str_cat(b, id >= B_ENG ? "B " : "A "); str_cat(p, ENG_P[e][k - 1]); return b; }
+    if (k) { char *p = str_cat(b, id >= B_ENG && id != A_P4 ? "B " : "A "); str_cat(p, k == 4 ? ENG_P4[e & 7u] : ENG_P[e][k - 1]); return b; }
     if (id == I_L1RATE || id == I_L2RATE) return PD[rate_id(id)].name;
     if (item_patch(id)) return PD[id].name;
     switch (id) {
@@ -1865,12 +1866,17 @@ static const char *dst_name(uint32_t d)
         str_cat(str_cat(p, o ? "B " : "A "), ENG_P[patch[A_ENG + o] & 7][k]);
         return p;
     }
+    if (d == D_AP4 || d == D_BP4) {             /* (the 4th: FOLD, or RING on CS) */
+        char *p = nb[t ^= 1u];
+        str_cat(str_cat(p, d == D_BP4 ? "B " : "A "), ENG_P4[patch[d == D_BP4 ? B_ENG : A_ENG] & 7]);
+        return p;
+    }
     return d < ND ? L_DST[d] : "";
 }
 static int dst_on(uint32_t d)                   /* an oscillator that is off is not offered */
 {
-    if (d == D_ALVL || d == D_AP1 || d == D_AP2 || d == D_AP3 || d == D_APIT) return patch[A_LVL] || patch[X_MODE] == 1;
-    if (d == D_BLVL || d == D_BP1 || d == D_BP2 || d == D_BP3 || d == D_BPIT) return patch[B_LVL] || patch[X_MODE];
+    if (d == D_ALVL || d == D_AP1 || d == D_AP2 || d == D_AP3 || d == D_AP4 || d == D_APIT) return patch[A_LVL] || patch[X_MODE] == 1;
+    if (d == D_BLVL || d == D_BP1 || d == D_BP2 || d == D_BP3 || d == D_BP4 || d == D_BPIT) return patch[B_LVL] || patch[X_MODE];
     if (d == D_GATE) return patch[ST_ON];       /* an effect that is off is not offered either */
     if (d >= D_CRBITS && d <= D_CRMIX) return patch[CR_ON];
     if (d >= D_CHRATE && d <= D_CHMIX) return patch[CH_ON];
@@ -1916,7 +1922,6 @@ static void item_text(uint32_t id, char *b)
         else if (e == E_WAVE && k == 2) str_cat(b, L_WT[q >> 12]);
         else if (e == E_FM && k == 2) str_cat(b, L_RATIO[q >> 11]);
         else if (e == E_PHASE && k == 2) str_cat(b, L_PDT[(q * 6) >> 15]);
-        else if (e == E_VOCAL && k == 1) { b[0] = L_VOX[(q * 4 + 16384) >> 15]; b[1] = 0; }
         else if (e == E_SYNC && k == 1) { uint32_t r = 10u + (uint32_t)v * 70u / 127u; b = str_cat(b, "x"); b = fmt_u(b, r / 10u, 0); *b++ = '.'; fmt_u(b, r % 10u, 0); }
         else { b = fmt_u(b, (uint32_t)v * 100u / 127u, 0); str_cat(b, "%"); }
         return;
@@ -2259,6 +2264,12 @@ static void edit_item(uint32_t id, int32_t d)
     }
     if (id != G_CPU && (vpop_id != (uint8_t)id || !vpop_ms)) { item_text(id, vpop_before); vpop_id = (uint8_t)id; }
     vpop_ms = fm1_ms | 1u;
+    if (id == A_ENG || id == B_ENG) {           /* the engines, in their order (FOLD and VOCAL gone) */
+        int32_t i, at = 0;
+        for (i = 0; i < 6; i++) if (ENG_ORDER[i] == v) at = i;
+        item_set(id, ENG_ORDER[clampi(at + d, 0, 5)]);
+        return;
+    }
     if (id == SM_SEL) {                         /* SAMPLE: the samples in order, RESAMPLE (its value kept: 16) last */
         int32_t i, at = 0;
         static const int8_t ORD[29] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 16};

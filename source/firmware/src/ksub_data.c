@@ -27,6 +27,7 @@ enum {
     OT_AMT, OT_LOW, OT_HIGH,                                     /* MULTIBAND (OTT): 3 bands squeezed up and down; the low and high bands' level */
     MB_MONO, S_LOCK,                                             /* MONO BASS under a frequency; the sub locked on OSC A (its pitch, its phase) */
     SM_START, SM_END, SM_DIR,                                    /* OSC C: its start and end cut, FORWARD / REVERSE / PING-PONG (0.9.55) */
+    A_P4, B_P4,                                                  /* each oscillator's 4th: FOLD after the engine (CS: RING, channel I x II) (1.0.26) */
     NP
 };
 #define NP_MAX 140u                             /* a patch in memory */
@@ -34,7 +35,8 @@ enum {
 #define OSC_B (B_ENG - A_ENG)
 #define LFO_2 (L2_SHP - L1_SHP)
 #define NENG 8
-enum { E_ANALOG, E_CS, E_WAVE, E_FM, E_PHASE, E_FOLD, E_SYNC, E_VOCAL };
+enum { E_ANALOG, E_CS, E_WAVE, E_FM, E_PHASE, E_GONE5, E_SYNC, E_GONE7 };   /* (1.0.26: FOLD and VOCAL gone; the numbers kept, saved sounds move: patch_sanitize) */
+static const uint8_t ENG_ORDER[6] = {E_ANALOG, E_CS, E_WAVE, E_FM, E_PHASE, E_SYNC};   /* the engines the knob walks */
 enum { FT_LP24, FT_LP12, FT_BP, FT_HP, FT_NOTCH, FT_VOWEL, FT_COMB, NFT };
 enum { D_OFF, D_CUT, D_RES, D_PITCH, D_AP1, D_AP2, D_BP1, D_BP2, D_ALVL, D_BLVL, D_XMOD, D_DRV, D_AMP, D_SUB, D_NOISE,
        D_WOB, D_AP3, D_BP3, D_APIT, D_BPIT, D_NCOL, D_FENV, D_L2DEP,
@@ -47,11 +49,12 @@ enum { D_OFF, D_CUT, D_RES, D_PITCH, D_AP1, D_AP2, D_BP1, D_BP2, D_ALVL, D_BLVL,
        D_AEA, D_AED, D_AES, D_AER, D_FEA, D_FED, D_FES, D_FER, D_MEA, D_MED, D_MEAMT,   /* (1.0.16: from D_AEA, one parameter each: GD_ID) */
        D_GLIDE, D_DRIFT, D_FKEY, D_FVEL, D_STDEP, D_SMLVL, D_SMTUNE, D_SMSPEED, D_SMSTART, D_SMEND,
        D_CPATK, D_CPREL, D_CPPUMP, D_PHFB, D_OTAMT, D_OTLOW, D_OTHIGH, D_DLTIME,
+       D_AP4, D_BP4,                              /* (1.0.26: each oscillator's FOLD / RING) */
        ND };   /* (stored in patches: append only) */
 #define IS_PITCH(d) ((d) == D_PITCH || (d) == D_APIT || (d) == D_BPIT)
 /* the order DEST steps through: the oscillators' EDIT rows together (ksub_ui.c skips an oscillator that is off) */
-static const uint8_t DST_ORDER[ND] = {D_OFF, D_CUT, D_RES, D_MORPHX, D_MORPHY, D_MORPH, D_DRV, D_DRAMT, D_FENV, D_PITCH, D_ALVL, D_ABMIX, D_AP1, D_AP2, D_AP3, D_APIT, D_BLVL,
-                                      D_BP1, D_BP2, D_BP3, D_BPIT, D_XMOD, D_SUB, D_NOISE, D_NCOL, D_AMP, D_WOB, D_L1RATE,
+static const uint8_t DST_ORDER[ND] = {D_OFF, D_CUT, D_RES, D_MORPHX, D_MORPHY, D_MORPH, D_DRV, D_DRAMT, D_FENV, D_PITCH, D_ALVL, D_ABMIX, D_AP1, D_AP2, D_AP3, D_AP4, D_APIT, D_BLVL,
+                                      D_BP1, D_BP2, D_BP3, D_BP4, D_BPIT, D_XMOD, D_SUB, D_NOISE, D_NCOL, D_AMP, D_WOB, D_L1RATE,
                                       D_L2RATE, D_L2DEP, D_GATE, D_DRMIX, D_CRBITS, D_CRRATE, D_CRMIX, D_CHRATE,
                                       D_CHDEP, D_CHMIX, D_PHRATE, D_PHDEP, D_PHMIX, D_DLFB, D_DLTONE, D_DLMIX, D_RVSIZE, D_RVDAMP,
                                       D_RVMIX, D_CPAMT, D_GLUE, D_SUBB, D_VOL,
@@ -63,7 +66,7 @@ static const uint8_t DST_ORDER[ND] = {D_OFF, D_CUT, D_RES, D_MORPHX, D_MORPHY, D
 #define D_N0 D_AEA
 static const uint8_t GD_ID[ND - D_N0] = {AE_A, AE_D, AE_S, AE_R, FE_A, FE_D, FE_S, FE_R, ME_A, ME_D, ME_AMT, V_GLIDE, X_DRIFT, F_KEY, F_VEL,
                                          ST_DEP, SM_LVL, SM_TUNE, SM_SPEED, SM_START, SM_END, CP_ATK, CP_REL, CP_PUMP, PH_FB, OT_AMT, OT_LOW,
-                                         OT_HIGH, DL_TIME};
+                                         OT_HIGH, DL_TIME, A_P4, B_P4};
 /* the parameter each global destination moves */
 #define D_G0 D_L1RATE
 
@@ -73,7 +76,7 @@ enum { VM_MONO, VM_LEGATO, VM_POLY };
 /* formats of the values on the screen */
 enum { FM_PCT, FM_BIP, FM_LIST, FM_INT, FM_SEMI, FM_CENT, FM_TIME, FM_CUT, FM_LFOHZ, FM_DIV, FM_VOL, FM_OSCP, FM_DEST };
 
-static const char *const L_ENG[NENG] = {"ANALOG", "CS", "WAVE", "FM", "PHASE", "FOLD", "SYNC", "VOCAL"};
+static const char *const L_ENG[NENG] = {"ANALOG", "CS", "WAVE", "FM", "PHASE", "-", "SYNC", "-"};
 static const char *const L_SUBW[] = {"SINE", "TRI", "SQUARE", "PULSE"};
 static const char *const L_SUBO[] = {"-2 OCT", "-1 OCT", "0 OCT"};
 static const char *const L_ROUTE[] = {"FILTER", "DIRECT"};
@@ -99,7 +102,7 @@ static const char *const L_DST[ND] = {"OFF", "CUTOFF", "RESO", "PITCH", "A SHAPE
                                       "AMP ATTACK", "AMP DECAY", "AMP SUSTAIN", "AMP RELEASE", "FENV ATTACK", "FENV DECAY", "FENV SUSTAIN",
                                       "FENV RELEASE", "MENV ATTACK", "MENV DECAY", "MENV AMOUNT", "GLIDE", "DRIFT", "KEY TRACK", "FILT VELO",
                                       "STEP DEPTH", "C LEVEL", "C TUNE", "C SPEED", "C START", "C END", "COMP ATTACK", "COMP RELEASE",
-                                      "COMP PUMP", "PHASER FDBK", "OTT AMOUNT", "OTT LOW", "OTT HIGH", "DELAY TIME"};
+                                      "COMP PUMP", "PHASER FDBK", "OTT AMOUNT", "OTT LOW", "OTT HIGH", "DELAY TIME", "A FOLD", "B FOLD"};
 static const char *const L_SRC[NSRC] = {"OFF", "LFO 1", "LFO 2", "FILT ENV", "MOD ENV", "VELOCITY", "MOD WHEEL",
                                         "PRESSURE", "NOTE", "RANDOM", "STEP", "LFO 3"};
 /* the STEP patterns: 16 steps, a level 0..F each ("RANDOM": a new one every bar) */
@@ -133,13 +136,14 @@ static const char *const L_STYLE[] = {"DNB", "DUB", "DUBSTEP", "TECHNO", "JUNGLE
 /* the engines' three timbre controls: names (long, short) and how they read */
 static const char *const ENG_P[NENG][3] = {
     {"WAVE", "PWIDTH", "DRIVE"}, {"WAVE", "DETUNE", "MOTION"}, {"POSITION", "TABLE", "WARP"},
-    {"INDEX", "RATIO", "FEEDBACK"}, {"AMOUNT", "TYPE", "BODY"}, {"FOLD", "SYMMETRY", "SHAPE"},
-    {"SYNC", "WAVE", "SOFT"}, {"VOWEL", "FORMANT", "WIDTH"}};
+    {"INDEX", "RATIO", "FEEDBACK"}, {"AMOUNT", "TYPE", "BODY"}, {"-", "-", "-"},
+    {"SYNC", "WAVE", "SOFT"}, {"-", "-", "-"}};
+static const char *const ENG_P4[NENG] = {"FOLD", "RING", "FOLD", "FOLD", "FOLD", "-", "FOLD", "-"};   /* each engine's 4th setting */
 static const char *const ENG_TITLE[NENG] = {"ANALOG / VA", "CS / DUAL", "WAVETABLE", "FM / GROWL",
-                                            "PHASE DIST", "WAVEFOLDER", "HARD SYNC", "VOCAL / YOI"};
+                                            "PHASE DIST", "-", "HARD SYNC", "-"};
 static const char *const ENG_SUB[NENG] = {"SUBTRACTIVE CORE", "2 CHANNELS: SAW + PULSE, PWM, DRIFT", "8 TABLES x 8 FRAMES",
-                                          "2-OP FM + FEEDBACK", "CZ-STYLE PHASE DISTORTION", "WEST COAST FOLDING",
-                                          "MASTER / SLAVE SYNC", "FORMANT TALKING BASS"};
+                                          "2-OP FM + FEEDBACK", "CZ-STYLE PHASE DISTORTION", "-",
+                                          "MASTER / SLAVE SYNC", "-"};
 static const char *const L_WT[8] = {"BASIC", "HARMONIC", "GROWL", "VOCAL", "FM", "PWM", "DIGITAL", "SYNC"};
 static const char *const L_PDT[6] = {"SAW", "SQUARE", "PULSE", "RESO SAW", "RESO TRI", "RESO TRAP"};
 static const char *const L_RATIO[16] = {"0.50", "1.00", "1.50", "2.00", "2.50", "3.00", "3.50", "4.00", "5.00", "6.00",
@@ -220,6 +224,7 @@ static const pdesc_t PD[NP] = {
     {"AMOUNT", "OTT", 0, 127, 0, FM_PCT, 0}, {"LOW BAND", "LOW", -64, 63, 0, FM_BIP, 0}, {"HIGH BAND", "HIGH", -64, 63, 0, FM_BIP, 0},
     {"MONO BASS", "MONO", 0, 6, 4, FM_LIST, L_MONO}, {"SUB LOCK", "LOCK", 0, 1, 1, FM_LIST, L_ONOFF},
     {"START", "START", 0, 127, 0, FM_PCT, 0}, {"END", "END", 0, 127, 0, FM_PCT, 0}, {"DIRECTION", "DIR", 0, 2, 0, FM_LIST, L_SMD},
+    {"A P4", "P4", 0, 127, 0, FM_OSCP, 0}, {"B P4", "P4", 0, 127, 0, FM_OSCP, 0}
 };
 
 /* ---- the factory presets: the defaults, then (parameter, value) pairs, -1 ends */
@@ -405,6 +410,11 @@ static void patch_sanitize(int8_t *p)
     uint32_t i;
     for (i = 0; i < NP; i++)
         p[i] = (int8_t)clampi(p[i], PD[i].lo, PD[i].hi);
+    for (i = 0; i < 2u; i++) {                  /* (1.0.26: a sound saved with FOLD plays ANALOG with its FOLD up; VOCAL plays FM) */
+        int8_t *e = p + A_ENG + i * OSC_B;
+        if (*e == E_GONE5) { *e = E_ANALOG; if (!p[A_P4 + i]) p[A_P4 + i] = 64; }
+        else if (*e == E_GONE7) *e = E_FM;
+    }
 }
 
 static void preset_factory(uint32_t k, int8_t *p, char *name)

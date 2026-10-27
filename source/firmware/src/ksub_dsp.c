@@ -228,7 +228,7 @@ typedef struct {
 } osc_t;
 typedef struct {
     uint8_t eng, sync;                          /* sync: restart with the master (X MODE SYNC: B with A) */
-    int32_t p1, p2, p3;                         /* 0..32767 after the modulation */
+    int32_t p1, p2, p3, p4;                     /* 0..32767 after the modulation (p4: FOLD, or CS's RING) */
     uint32_t inc, mph, minc, mrq;               /* the master's phase and step; its step / ours, Q8 */
 } oscp_t;
 /* hard sync, in the loops that read ph: when the master turns, ph starts again where the master is in its turn */
@@ -239,7 +239,7 @@ static const uint16_t VOX_A[5][3] = {{32767, 16384, 8192}, {32767, 13107, 6554},
 
 static inline int64_t cs_pwc(int64_t w) { return w < 0x0CCCCCCCll ? 0x0CCCCCCCll : w > 0xF3333333ll ? 0xF3333333ll : w; }   /* (CS: a pulse width kept in 5 .. 95 %) */
 /* render n samples of one oscillator; pm (or 0): phase modulation per sample */
-static void osc_render(osc_t *o, const oscp_t *q, int32_t *out, const int32_t *pm, uint32_t n)
+static void osc_core(osc_t *o, const oscp_t *q, int32_t *out, const int32_t *pm, uint32_t n)
 {
     uint32_t i, inc = q->inc, rcp = blep_rcp(inc), ph = o->ph[0], mp = q->mph, sy = q->sync;
     switch (q->eng) {
@@ -303,6 +303,7 @@ static void osc_render(osc_t *o, const oscp_t *q, int32_t *out, const int32_t *p
                 p2 = ph1 + (pm ? (uint32_t)pm[i] : 0u);
                 b = mul15(saw_bl(p2, inc2, rc2), sw) + mul15(sqr_bl(p2, pw2, inc2, rc2) - dc2, uw);
                 x = (a + b) >> 1;
+                if (q->p4) x += mul15(mul15(a, b) - x, q->p4);   /* RING: channel I times channel II, the bell in a CS */
             } else x = a;
             x = mul15(x, norm);
             if (nz) { nr ^= nr << 13; nr ^= nr >> 17; nr ^= nr << 5; x += mul15((int32_t)(nr >> 17) - 16384, nz); }
@@ -394,19 +395,6 @@ static void osc_render(osc_t *o, const oscp_t *q, int32_t *out, const int32_t *p
         }
         break;
     }
-    case E_FOLD: {                              /* a sine (or triangle) driven into a folder, with a bias */
-        int32_t g = 4096 + ((q->p1 * 9) >> 3), bias = (q->p2 - 16384) >> 1, tk = q->p3;
-        for (i = 0; i < n; i++) {
-            int32_t s;
-            uint32_t p;
-            ph += inc;
-            p = ph + (pm ? (uint32_t)pm[i] : 0u);
-            s = sin32(p);
-            s += mul15(tri32(p + 0x40000000u) - s, tk);
-            out[i] = clip(lfold(((s * g) >> 12) + bias), 32767);
-        }
-        break;
-    }
     case E_SYNC: {                              /* a slave at 1..8 x reset by the note's phase */
         uint32_t R = 4096u + (((uint32_t)q->p1 * 7u) >> 3), is = (uint32_t)(((uint64_t)inc * R) >> 12), rs = blep_rcp(is), ps = o->ph2;
         int32_t k = q->p2, soft = q->p3;
@@ -424,33 +412,24 @@ static void osc_render(osc_t *o, const oscp_t *q, int32_t *out, const int32_t *p
         o->ph2 = ps;
         break;
     }
-    default: {                                  /* VOCAL: three formant bursts reset at every period */
-        uint32_t v = (uint32_t)q->p1 * 4u, vi = v >> 15, vk = v & 32767u, fi[3], k;
-        int32_t a[3], sh = 2048 + ((q->p2 * 6144) >> 15), wd = q->p3;
-        if (vi > 3u) { vi = 3u; vk = 32767u; }
-        for (k = 0; k < 3u; k++) {
-            int32_t f = VOX_F[vi][k] + ((((int32_t)VOX_F[vi + 1u][k] - VOX_F[vi][k]) * (int32_t)vk) >> 15);
-            f = (f * sh) >> 12;
-            if (f > 6000) f = 6000;
-            fi[k] = (uint32_t)f * 97391u;
-            a[k] = VOX_A[vi][k] + ((((int32_t)VOX_A[vi + 1u][k] - VOX_A[vi][k]) * (int32_t)vk) >> 15);
-        }
-        for (i = 0; i < n; i++) {
-            uint32_t old = ph;
-            int32_t w, w2, s;
-            ph += inc + (pm ? (uint32_t)pm[i] : 0u);
-            if (ph < old) o->f[0] = o->f[1] = o->f[2] = 0;
-            o->f[0] += fi[0]; o->f[1] += fi[1]; o->f[2] += fi[2];
-            w = 32767 - (int32_t)(ph >> 17);
-            w2 = mul15(w, w);
-            w = w2 + mul15(mul15(w2, w2) - w2, wd);
-            s = mul15(sin32(o->f[0]), a[0]) + mul15(sin32(o->f[1]), a[1]) + mul15(sin32(o->f[2]), a[2]);
-            out[i] = clip(mul15(s, w) + (sin32(ph) >> 2), 40000);
-        }
+    default:                                    /* (1.0.26: FOLD and VOCAL gone: patch_sanitize moves the sounds; silence here) */
+        for (i = 0; i < n; i++) out[i] = 0;
         break;
     }
-    }
     o->ph[0] = ph;
+}
+static void osc_render(osc_t *o, const oscp_t *q, int32_t *out, const int32_t *pm, uint32_t n)
+{
+    uint32_t i;
+    osc_core(o, q, out, pm, n);
+    if (q->p4 && q->eng != E_CS) {              /* FOLD: the engine's wave driven into a triangle folder, 1 to 6 times (west coast, after any engine) */
+        int32_t g = 32768 + q->p4 * 5;
+        for (i = 0; i < n; i++) {               /* (the wave as it is inside +-1; past it, reflected back, as often as it takes) */
+            int32_t y = (int32_t)(((int64_t)out[i] * g) >> 15);
+            while (y > 32767 || y < -32767) y = y > 32767 ? 65534 - y : -65534 - y;
+            out[i] = y;
+        }
+    }
 }
 
 /* ================================================================ envelopes, LFOs */
@@ -791,11 +770,13 @@ static void voice_block(voice_t *v, int32_t *acc)
     qa.p1 = q8to15(pv(LKB(PB_SHAPE, P[A_P1]), m[D_AP1]));
     qa.p2 = q8to15(pv(P[A_P2], m[D_AP2]));
     qa.p3 = q8to15(pv(P[A_P3], m[D_AP3]));
+    qa.p4 = GP(D_AP4) * 258;
     qa.inc = pitch_inc(p + m[D_APIT] + ((P[A_OCT] * 12 + P[A_SEMI]) << 8) + P[A_FINE] * 256 / 100 + ((v->drift_a * GP(D_DRIFT)) >> 9));
     qb.eng = (uint8_t)P[B_ENG];
     qb.p1 = q8to15(pv(P[B_P1], m[D_BP1]));
     qb.p2 = q8to15(pv(P[B_P2], m[D_BP2]));
     qb.p3 = q8to15(pv(P[B_P3], m[D_BP3]));
+    qb.p4 = GP(D_BP4) * 258;
     qb.inc = pitch_inc(p + m[D_BPIT] + ((P[B_OCT] * 12 + P[B_SEMI]) << 8) + P[B_FINE] * 256 / 100 + ((v->drift_b * GP(D_DRIFT)) >> 9)
                        + (P[X_MODE] == 3 ? (pv(P[X_AMT], m[D_XMOD]) >> 8) * 6144 / 127 : 0));   /* (SYNC: X-MOD = +0..24 semitones) */
     qa.sync = 0;

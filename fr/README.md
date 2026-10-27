@@ -18,7 +18,7 @@
 
 ## Fonctions clés
 
-1. **4 moteurs efficaces** pour des basses modernes, ou **8 moteurs** pour basses, pads et leads (`SYSTEM › ENGINES`).
+1. **6 moteurs** par oscillateur (ANALOG, CS, WAVETABLE, FM, PHASE DIST, HARD SYNC), chacun suivi d’un **FOLD** (CS : **RING**).
 2. **Séquenceur de batterie avec conditions & parameter locks** (sur la basse aussi : maintenir un pas, tourner un potard) et **automation** (maintenir REC pendant la lecture et tourner n'importe quel potard ; REC maintenu seul pour effacer) : 8 pistes colorées (kits 808, 909, dub techno, acoustique), chance et conditions sur chaque pas, touches noires pour l'instrument, touches blanches (pads) pour ses pas, OCT−/OCT+ pour les pages ; REC en direct ; sortie sync pour Pocket Operator et Volca.
 3. **LFO learn** : `LFO` maintenu + n'importe quel potard, le LFO 2 se branche sur ce réglage en un geste (avec `OCT−` : LFO 1, avec `OCT+` : LFO 3).
 4. Mode **CLASSIC** ou **SHIFT** (`OCT−` / `OCT+`) pour aller plus vite, au choix dans les options.
@@ -45,8 +45,8 @@ Retour à KAWA (`install/kawa-0.5.fwsc`) ou au firmware officiel (M-UPGRADE) pos
 
 ```sh
 cd source
-./build.sh --release 1.0.25          # -> build/k-wasub-1.0.25.fwsc
-APP_VER=1.0.25 bash web/make_emulator.sh      # émulateur
+./build.sh --release 1.0.26          # -> build/k-wasub-1.0.26.fwsc
+APP_VER=1.0.26 bash web/make_emulator.sh      # émulateur
 bash web/make_installer.sh                    # installer.html avec le dernier paquet
 bash tests/run_stress.sh                      # tests de charge (UBSan)
 python3 tests/manual_shots.py                 # captures du manuel (docs/img)
