@@ -276,6 +276,17 @@ static void vis_seq(int32_t x, int32_t y, int32_t w, int32_t h)   /* SEQ BASS: 1
  * playing a column, the cursor underlined, the muted tracks grey, a dot where a chance or a condition is set */
 static const uint16_t DK_COL[NDK] = {RGB(255, 60, 60), RGB(70, 220, 90), RGB(255, 120, 200), RGB(250, 225, 50), RGB(255, 150, 40),
                                      RGB(70, 140, 255), RGB(170, 90, 255), RGB(150, 235, 255)};
+static inline int hold_dot_cursor(int sel, int32_t s) { return sel && s == (int32_t)dk_cur; }
+static void dk_dot(int32_t cx, int32_t cy, int32_t r2, uint16_t c, uint32_t a)   /* a soft round dot, radius r2 / 2 pixels (half pixels: 3 = 1.5) */
+{
+    int32_t dx, dy, e = (r2 + 3) / 2;
+    for (dy = -e; dy <= e; dy++)
+        for (dx = -e; dx <= e; dx++) {
+            int32_t d2 = 4 * (dx * dx + dy * dy), in = (r2 - 1) * (r2 - 1), out = (r2 + 1) * (r2 + 1);
+            if (d2 <= in) g_pxa(cx + dx, cy + dy, c, a);
+            else if (d2 < out) g_pxa(cx + dx, cy + dy, c, a * (uint32_t)(out - d2) / (uint32_t)(out - in));
+        }
+}
 static void vis_drum(int32_t x, int32_t y, int32_t w, int32_t h)
 {
     const dkpat_t *q = dk_pp();
@@ -284,23 +295,34 @@ static void vis_drum(int32_t x, int32_t y, int32_t w, int32_t h)
     if (!g_vis(y, h)) return;
     memset(lkd, 0, sizeof lkd);
     { uint32_t j, n = pl.n <= PL_MAX ? pl.n : 0u; for (j = 0; j < n; j++) if (pl.l[j].pat == dk.cur % DK_NPAT && pl.l[j].step < DK_MAX) lkd[pl.l[j].step] |= (uint8_t)(1u << (pl.l[j].tp >> 4 & 7u)); }
-    if (dk_hold && (int32_t)(dk_hold - 1u) / 16 == pg) g_rect(x0 + (int32_t)((dk_hold - 1u) % 16u) * bw, y + 1, bw, h - 2, g_mix(K_BG, K_WHITE, 60));   /* (the step held: its column) */
     if (rh < 3) rh = 3;
+    {                                           /* the step playing (a soft column) and the step held */
+        int32_t ps = sq_play && dk_show != 0xFF && (int32_t)dk_show / 16 == pg ? (int32_t)dk_show % 16 : -1;
+        int32_t hs = dk_hold && (int32_t)(dk_hold - 1u) / 16 == pg ? (int32_t)(dk_hold - 1u) % 16 : -1;
+        if (ps >= 0) g_rect(x0 + ps * bw, y + 1, bw, h - 2, g_mix(K_BG, K_WHITE, 22));
+        if (hs >= 0) g_rect(x0 + hs * bw, y + 1, bw, h - 2, g_mix(K_BG, K_WHITE, 50));
+    }
     for (t = 0; t < (int32_t)NDK; t++) {
-        int32_t ry = y + 3 + t * rh, mute = dk.mute >> t & 1u, sel = t == (int32_t)dk_trk;
+        int32_t ry = y + 3 + t * rh, cy = ry + rh / 2, mute = dk.mute >> t & 1u, sel = t == (int32_t)dk_trk;
+        int32_t R = (bw < rh ? bw : rh) - 1;     /* (the dot's diameter, in pixels) */
         uint16_t col = mute ? g_mix(K_BG, K_GREY, 150) : PAL_BW ? g_mix(K_BG, K_WHITE, (uint32_t)(255 - t * 18)) : DK_COL[t];   /* (BLACK / WHITE: shades of its white) */
         if (!g_vis(ry, rh)) continue;
-        if (sel) g_rect(x + 2, ry, w - 4, rh, g_mix(K_BG, col, 40));
-        g_rect(x + 4, ry + 1, sel ? 18 : 10, rh - 2, col);   /* (the track's colour, wider when chosen) */
+        if (sel) { g_rect(x + 2, ry, w - 4, rh, g_mix(K_BG, col, 26)); g_rect(x + 2, ry + 1, 2, rh - 2, col); }   /* (the track chosen: a tint, a bar at the left) */
+        dk_dot(x + 13, cy, sel ? R + 2 : R - 1, col, 256);   /* (the track's colour, a bigger dot when chosen) */
         for (i = 0; i < 16; i++) {
-            int32_t s = pg * 16 + i, bx = x0 + i * bw;
-            uint32_t on = s < len && (q->on[s] >> t & 1u), acc = q->acc[s] >> t & 1u;
-            uint16_t c = s >= len ? K_BG : on ? (acc ? g_mix(col, 0xFFFFu, 110) : col) : g_mix(K_BG, col, (i & 3) ? 26 : 50);
-            if (s == (int32_t)dk_show && sq_play) c = on ? 0xFFFFu : g_mix(c, 0xFFFFu, 70);
-            g_rect(bx + 1, ry + 1, bw - 2, rh - 2, c);
-            if (on && (q->pc[t][s] & 0xFFu) && rh >= 5) g_rect(bx + bw / 2 - 1, ry + rh / 2 - 1, 2, 2, K_BG);
-            if (on && (lkd[s] >> t & 1u)) { g_rect(bx + 1, ry + 1, bw - 2, 1, K_WHITE); g_rect(bx + 1, ry + 1, 1, rh - 2 > 3 ? 3 : rh - 2, K_WHITE); }   /* (locked: a white corner) */
-            if (sel && s == (int32_t)dk_cur) g_rect(bx + 1, ry + rh - 1, bw - 2, 1, 0xFFFFu);
+            int32_t s = pg * 16 + i, cx = x0 + i * bw + bw / 2;
+            uint32_t on = s < len && (q->on[s] >> t & 1u), acc = q->acc[s] >> t & 1u, now = sq_play && s == (int32_t)dk_show;
+            if (s >= len) continue;
+            if (!on) {                          /* (an empty step: a small dim dot, a bigger one on the beat) */
+                dk_dot(cx, cy, (i & 3) ? 2 : 3, now ? K_WHITE : col, now ? 150 : (i & 3) ? 60 : 110);
+                if (hold_dot_cursor(sel, s)) dk_dot(cx, cy, 3, K_WHITE, 200);
+                continue;
+            }
+            if (acc) dk_dot(cx, cy, R + 2, col, 70);   /* (an accent: a halo) */
+            dk_dot(cx, cy, acc ? R : R - 1, now ? K_WHITE : acc ? g_mix(col, 0xFFFFu, 90) : col, 256);
+            if (q->pc[t][s] & 0xFFu) dk_dot(cx, cy, R / 2 > 2 ? R - 4 : 1, K_BG, 230);   /* (a chance or a condition: a hollow) */
+            if (lkd[s] >> t & 1u) g_rect(cx + bw / 2 - 2, ry + 1, 2, 2, K_WHITE);   /* (locked: a white spark at the corner) */
+            if (hold_dot_cursor(sel, s)) g_rect(cx - 2, ry + rh - 1, 5, 1, 0xFFFFu);
         }
     }
     for (i = 0; np > 1 && i < np; i++)          /* the pages, bottom right */
