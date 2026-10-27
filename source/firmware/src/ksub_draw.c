@@ -657,7 +657,7 @@ static const char *view_title(uint32_t vi, char *t, char *sub)
         p = str_cat(p, " \xB7 TAG ");
         str_cat(p, L_TAG[pre_tag]);
         return "SELECT PATCH";
-    case LY_SAVE: p = str_cat(sub, "TO USER SLOT B"); fmt_u(p, save_slot + 1u, 2); return pname;
+    case LY_SAVE: str_cat(sub, "PRESS SAVE AGAIN TO WRITE"); return pname;
     case LY_SYS:
         if (vi != PAGE_V0[PG_SYS]) { str_cat(sub, "LEARN \xB7 CHANNEL \xB7 CLOCK \xB7 START / STOP \xB7 PROGRAM"); return "MIDI"; }
         str_cat(sub, "DNB / DUB / DUBSTEP / TECHNO EDITION"); return "DEVICE SETUP";
@@ -933,20 +933,28 @@ static void presets_g(uint32_t bank, int32_t x, int32_t y0, int32_t w, int32_t h
 }
 static void save_g(int32_t x, int32_t y0, int32_t w, int32_t ty)   /* the name being written, its slot */
 {
-    char sub[32], b[8], *p;
     int32_t cx = x, i;
     for (i = 0; i < (int32_t)save_pos; i++) { char ch[2] = {pname[i], 0}; cx += g_text_w(T_L, ch); }
     if (g_vis(ty + T_L->h, 2)) { char ch[2] = {pname[save_pos] ? pname[save_pos] : ' ', 0}; g_rect(cx, ty + T_L->h, g_text_w(T_L, ch), 2, K_LIME); }
-    p = str_cat(b, "B");
-    fmt_u(p, save_slot + 1u, 2);
-    row_g(x - 2, y0, w, 21, "SLOT", b, 1, K_CYAN, T_S);
-    str_cat(sub, up_valid(save_slot) ? ustore[save_slot].name : "- EMPTY -");
-    row_g(x - 2, y0 + 23, w, 21, "NOW IN SLOT", sub, 0, K_GREY, T_S);
-    row_g(x - 2, y0 + 46, w, 21, "STYLE", L_STYLE[clampi(patch[P_STYLE], 0, NSTYLE - 1)], 0, K_CYAN, T_S);
-    row_g(x - 2, y0 + 69, w, 21, "NEW PRESET", new_arm ? "TURN K4 AGAIN" : "K4 \xB7 INIT", 0, new_arm ? K_LIME : K_CYAN, T_S);
-    if (g_vis(y0 + 92, 20)) {
-        g_text(T_XS, x, y0 + 92, "KEYS: LETTERS \xB7 K2 PLACE \xB7 K3 SIGNS \xB7 ALGO STYLE", K_GREY);
-        g_text(T_XS, x, y0 + 101, "PRESS SAVE AGAIN TO WRITE", K_LIME);
+    {                                           /* one row per knob: its name in the middle column, the value on the right */
+        char v1[24], v2[8], v3[8], *q;
+        int32_t kx = x + w * 45 / 100, r;
+        static const char *const KN[5] = {"K1", "K2", "K3", "ALGO", "K4"};
+        const char *lab[5] = {"SLOT", "PLACE", "LETTER", "STYLE", "NEW PRESET"}, *val[5];
+        q = str_cat(v1, "B");
+        q = fmt_u(q, save_slot + 1u, 2);
+        q = str_cat(q, " \xB7 ");
+        str_cat(q, up_valid(save_slot) ? ustore[save_slot].name : "EMPTY");
+        q = fmt_u(v2, save_pos + 1u, 0);
+        str_cat(q, "/13");
+        v3[0] = pname[save_pos] && pname[save_pos] != ' ' ? pname[save_pos] : '_'; v3[1] = 0;
+        val[0] = v1; val[1] = v2; val[2] = v3; val[3] = L_STYLE[clampi(patch[P_STYLE], 0, NSTYLE - 1)];
+        val[4] = new_arm ? "TURN K4 AGAIN" : "INIT";
+        for (i = 0; i < 5; i++) {
+            r = y0 + i * 20;
+            row_g(x - 2, r, w, 18, lab[i], val[i], i == 0, i == 4 && new_arm ? K_LIME : K_CYAN, T_S);
+            if (g_vis(r, 18)) g_text(T_XS, kx, r + 5, KN[i], K_LIME);
+        }
     }
 }
 
