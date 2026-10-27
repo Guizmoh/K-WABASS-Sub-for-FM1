@@ -126,7 +126,7 @@ def build(L):
 
     # 6 sequencers -- the drums' grid and the keys that fill it
     chaps.append(("seq", t(T("6 · SEQ BASS and DRUMS", "6 · SEQ BASS et DRUMS")),
-                  grid([("d-drums", "DRUMS · TECHNO"), ("d-lock", "PARAMETER LOCK"), ("d-seq", "SEQ BASS")])
+                  grid([("d-drums", "DRUMS · TECHNO"), ("d-lock", "PARAMETER LOCK"), ("d-drums-dub", T("DUB TECHNO kit", "kit DUB TECHNO")), ("d-seq", "SEQ BASS"), ("v-sample-cut", T("OSC C: START / END", "OSC C : START / END"))])
                   + t(T('<p><b>PLAY</b> starts both sequencers (SEQ BASS and DRUMS) on the tempo; <b>REC</b> on their views records: stopped, step by step; playing, live. '
                         'DRUMS is the 4th view of SEQ (press SEQ until it shows).</p>'
                         '<table><tr><td>Black keys 1–8</td><td>choose the instrument and play it (REC + PLAY: record it now)</td></tr>'
@@ -175,13 +175,24 @@ def build(L):
                       '<p>Deux réglages différents, dans SYSTEM : le <b>THEME</b> change l’<i>aspect</i> des écrans (formes, cartes, rubans), la <b>PALETTE</b> change seulement les <i>couleurs</i>. Toute palette va avec tout thème, et on change l’un sans toucher à l’autre.</p>'))
                   + '<div class="card tip" id="themes"><h3>' + t(T("THEME", "THÈME")) + '</h3><p>'
                   + t(T("The look of the screens: 7 themes. <b>CLASSIC GLOW</b> by default.", "L’aspect des écrans : 7 thèmes. <b>CLASSIC GLOW</b> par défaut.")) + '</p>'
-                  + grid([("t-glow-green", "CLASSIC GLOW")])
-                  + chips(["CLASSIC GLOW", "STUDIO", "PURE", "RACK", "TECH", "RIBBON", "RIBBON CLASSIC"]) + '</div>'
+                  + grid([("t-glow-green", T("<b>CLASSIC GLOW</b> The simplest layout, lit by gradients: the accent glows down from the top, the chosen row lights up from the left. Its own palettes: FLUO GREEN, TOXIC.", "<b>CLASSIC GLOW</b> La disposition la plus simple, éclairée en dégradés : la couleur d’accent coule du haut de l’écran, la ligne choisie s’allume depuis la gauche. Ses palettes : FLUO GREEN, TOXIC.")),
+                          ("t-studio", T("<b>STUDIO</b> A status bar, the eight pages always in view, compact cells.", "<b>STUDIO</b> Une barre d’état, les huit pages toujours visibles, des cases compactes.")),
+                          ("t-pure", T("<b>PURE</b> A tabbed header, a big wave and four knob dials: readable at arm’s length, made for the stage.", "<b>PURE</b> Un en-tête à onglets, une grande onde et quatre potards dessinés : lisible à bout de bras, pensé pour la scène.")),
+                          ("t-rack", T("<b>RACK</b> A rack-unit look: a side rail of pages, tight rows.", "<b>RACK</b> L’allure d’un rack : un rail de pages sur le côté, des lignes serrées.")),
+                          ("t-tech-volt", T("<b>TECH</b> The picture fills almost the whole page, four tiles, gradients in different directions.", "<b>TECH</b> L’image occupe presque toute la page, quatre cases, des dégradés dans plusieurs directions.")),
+                          ("rb-osc", T("<b>RIBBON</b> The views side by side; each one a tall window full of pictures that scrolls down. A band at the bottom says what the knobs do.", "<b>RIBBON</b> Les vues côte à côte ; chacune est une haute fenêtre pleine d’images qui défile vers le bas. Une bande en bas dit ce que font les potards.")),
+                          ("rbc-osc", T("<b>RIBBON CLASSIC</b> The same look with the classic rows: one window on the whole page.", "<b>RIBBON CLASSIC</b> Le même aspect avec les lignes classiques : une fenêtre sur toute la page."))], "grid")
+                  + '</div>'
                   + '<div class="card warn" id="palettes"><h3>PALETTE</h3><p>'
-                  + t(T("The colours: 13 palettes, then their <b>RAD</b> versions (a gradient background). <b>FLUO GREEN</b> by default. The first two of the list follow the theme (for example FLUO GREEN and TOXIC with CLASSIC GLOW).",
-                        "Les couleurs : 13 palettes, puis leurs versions <b>RAD</b> (fond en dégradé). <b>FLUO GREEN</b> par défaut. Les deux premières de la liste suivent le thème (par exemple FLUO GREEN et TOXIC avec CLASSIC GLOW).")) + '</p>'
-                  + grid([("t-fluo", "FLUO")])
-                  + chips(["RED", "GOLD", "SYNTHWAVE", "FLUO", "PINK", "ICE", "MINT", "BLACK / WHITE", "INVERTED", "SKY", "BLAZE", "ICE NEON", "RED RAD", "SYNTHWAVE RAD", "FLUO GREEN RAD", "SKY RAD"]) + '</div>'
+                  + t(T("The colours: 13 palettes, then their <b>RAD</b> versions (a gradient background). <b>FLUO GREEN</b> by default. The first two of the list follow the theme (for example FLUO GREEN and TOXIC with CLASSIC GLOW); the others work with every theme.",
+                        "Les couleurs : 13 palettes, puis leurs versions <b>RAD</b> (fond en dégradé). <b>FLUO GREEN</b> par défaut. Les deux premières de la liste suivent le thème (par exemple FLUO GREEN et TOXIC avec CLASSIC GLOW) ; les autres vont avec tous les thèmes.")) + '</p>'
+                  + grid([("t-fluo", T("<b>FLUO</b> Fluo green on black, sober.", "<b>FLUO</b> Vert fluo sur noir, sobre.")),
+                          ("t-synthwave", T("<b>SYNTHWAVE</b> Violet and magenta.", "<b>SYNTHWAVE</b> Violet et magenta.")),
+                          ("t-inverted", T("<b>INVERTED</b> Greys, dark on light.", "<b>INVERTED</b> Des gris, sombre sur clair.")),
+                          ("t-sky", T("<b>SKY</b> Light, office-like: square windows in relief with a shadow.", "<b>SKY</b> Clair, façon bureautique : fenêtres carrées en relief avec une ombre.")),
+                          ("t-blaze", T("<b>BLAZE</b> Black, greys, fluo orange, white text.", "<b>BLAZE</b> Noir, gris, orange fluo, texte blanc.")),
+                          ("t-rad-red", T("<b>RED RAD</b> Any palette has a RAD version: the background is a gradient.", "<b>RED RAD</b> Chaque palette a une version RAD : le fond est un dégradé."))], "grid")
+                  + '<p>' + t(T("Also: RED, GOLD, PINK, ICE, MINT, BLACK / WHITE, ICE NEON (RIBBON’s own), and the RAD versions of all.", "Aussi : RED, GOLD, PINK, ICE, MINT, BLACK / WHITE, ICE NEON (celle de RIBBON), et les versions RAD de toutes.")) + '</p></div>'
                   + '<div class="card" id="uimode"><h3>' + t(T("Display mode and the rest", "Mode d’affichage et le reste")) + '</h3><p>'
                   + t(T("SYSTEM also holds FONT (9; TEKTUR by default), LOUPE (on by default) and BRIGHTNESS. Two modes: <b>CLASSIC</b> (lists) and <b>SHIFT</b> (3 columns, OCT− / OCT+ held for the middle and right ones).",
                         "SYSTEM contient aussi FONT (9 ; TEKTUR par défaut), LOUPE (active par défaut) et BRIGHTNESS. Deux modes : <b>CLASSIC</b> (listes) et <b>SHIFT</b> (3 colonnes, OCT− / OCT+ maintenus pour celles du milieu et de droite).")) + '</p>'
