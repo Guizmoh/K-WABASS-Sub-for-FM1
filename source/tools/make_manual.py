@@ -182,14 +182,15 @@ def build(L):
                   t(T('<p>Two different settings, in SYSTEM: the <b>THEME</b> changes the <i>look</i> of the screens (shapes, cards, ribbons), the <b>PALETTE</b> changes only the <i>colours</i>. Any palette works with any theme, and you can change one without touching the other.</p>',
                       '<p>Deux réglages différents, dans SYSTEM : le <b>THEME</b> change l’<i>aspect</i> des écrans (formes, cartes, rubans), la <b>PALETTE</b> change seulement les <i>couleurs</i>. Toute palette va avec tout thème, et on change l’un sans toucher à l’autre.</p>'))
                   + '<div class="card tip" id="themes"><h3>' + t(T("THEME", "THÈME")) + '</h3><p>'
-                  + t(T("The look of the screens: 7 themes. <b>CLASSIC GLOW</b> by default.", "L’aspect des écrans : 7 thèmes. <b>CLASSIC GLOW</b> par défaut.")) + '</p>'
+                  + t(T("The look of the screens: 8 themes. <b>CLASSIC GLOW</b> by default; the very first start asks for one (CLASSIC, STUDIO, PURE or RIBBON CLASSIC).", "L’aspect des écrans : 8 thèmes. <b>CLASSIC GLOW</b> par défaut ; le tout premier démarrage en fait choisir un (CLASSIC, STUDIO, PURE ou RIBBON CLASSIC).")) + '</p>'
                   + grid([("t-glow-green", T("<b>CLASSIC GLOW</b> The simplest layout, lit by gradients: the accent glows down from the top, the chosen row lights up from the left. Its own palettes: FLUO GREEN, TOXIC.", "<b>CLASSIC GLOW</b> La disposition la plus simple, éclairée en dégradés : la couleur d’accent coule du haut de l’écran, la ligne choisie s’allume depuis la gauche. Ses palettes : FLUO GREEN, TOXIC.")),
                           ("t-studio", T("<b>STUDIO</b> A status bar, the eight pages always in view, compact cells.", "<b>STUDIO</b> Une barre d’état, les huit pages toujours visibles, des cases compactes.")),
                           ("t-pure", T("<b>PURE</b> A tabbed header, a big wave and four knob dials: readable at arm’s length, made for the stage.", "<b>PURE</b> Un en-tête à onglets, une grande onde et quatre potards dessinés : lisible à bout de bras, pensé pour la scène.")),
                           ("t-rack", T("<b>RACK</b> A rack-unit look: a side rail of pages, tight rows.", "<b>RACK</b> L’allure d’un rack : un rail de pages sur le côté, des lignes serrées.")),
                           ("t-tech-volt", T("<b>TECH</b> The picture fills almost the whole page, four tiles, gradients in different directions.", "<b>TECH</b> L’image occupe presque toute la page, quatre cases, des dégradés dans plusieurs directions.")),
                           ("rb-osc", T("<b>RIBBON</b> The views side by side; each one a tall window full of pictures that scrolls down. A band at the bottom says what the knobs do.", "<b>RIBBON</b> Les vues côte à côte ; chacune est une haute fenêtre pleine d’images qui défile vers le bas. Une bande en bas dit ce que font les potards.")),
-                          ("rbc-osc", T("<b>RIBBON CLASSIC</b> The same look with the classic rows: one window on the whole page.", "<b>RIBBON CLASSIC</b> Le même aspect avec les lignes classiques : une fenêtre sur toute la page."))], "grid")
+                          ("rbc-osc", T("<b>RIBBON CLASSIC</b> The same look with the classic rows: one window on the whole page.", "<b>RIBBON CLASSIC</b> Le même aspect avec les lignes classiques : une fenêtre sur toute la page.")),
+                          ("t-classic", T("<b>CLASSIC</b> CLASSIC GLOW without the gradients: the same layout, the colours flat.", "<b>CLASSIC</b> CLASSIC GLOW sans les dégradés : la même disposition, les couleurs à plat."))], "grid")
                   + '</div>'
                   + '<div class="card warn" id="palettes"><h3>PALETTE</h3><p>'
                   + t(T("The colours: 13 palettes, then their <b>RAD</b> versions (a gradient background). <b>FLUO GREEN</b> by default. The first two of the list follow the theme (for example FLUO GREEN and TOXIC with CLASSIC GLOW); the others work with every theme.",
@@ -259,10 +260,10 @@ def build(L):
     o.append('<ul class="feat">' + t(T(
         "<li><b>4 or 8 engines</b>, two oscillators, a sub, a sample / resample oscillator</li><li><b>3 LFOs</b>, <b>LFO learn</b>: hold LFO, turn a knob</li>"
         "<li><b>FX PADS</b> with quantize, <b>PERFORM</b>, <b>MORPH</b> X/Y and A/B</li><li><b>SEQ BASS</b>, ARP, MIDI</li>"
-        "<li>Deep, tight low end: OTT, MONO BASS, SUB LOCK, auto level</li><li><b>7 themes</b>, 26 palettes, 9 fonts</li>",
+        "<li>Deep, tight low end: OTT, MONO BASS, SUB LOCK, auto level</li><li><b>8 themes</b>, 26 palettes, 9 fonts</li>",
         "<li><b>4 ou 8 moteurs</b>, deux oscillateurs, un sub, un oscillateur sample / resample</li><li><b>3 LFO</b>, <b>LFO learn</b> : LFO maintenu, tourner un potard</li>"
         "<li><b>FX PADS</b> avec quantisation, <b>PERFORM</b>, <b>MORPH</b> X/Y et A/B</li><li><b>SEQ BASS</b>, ARP, MIDI</li>"
-        "<li>Un grave profond et propre : OTT, MONO BASS, SUB LOCK, auto level</li><li><b>7 thèmes</b>, 26 palettes, 9 polices</li>")) + '</ul>'
+        "<li>Un grave profond et propre : OTT, MONO BASS, SUB LOCK, auto level</li><li><b>8 thèmes</b>, 26 palettes, 9 polices</li>")) + '</ul>'
              + f'<p class="more">{t(T("<b>And more is coming.</b> Tell me what would help you most; a donation, even small, helps enormously.", "<b>Et d’autres choses arrivent.</b> Dis-moi ce qui t’aiderait le plus ; un don, même petit, aide énormément."))}</p>')
 
     for a, title, html in chaps:

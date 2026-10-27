@@ -90,20 +90,20 @@ static void lum_gap(uint32_t k, uint32_t min)   /* a text colour too close to th
 static void theme_set(uint32_t t, uint32_t pal)
 {
     uint32_t i, k, con;
-    theme = (uint8_t)(t < 7u ? t : 0u);
+    theme = (uint8_t)(t < 8u ? t : 0u);   /* (7: CLASSIC, GLOW's look and colours, flat) */
     g_rad = (uint8_t)(pal >= NPAL_BASE && pal < 2u * NPAL_BASE);
     theme_pal = (uint8_t)(pal < NPAL_BASE ? pal : pal < 2u * NPAL_BASE ? pal - NPAL_BASE : 0u);
-    k = theme_pal < 2u ? (theme == 0u ? 15u : theme < 4u ? theme * 2u : theme == 4u ? 19u : 23u) + theme_pal : theme_pal < 9u ? 6u + theme_pal : theme_pal < 11u ? 8u + theme_pal : 10u + theme_pal;   /* (rows: 4 themes x 2, 7 for all, GLOW's 2, 2 more for all, TECH's 2, SKY and BLAZE) */
-    con = g_con && theme_pal != PAL_SKY && !(theme >= 5u && theme_pal < 2u);   /* (SKY, and RIBBON's EMBER and ICE NEON, keep their own lighter grounds) */
+    k = theme_pal < 2u ? (theme == 0u || theme == 7u ? 15u : theme < 4u ? theme * 2u : theme == 4u ? 19u : 23u) + theme_pal : theme_pal < 9u ? 6u + theme_pal : theme_pal < 11u ? 8u + theme_pal : 10u + theme_pal;   /* (rows: 4 themes x 2, 7 for all, GLOW's 2, 2 more for all, TECH's 2, SKY and BLAZE) */
+    con = g_con && theme_pal != PAL_SKY && !(theme >= 5u && theme <= 6u && theme_pal < 2u);   /* (SKY, and RIBBON's EMBER and ICE NEON, keep their own lighter grounds) */
     for (i = 0; i < KC_N; i++) kc[i] = con ? con_px(PALS[k][i], PALS[k][KC_BG], PALS[k][KC_WHITE]) : PALS[k][i];   /* (SKY keeps its pale blue) */
     g_rtop = g_mix(kc[KC_BG], kc[KC_LIME], 110); g_rbot = g_mix(kc[KC_BG], kc[KC_CYAN], 110); g_rcell = g_mix(kc[KC_BG], kc[KC_CYAN], 60);
     g_wgrad = 0;
     g_rflat = 0;
     g_sky = theme_pal == PAL_SKY;
-    if (g_rad && theme == 0u && theme_pal == 0u) {   /* CLASSIC GLOW, FLUO GREEN RAD: a deeper, bluer green into a night blue, the line yellow */
+    if (g_rad && (theme == 0u || theme == 7u) && theme_pal == 0u) {   /* CLASSIC GLOW, FLUO GREEN RAD: a deeper, bluer green into a night blue, the line yellow */
         g_rtop = RGB(10, 74, 66); g_rbot = RGB(3, 7, 30); g_rcell = RGB(4, 22, 40);
         kc[KC_WAVE] = RGB(255, 222, 40);
-    } else if (g_rad && theme >= 5u && theme_pal == 1u) {   /* (RIBBON) ICE NEON RAD: a cyan blue into a pale dark blue-green */
+    } else if (g_rad && theme >= 5u && theme <= 6u && theme_pal == 1u) {   /* (RIBBON) ICE NEON RAD: a cyan blue into a pale dark blue-green */
         g_rtop = RGB(40, 150, 196); g_rbot = RGB(20, 58, 58); g_rcell = RGB(24, 64, 72);
     } else if (g_rad && theme_pal == 4u) {      /* BLACK / WHITE RAD: darker at the top, lighter at the bottom, the boxes a touch lighter */
         g_rtop = RGB(20, 20, 22); g_rbot = RGB(92, 94, 98); g_rcell = RGB(64, 66, 70);
@@ -234,11 +234,13 @@ static void g_hgrad(int32_t x, int32_t y, int32_t w, int32_t h, uint16_t c0, uin
 {
     int32_t i;
     if (w <= 0 || !g_vis(y, h)) return;
+    if (theme == 7u) { g_rect(x, y, w, h, g_mix(c0, c1, 96)); return; }   /* (CLASSIC: GLOW without the gradients, the colour flat) */
     for (i = 0; i < w; i++) g_rect(x + i, y, 1, h, g_mix(c0, c1, (uint32_t)(i * 256 / w)));
 }
 static void g_vgrad(int32_t x, int32_t y, int32_t w, int32_t h, uint16_t c0, uint16_t c1)   /* top c0 .. bottom c1 (this band only) */
 {
     int32_t j = y > g_y0 ? y : g_y0, e = y + h < g_y0 + (int32_t)BAND_H ? y + h : g_y0 + (int32_t)BAND_H;
+    if (theme == 7u && j < e) { g_rect(x, j, w, e - j, g_mix(c0, c1, 96)); return; }
     for (; j < e; j++) g_rect(x, j, w, 1, g_mix(c0, c1, (uint32_t)((j - y) * 256 / h)));
 }
 static void g_vbar(int32_t x, int32_t y, int32_t w, int32_t h, uint32_t frac, uint16_t c)   /* frac 0..256 */

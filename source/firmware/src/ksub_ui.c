@@ -828,7 +828,9 @@ static const col3_t COL3[NPAGE] = {
                {{"SAT", "OTT", "MIX", "TYP"}, {"CMP", "PMP", "MNO", "VOL"}, {"DLY", "DT", "FB", "REV"}}},
 };
 static uint8_t c3_show[NPAGE] = {1, 1, 1, 1, 1, 1, 0, 0}, c3_cur;
-static uint8_t ask_on, ask_sel;                 /* the start's question: CLASSIC or SHIFT */
+static uint8_t ask_on, ask_sel;                 /* the start's question: CLASSIC or SHIFT (ask_on 2: then the look, the very first start only) */
+static uint8_t theme_ask;                       /* the very first start (no settings yet): the look is asked too */
+static const uint8_t ASK_TH[4] = {7, 1, 2, 6};  /* CLASSIC, STUDIO, PURE, RIBBON CLASSIC */
 static uint32_t ask_ms;
 #define C3_ON (set.ui && COL3[page].title && c3_show[page])
 static uint32_t c3_col(void) { return hb.b == BTN_OCT_DOWN ? 1u : hb.b == BTN_OCT_UP ? 2u : 0u; }
@@ -1424,7 +1426,7 @@ static void item_range(uint32_t id, int32_t *lo, int32_t *hi)
         return;
     }
     *lo = 0;
-    *hi = id == G_MIDICH ? 16 : id == G_BPM ? 2400 : id == G_CLOCK || id == G_QLFO || id == G_ENG8 || id == G_ASAVE || id == G_LANG || id == G_NORM || id == G_RS_GO || id == G_GRID || id == G_BROWSE || id == G_C3COL || id == G_UI || id == G_ASK || id == G_ZOOM || id == G_MLEARN || id == G_MSTART || id == G_MPROG || id == G_MCLK || id == G_SYNC || id == G_SQ_ON || id == G_NEWSONG || id == G_L3_SYNC ? 1 : id == G_MMAP ? 16 : id == I_ABMIX ? 127 : id == G_BRI ? 3 : id == G_ACCEL || id == G_CON || id == G_DEEP || id == G_RS_LEN ? 2 : id == G_THEME ? 6 : id == G_FONT ? (int32_t)NFONT - 1 : id == G_PAL ? (int32_t)(2u * NPAL_BASE - 1u) : id == G_OCT ? 6 : 0;
+    *hi = id == G_MIDICH ? 16 : id == G_BPM ? 2400 : id == G_CLOCK || id == G_QLFO || id == G_ENG8 || id == G_ASAVE || id == G_LANG || id == G_NORM || id == G_RS_GO || id == G_GRID || id == G_BROWSE || id == G_C3COL || id == G_UI || id == G_ASK || id == G_ZOOM || id == G_MLEARN || id == G_MSTART || id == G_MPROG || id == G_MCLK || id == G_SYNC || id == G_SQ_ON || id == G_NEWSONG || id == G_L3_SYNC ? 1 : id == G_MMAP ? 16 : id == I_ABMIX ? 127 : id == G_BRI ? 3 : id == G_ACCEL || id == G_CON || id == G_DEEP || id == G_RS_LEN ? 2 : id == G_THEME ? 7 : id == G_FONT ? (int32_t)NFONT - 1 : id == G_PAL ? (int32_t)(2u * NPAL_BASE - 1u) : id == G_OCT ? 6 : 0;
     if (id == G_ACCEL) *hi = 3;                 /* (OFF, ON, FAST, ULTRA) */
     if (id == G_LANG) *hi = 2;                  /* (ENGLISH, FRANCAIS, ESPANOL) */
     if (id == G_BPM) *lo = 600;
@@ -1925,7 +1927,7 @@ static void item_text(uint32_t id, char *b)
         case G_L3_DST: str_cat(b, dst_name((uint32_t)v)); break;
         case G_L3_SYNC: lk_text(L1_SYNC, v, b); break;
         case G_OCT: fmt_s(b, v - 3); break;
-        case G_THEME: { static const char *const TN[7] = {"CLASSIC GLOW", "STUDIO", "PURE", "RACK", "TECH", "RIBBON", "RIBBON CLASSIC"}; str_cat(b, TN[(uint32_t)v % 7u]); break; }
+        case G_THEME: { static const char *const TN[8] = {"CLASSIC GLOW", "STUDIO", "PURE", "RACK", "TECH", "RIBBON", "RIBBON CLASSIC", "CLASSIC"}; str_cat(b, TN[(uint32_t)v % 8u]); break; }
         case G_PAL: { static const char *const PN[11] = {"SYNTHWAVE", "MINT", "BLACK / WHITE", "INVERTED", "RED", "ICE", "FLUO", "PINK", "GOLD", "SKY", "BLAZE"}; int32_t q = v >= (int32_t)NPAL_BASE ? v - (int32_t)NPAL_BASE : v; str_cat(b, q < 2 ? PAL_NAME[set.theme % 7u][q] : PN[(q - 2) % 11]); if (v >= (int32_t)NPAL_BASE) str_cat(b, " RAD"); break; }
         case G_GRID: str_cat(b, v ? "STRAIGHT" : "ALL (T, D)"); break;
         case G_BROWSE: str_cat(b, v ? "FAVORITES" : "ALL"); break;
@@ -2758,8 +2760,26 @@ static void favorite(void)                       /* the preset under the PRESETS
     toast(fav_is(bk, k) ? "* FAVORITE" : "NOT A FAVORITE");
 }
 
+static void ask_theme_done(uint32_t sel)       /* the very first start: the look chosen */
+{
+    static const char *const N[4] = {"CLASSIC", "STUDIO", "PURE", "RIBBON CLASSIC"};
+    ask_on = 0;
+    set.theme = ASK_TH[sel & 3u];
+    theme_set(set.theme, set.pal); font_set(set.font, set.zoom);
+    set_dirty = 1; set_ms = fm1_ms;
+    toast(N[sel & 3u]);
+    g_force = 1;
+}
 static void ask_done(uint32_t sel)
 {
+    if (theme_ask) {                            /* (the very first start: on to the look) */
+        theme_ask = 0;
+        if (set.ui != sel || first_run || set.askv < 2u) { set.ui = (uint8_t)sel; set.askv = 6; set_dirty = 1; set_ms = fm1_ms; first_run = 0; }
+        ask_on = 2; ask_sel = 0; ask_ms = fm1_ms;
+        theme_set(ASK_TH[0], set.pal);          /* (each one shown as it is chosen) */
+        g_force = 1;
+        return;
+    }
     ask_on = 0;
     splash_until = 0;
     if (set.ui != sel || first_run || set.askv < 2u) { set.ui = (uint8_t)sel; set.askv = 6; set_dirty = 1; set_ms = fm1_ms; first_run = 0; }
@@ -2789,6 +2809,15 @@ static void ui_input(void)
         ask_ms = fm1_ms;
         prev_keys = now;                        /* (a key held now does not play when the screen goes) */
         return;
+    } else if (ask_on == 2u) {                  /* the very first start: the look, OCT- / OCT+ or a knob go through four, any other button says yes */
+        int32_t mv = 0;
+        for (b = 0; b < 7u; b++) if ((d = fm1_enc_take(b)) != 0) mv += d > 0 ? 1 : -1;
+        if (pr & (1u << BTN_OCT_DOWN)) mv--;
+        if (pr & (1u << BTN_OCT_UP)) mv++;
+        if (mv) { ask_sel = (uint8_t)((ask_sel + 4 + (mv > 0 ? 1 : 3)) % 4u); theme_set(ASK_TH[ask_sel], set.pal); ask_ms = fm1_ms; g_force = 1; }
+        else if (pr & ~3u) ask_theme_done(ask_sel);
+        else if (fm1_ms - ask_ms > 30000u) ask_theme_done(ask_sel);
+        pr = 0;
     } else if (ask_on) {                        /* the start's question: OCT- CLASSIC, OCT+ SHIFT, a knob turns, SEL says yes */
         for (b = 0; b < 7u; b++) if ((d = fm1_enc_take(b)) != 0) ask_sel = (uint8_t)(d > 0);
         if (pr & (1u << BTN_OCT_DOWN)) ask_done(0);
@@ -3047,6 +3076,7 @@ static void app_init(void)
         const uint32_t LEN[15] = {sizeof set, (uint32_t)((uint8_t *)set.l3 - (uint8_t *)&set), (uint32_t)((uint8_t *)&set.sync - (uint8_t *)&set), (uint32_t)((uint8_t *)&set.lang - (uint8_t *)&set), (uint32_t)((uint8_t *)&set.pquant - (uint8_t *)&set), (uint32_t)((uint8_t *)&set.asave - (uint8_t *)&set), (uint32_t)((uint8_t *)&set.eng8 - (uint8_t *)&set), (uint32_t)((uint8_t *)&set.qlfo - (uint8_t *)&set), (uint32_t)((uint8_t *)&set.bri - (uint8_t *)&set), (uint32_t)((uint8_t *)&set.norm - (uint8_t *)&set), (uint32_t)((uint8_t *)&set.contrast - (uint8_t *)&set), (uint32_t)((uint8_t *)&set.mstart - (uint8_t *)&set), (uint32_t)((uint8_t *)&set.zoom - (uint8_t *)&set),
                                  (uint32_t)((uint8_t *)&set.ui - (uint8_t *)&set), (uint32_t)((uint8_t *)&set.accel - (uint8_t *)&set)};
         for (ok = 0, i = 0; i < 15u && !ok; i++) ok = !settings_load(&set, LEN[i]) && set.ver == 6u;
+        theme_ask = !ok;                        /* (nothing saved yet: the very first start) */
         l3_push();
     }
     first_run = !ok || set.askv < 2u;           /* (the very first start, or a save from before 0.9.17: the question once) */

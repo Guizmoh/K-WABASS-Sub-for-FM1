@@ -6,7 +6,7 @@
  *   PURE     after Pure SUB: a lime tab, a big visual, four rings for the four knobs, the row being edited below
  *   RACK     the pages on a rail at the left, big type, tall rows
  * Every visual is drawn with integers only (no FPU), from the patch and what the voices say (ksub_dsp.c). */
-enum { TH_GLOW, TH_STUDIO, TH_PURE, TH_RACK, TH_TECH, TH_RIBBON, TH_RIBBONC, NTHEMES };
+enum { TH_GLOW, TH_STUDIO, TH_PURE, TH_RACK, TH_TECH, TH_RIBBON, TH_RIBBONC, TH_CLASSIC, NTHEMES };   /* (CLASSIC: GLOW flat, 1.0.19) */
 enum { VZ_NONE, VZ_SCOPE, VZ_OSCA, VZ_OSCB, VZ_SUB, VZ_MIX, VZ_ENV0, VZ_ENV1, VZ_ENV2, VZ_FILT, VZ_LFO1, VZ_LFO2, VZ_STEP,
        VZ_SEQ, VZ_SMP, VZ_DRIVE, VZ_CRUSH, VZ_CHORUS, VZ_DELAY, VZ_REVERB, VZ_MASTER, VZ_COMP, VZ_PHASER, VZ_OTT, VZ_CPU, VZ_DRUM };
 static const uint8_t VZ_OF[] = {VZ_SCOPE, VZ_SCOPE, VZ_OSCA, VZ_OSCB, VZ_SUB, VZ_MIX, VZ_SMP, VZ_ENV0, VZ_ENV1, VZ_ENV2, VZ_FILT, VZ_FILT,
@@ -774,7 +774,7 @@ static void row_g(int32_t x, int32_t y, int32_t w, int32_t h, const char *lab, c
     int32_t ty, room;
     const ks_font_t *fl = f, *fv;
     if (!g_vis(y, h)) return;
-    if (theme == TH_GLOW || (g_rad && !g_rflat)) {   /* GLOW (and the RAD palettes): the row chosen lit from the left, the others only a line */
+    if (theme == TH_GLOW || theme == TH_CLASSIC || (g_rad && !g_rflat)) {   /* GLOW, CLASSIC (flat) (and the RAD palettes): the row chosen lit from the left, the others only a line */
         if (sel) { g_box(x, y, w, h, K_PANEL, K_LIME); g_hgrad(x + 1, y + 1, w - 2, h - 2, g_mix(K_PANEL, K_LIME, 120), K_PANEL); }
         else g_hgrad(x + 4, y + h - 1, w - 8, 1, g_mix(K_BG, K_LIME, 90), K_BG);
     } else if (theme == TH_RACK) rb_frame(x, y, w, h, 6, sel ? K_LIME : K_LINE, sel ? K_LIMED : K_PANEL, sel ? K_LIMED : K_PANEL);   /* (RACK: rounder) */
@@ -812,7 +812,7 @@ static void draw_vbox(int32_t x, int32_t y, int32_t w, int32_t h, uint32_t id, i
     if (!g_vis(y, h)) return;
     item_text(id, b);
     g_box(x, y, w, h, sel ? K_LIMED : K_PANEL, sel ? K_LIME : K_LINE);
-    if (theme == TH_GLOW || (g_rad && !g_rflat)) g_vgrad(x + 1, y + 1, w - 2, h - 2, g_mix(K_PANEL, K_LIME, sel ? 100 : 36), g_rad ? g_rcell : K_BG);   /* (GLOW, RAD: lit from the top) */
+    if (theme == TH_GLOW || theme == TH_CLASSIC || (g_rad && !g_rflat)) g_vgrad(x + 1, y + 1, w - 2, h - 2, g_mix(K_PANEL, K_LIME, sel ? 100 : 36), g_rad ? g_rcell : K_BG);   /* (GLOW, RAD: lit from the top) */
     g_text(T_XS, x + 7, y + 6, lab ? lab : item_name(id), sel ? K_LIME : K_GREY);
     if (h >= 50) g_text(g_fit(T_B, b, w - 14), x + 7, y + 18, b, sel ? K_LIME : K_WHITE);
     else g_text(g_fit(T_M, b, w - 14), x + 7, y + 17, b, sel ? K_LIME : K_WHITE);
@@ -1058,7 +1058,8 @@ static void th_tech(const view_t *v, uint32_t vi)
         else rows_g(v, 4, 36, 232, 24, 28, 6, T_S);
         goto foot;
     }
-    ph = vz && v->n > 4u && !big_vis(vi) ? 62 : 126;   /* the picture: small when the page has rows to show under the tiles */
+    int grid = vz && v->n <= 4u && !big_vis(vi);   /* (four settings and a picture: a smaller picture, the four as a 2 x 2 of big tiles) */
+    ph = vz && v->n > 4u && !big_vis(vi) ? 62 : grid ? 78 : 126;   /* the picture: small when the page has rows to show under the tiles */
     tech_win(4, 18, 232, ph, 0, K_LIME, 0);
     if (vz && big_vis(vi)) {                    /* (a pattern, a sample: the title above it, not on it) */
         g_text(T_S, 10, 22, ti, K_WHITE);
@@ -1079,7 +1080,20 @@ static void th_tech(const view_t *v, uint32_t vi)
             g_vbar(10, 124, 216, 6, item_frac(id), K_LIME);
         }
     }
-    for (i = 0; i < 4u; i++) {                  /* the four knobs: K1..K4 */
+    for (i = 0; grid && i < 4u; i++) {          /* the four knobs, 2 x 2: K1 K2 / K3 K4 */
+        int32_t x = 4 + (int32_t)(i & 1u) * 118, y = ph + 22 + (int32_t)(i >> 1) * 54;
+        uint32_t id = vknob(v, i);
+        int on = id != I_NONE && v->n && v->it[c] == id;
+        if (id == I_NONE || !g_vis(y, 50)) continue;
+        tech_win(x, y, 114, 50, 2, K_LIME, on);
+        p = str_cat(nm, "K"); *p++ = (char)('1' + i); *p = 0;
+        g_text(T_XS, x + 6, y + 5, nm, KNOB_RGB[i]);
+        g_text(g_fit(T_XS, item_name(id), 86), x + 22, y + 5, item_name(id), K_GREY);
+        item_text(id, b);
+        g_text(g_fit(T_L, b, 102), x + 6, y + 17, b, on ? K_LIME : K_WHITE);
+        g_vbar(x + 6, y + 42, 102, 4, item_frac(id), on ? K_LIME : K_CYAN);
+    }
+    for (i = 0; !grid && i < 4u; i++) {         /* the four knobs: K1..K4 */
         int32_t x = 4 + (int32_t)i * 59, y = ph + 22;
         uint32_t id = vknob(v, i);
         int on = id != I_NONE && v->n && v->it[c] == id;
@@ -2129,6 +2143,22 @@ static void draw_ask(void)
         {"CLASSIC", "PAGES OF LISTS, LIKE A SYNTH", "SELECT: ROW  ALGO: ITS VALUE", "K1-K4: THE FIRST 4 ROWS"},
         {"SHIFT", "12 SETTINGS A PAGE, 3 COLUMNS", "KNOBS: LEFT  HOLD OCT-: MIDDLE", "HOLD OCT+: RIGHT  TAP: OCTAVE"}};
     uint32_t k;
+    if (ask_on == 2u) {                         /* the very first start: the look (each one shown as it is chosen) */
+        static const char *const TT[4][2] = {{"CLASSIC", "LISTS, FLAT COLOURS"}, {"STUDIO", "A STATUS BAR, THE 8 PAGES IN VIEW"},
+                                              {"PURE", "A BIG WAVE, FOUR KNOB DIALS"}, {"RIBBON CLASSIC", "THE VIEWS SIDE BY SIDE"}};
+        g_text_c(T_XS, 120, 20, "CHOOSE A LOOK", K_GREY);
+        for (k = 0; k < 4u; k++) {
+            int32_t y = 32 + (int32_t)k * 44;
+            int on = k == ask_sel;
+            if (!g_vis(y, 40)) continue;
+            g_box(8, y, 224, 40, on ? K_LIMED : K_PANEL, on ? K_LIME : K_LINE);
+            g_text(T_M, 16, y + 5, TT[k][0], on ? K_LIME : K_WHITE);
+            g_text(T_XS, 16, y + 26, TT[k][1], K_GREY);
+        }
+        g_text_c(T_XS, 120, 212, "OCT- / OCT+ OR A KNOB  \xB7  SEL: OK", K_WHITE);
+        g_text_c(T_XS, 120, 226, "LATER: SYSTEM > THEME", K_GREY);
+        return;
+    }
     if (rst_bad) { char t[40]; str_cat(str_cat(t, "LAST STOP: "), rst_why); g_text_c(T_XS, 120, 22, t, K_ORANGE); }
     else g_text_c(T_XS, 120, 22, "HOW DO YOU WANT TO PLAY?", K_GREY);
     for (k = 0; k < 2u; k++) {
@@ -2204,7 +2234,7 @@ static void draw_all(void)
     } else if (theme_pal == 9u) {               /* PINK: synthwave, blue above and a pink haze below */
         g_vgrad(0, 0, 240, 120, g_mix(K_BG, RGB(40, 60, 160), 90), K_BG);
         g_vgrad(0, 160, 240, 80, K_BG, g_mix(K_BG, RGB(255, 60, 170), 50));
-    } else if (theme >= TH_RIBBON) {            /* RIBBON: a deep night, a little lighter at the top */
+    } else if (theme == TH_RIBBON || theme == TH_RIBBONC) {   /* RIBBON: a deep night, a little lighter at the top */
         g_vgrad(0, 0, 240, 240, g_mix(K_BG, K_LINE, 60), g_mix(K_BG, 0x0000u, 140));
     } else if (g_sky) {                         /* SKY: a pale blue sky, deeper toward the bottom */
         g_vgrad(0, 0, 240, 240, g_mix(K_BG, 0xFFFFu, 90), g_mix(K_BG, RGB(120, 160, 220), 80));

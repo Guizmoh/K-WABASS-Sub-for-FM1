@@ -32,7 +32,7 @@ def finish(s, tag):
     print(tag, len(s.names), "screens")
 
 # 1. the pages, the views, the windows (CLASSIC, NEON)
-s = S(); s.shot("x-splash", 300); s.t += 1500; s.btn(HOME, 300); s.shot("x-ask", 600); s.btn(SEL, 400); look(s, 0, 0)   # (the first start's question: SEL = CLASSIC; then CLASSIC, NEON)
+s = S(); s.shot("x-splash", 300); s.t += 1500; s.btn(HOME, 300); s.shot("x-ask", 600); s.btn(SEL, 400); s.shot("x-look", 600); s.btn(SEL, 400); look(s, 0, 0)   # (the first start: SEL = CLASSIC, then the look: SEL = the first; then CLASSIC GLOW, NEON)
 s.c("on 12", 300); s.c("on 14", 10); s.shot("p-home", 300); s.c("off 12", 50); s.c("off 14", 50)
 def views(page_btn, names):
     s.btn(page_btn, 200)
@@ -64,7 +64,7 @@ s.c("down 12", 700); s.shot("h-hold", 150); s.c("up 12", 100)
 finish(s, "m1")
 
 # 2. SHIFT (three columns: the menu, OCT- held in the middle, OCT+ held on the right)
-s = S(); s.t += 2800; s.btn(HOME, 300); s.btn(SEL, 400); look(s, 0, 0); s.hold(GLO, 1100); s.btn(HOME, 300)
+s = S(); s.t += 2800; s.btn(HOME, 300); s.btn(SEL, 400); s.btn(SEL, 400); look(s, 0, 0); s.hold(GLO, 1100); s.btn(HOME, 300)
 for page, nm in ((HOME, "s-home"), (EDIT, "s-osc"), (ENV, "s-env"), (SEQ, "s-filter"), (LFO, "s-lfo"), (FX, "s-fx")):
     s.btn(page, 300); s.shot(nm, 300)
 s.btn(EDIT, 300); s.c("down 0", 150); s.enc(3, 6, 100); s.shot("s-osc-mid", 250); s.c("up 0", 150)
@@ -90,20 +90,20 @@ for t, p, nm in combos:
 finish(s, "m3")
 
 # 4. GLOW: the theme on several screens
-s = S(); s.t += 2800; s.btn(HOME, 300); s.btn(SEL, 400); look(s, 0, 0)
+s = S(); s.t += 2800; s.btn(HOME, 300); s.btn(SEL, 400); s.btn(SEL, 400); look(s, 0, 0)
 s.shot("g-home", 1300); s.btn(EDIT, 300); s.shot("g-osc", 300); s.btn(ENV, 300); s.shot("g-env", 300); s.btn(LFO, 300); s.shot("g-lfo", 300)
 s.btn(FX, 300); s.shot("g-fx", 300); s.btn(ARP, 300); s.shot("g-presets", 300); s.btn(SEQ, 300); s.shot("g-filter", 300)
 finish(s, "m4")
 
 # 5. TECH: the layout on its screens (the theme the 6th of the list)
-s = S(); s.t += 2800; s.btn(HOME, 300); s.btn(SEL, 400); look(s, 4, 0)
+s = S(); s.t += 2800; s.btn(HOME, 300); s.btn(SEL, 400); s.btn(SEL, 400); look(s, 4, 0)
 s.shot("k-home", 1300); s.btn(EDIT, 300); s.shot("k-osc", 300); s.btn(EDIT, 200); s.shot("k-oscb", 300); s.btn(ENV, 300); s.shot("k-env", 300)
 s.btn(LFO, 300); s.shot("k-lfo", 300); s.btn(FX, 300); s.shot("k-fx", 300); s.btn(FX, 200); s.btn(FX, 200); s.shot("k-fx3", 300)
 s.btn(SEQ, 300); s.shot("k-filter", 300); s.btn(ARP, 300); s.shot("k-presets", 300); s.btn(GLO, 300); s.shot("k-system", 300)
 finish(s, "m5")
 
 # 5b. RIBBON: the views side by side, each a tall window that scrolls; RIBBON CLASSIC: the same look, the rows inside
-s = S(); s.t += 2800; s.btn(HOME, 300); s.btn(SEL, 400); look(s, 5, 0)
+s = S(); s.t += 2800; s.btn(HOME, 300); s.btn(SEL, 400); s.btn(SEL, 400); look(s, 5, 0)
 s.shot("rb-home", 1300); s.btn(EDIT, 300); s.shot("rb-osc", 300); s.enc(0, 6, 100); s.shot("rb-osc-down", 300); s.enc(0, 3, 100); s.shot("rb-osc-end", 300)
 s.enc(0, -9, 100); s.btn(ENV, 300); s.shot("rb-env", 300); s.btn(LFO, 300); s.shot("rb-lfo", 300); s.btn(FX, 300); s.shot("rb-fx", 300)
 s.btn(ARP, 300); s.shot("rb-presets", 300)
@@ -125,7 +125,7 @@ s.enc(2, 19, 100); s.enc(4, 25, 100); s.enc(5, 40, 100); s.c("on 12", 100); s.sh
 finish(s, "m5c")
 
 # 6. BRIGHTNESS: the same screen in the four steps
-s = S(); s.t += 2800; s.btn(HOME, 300); s.btn(SEL, 400); look(s, 0, 0); s.btn(GLO, 200); s.enc(0, -30, 100); s.enc(0, 7, 100)
+s = S(); s.t += 2800; s.btn(HOME, 300); s.btn(SEL, 400); s.btn(SEL, 400); look(s, 0, 0); s.btn(GLO, 200); s.enc(0, -30, 100); s.enc(0, 7, 100)
 for lv, nm in ((0, "eco"), (1, "normal"), (2, "bright"), (3, "max")):
     s.enc(1, -5, 100); s.enc(1, lv, 100); s.btn(HOME, 200); s.shot("b-" + nm, 1300); s.btn(GLO, 200)
 finish(s, "m6")
