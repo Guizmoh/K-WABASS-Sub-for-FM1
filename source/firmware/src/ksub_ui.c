@@ -339,6 +339,7 @@ static const struct { const char *name, *t; uint8_t stretch; } SQP[] = {
     {"DNB ROLL", "C0^ - - C0 - - C0 - - - C0^ - D#0 - C0 -", 0},
     {"DUB STEPPA", "C0^ - C0 - G0 - F0 - C0^ - C0 - D#0 - F0~ G0", 0},
     {"TECHNO OFF", "- - C0 - - - C0^ - - - C0 - - - C0 C1", 0},
+    {"TECHNO ROLL", "- C0 C0^ C0 - C0 C0^ C0 - C0 C0^ C0 - C0 C1^ C0", 0},   /* (the kick's step left free, three 16ths after it, the off-beat pushed) */
     {"HALFTIME", "C0^~ C0 - - - - - - F0^ - - - D#0~ C0 - -", 0},
     {"ACID", "C0 C1^ - C0~ D#0 C0 G0^ - C0 A#0~ C1 - C0^ F0 - D#0", 0},
     {"2-STEP", "C0^ - - C0 - - G0 - - C0 - - A#0~ G0 - -", 0},
