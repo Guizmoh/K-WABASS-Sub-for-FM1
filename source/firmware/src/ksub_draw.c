@@ -274,8 +274,9 @@ static void vis_seq(int32_t x, int32_t y, int32_t w, int32_t h)   /* SEQ BASS: 1
 
 /* DRUMS: the 8 tracks x the 16 steps of the cursor's page, each instrument its colour; the track chosen lit, the step
  * playing a column, the cursor underlined, the muted tracks grey, a dot where a chance or a condition is set */
-static const uint16_t DK_COL[NDK] = {RGB(255, 60, 60), RGB(70, 220, 90), RGB(255, 120, 200), RGB(250, 225, 50), RGB(255, 150, 40),
-                                     RGB(70, 140, 255), RGB(170, 90, 255), RGB(150, 235, 255)};
+static const uint16_t DK_COL[NDK] = {RGB(255, 74, 96), RGB(52, 226, 138), RGB(255, 122, 220), RGB(255, 216, 61), RGB(255, 154, 60),
+                                     RGB(80, 156, 255), RGB(178, 108, 255), RGB(110, 240, 255)};   /* (coral, mint, rose, gold, amber, azure, violet, ice) */
+static uint32_t isqrt32(uint32_t v) { uint32_t r = 0, b = 1u << 15; for (; b; b >>= 1) if ((r | b) * (r | b) <= v) r |= b; return r; }
 static inline int hold_dot_cursor(int sel, int32_t s) { return sel && s == (int32_t)dk_cur; }
 static void dk_dot(int32_t cx, int32_t cy, int32_t r2, uint16_t c, uint32_t a)   /* a soft round dot, radius r2 / 2 pixels (half pixels: 3 = 1.5) */
 {
@@ -285,6 +286,29 @@ static void dk_dot(int32_t cx, int32_t cy, int32_t r2, uint16_t c, uint32_t a)  
             int32_t d2 = 4 * (dx * dx + dy * dy), in = (r2 - 1) * (r2 - 1), out = (r2 + 1) * (r2 + 1);
             if (d2 <= in) g_pxa(cx + dx, cy + dy, c, a);
             else if (d2 < out) g_pxa(cx + dx, cy + dy, c, a * (uint32_t)(out - d2) / (uint32_t)(out - in));
+        }
+}
+static void dk_orb(int32_t cx, int32_t cy, int32_t r2, uint16_t col, uint32_t a)   /* a lit sphere: the light from the top left, a shadowed rim, a gleam */
+{
+    int32_t dx, dy, e = (r2 + 3) / 2;
+    uint16_t dark = g_mix(0x0000u, col, 70), lite = g_mix(col, 0xFFFFu, 70);
+    if (!g_vis(cy - e, 2 * e + 1)) return;
+    for (dy = -e; dy <= e; dy++)
+        for (dx = -e; dx <= e; dx++) {
+            int32_t d2 = 4 * (dx * dx + dy * dy), in = (r2 - 1) * (r2 - 1), out = (r2 + 1) * (r2 + 1), nx, ny, nz, dot, sh, sp;
+            uint32_t al, z2;
+            uint16_t c;
+            if (d2 >= out) continue;
+            al = d2 <= in ? a : a * (uint32_t)(out - d2) / (uint32_t)(out - in);
+            nx = dx * 512 / r2; ny = dy * 512 / r2;   /* (the surface's direction, 256 = 1) */
+            z2 = 65536 - (uint32_t)(nx * nx + ny * ny) > 65536u ? 0u : 65536u - (uint32_t)(nx * nx + ny * ny);
+            nz = (int32_t)isqrt32(z2);
+            dot = (nx * -90 + ny * -128 + nz * 202) >> 8; if (dot < 0) dot = 0; if (dot > 256) dot = 256;
+            sh = dot;
+            c = sh < 150 ? g_mix(dark, col, (uint32_t)sh * 256u / 150u) : g_mix(col, lite, (uint32_t)(sh - 150) * 256u / 106u);
+            sp = dot > 228 ? (dot - 228) * 9 : 0;   /* (the gleam) */
+            if (sp > 0) c = g_mix(c, 0xFFFFu, (uint32_t)(sp > 230 ? 230 : sp));
+            g_pxa(cx + dx, cy + dy, c, al);
         }
 }
 static void vis_drum(int32_t x, int32_t y, int32_t w, int32_t h)
@@ -308,19 +332,20 @@ static void vis_drum(int32_t x, int32_t y, int32_t w, int32_t h)
         uint16_t col = mute ? g_mix(K_BG, K_GREY, 150) : PAL_BW ? g_mix(K_BG, K_WHITE, (uint32_t)(255 - t * 18)) : DK_COL[t];   /* (BLACK / WHITE: shades of its white) */
         if (!g_vis(ry, rh)) continue;
         if (sel) { g_rect(x + 2, ry, w - 4, rh, g_mix(K_BG, col, 26)); g_rect(x + 2, ry + 1, 2, rh - 2, col); }   /* (the track chosen: a tint, a bar at the left) */
-        dk_dot(x + 13, cy, sel ? R + 2 : R - 1, col, 256);   /* (the track's colour, a bigger dot when chosen) */
+        dk_orb(x + 13, cy, sel ? R + 2 : R - 1, col, 256);   /* (the track's colour, a bigger sphere when chosen) */
         for (i = 0; i < 16; i++) {
             int32_t s = pg * 16 + i, cx = x0 + i * bw + bw / 2;
             uint32_t on = s < len && (q->on[s] >> t & 1u), acc = q->acc[s] >> t & 1u, now = sq_play && s == (int32_t)dk_show;
             if (s >= len) continue;
             if (!on) {                          /* (an empty step: a small dim dot, a bigger one on the beat) */
-                dk_dot(cx, cy, (i & 3) ? 2 : 3, now ? K_WHITE : col, now ? 150 : (i & 3) ? 60 : 110);
+                dk_dot(cx, cy, (i & 3) ? 3 : 4, K_BG, 200);            /* (a socket: dark, a faint rim of the colour) */
+                dk_dot(cx, cy, (i & 3) ? 2 : 3, now ? K_WHITE : col, now ? 150 : (i & 3) ? 70 : 120);
                 if (hold_dot_cursor(sel, s)) dk_dot(cx, cy, 3, K_WHITE, 200);
                 continue;
             }
-            if (acc) dk_dot(cx, cy, R + 2, col, 70);   /* (an accent: a halo) */
-            dk_dot(cx, cy, acc ? R : R - 1, now ? K_WHITE : acc ? g_mix(col, 0xFFFFu, 90) : col, 256);
-            if (q->pc[t][s] & 0xFFu) dk_dot(cx, cy, R / 2 > 2 ? R - 4 : 1, K_BG, 230);   /* (a chance or a condition: a hollow) */
+            dk_dot(cx, cy, R + (acc ? 4 : 2), col, acc ? 80 : 36);   /* (a soft glow, wider on an accent) */
+            dk_orb(cx, cy, acc ? R + 1 : R - 1, now ? K_WHITE : acc ? g_mix(col, 0xFFFFu, 70) : col, 256);
+            if (q->pc[t][s] & 0xFFu) dk_dot(cx, cy, R / 2 > 2 ? R - 4 : 1, K_BG, 200);   /* (a chance or a condition: a hollow) */
             if (lkd[s] >> t & 1u) g_rect(cx + bw / 2 - 2, ry + 1, 2, 2, K_WHITE);   /* (locked: a white spark at the corner) */
             if (hold_dot_cursor(sel, s)) g_rect(cx - 2, ry + rh - 1, 5, 1, 0xFFFFu);
         }
