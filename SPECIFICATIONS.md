@@ -2,7 +2,7 @@
 
 [English](SPECIFICATIONS.md) · [Français](fr/CAHIER-DES-CHARGES.md)
 
-A modern bass synth for the M-VAVE FM-1 (JieLi AC79, two cores, no FPU). Last update: **1.0.28**.
+A modern bass synth for the M-VAVE FM-1 (JieLi AC79, two cores, no FPU). Last update: **1.0.29**.
 This document says where the project stands: what is done, what has to be checked, what is left, and ideas to go further.
 
 ## 1. Vision
@@ -16,7 +16,7 @@ This document says where the project stands: what is done, what has to be checke
 ### Sound
 | Area | Detail | Version |
 |---|---|---|
-| Engines | 7 engines per oscillator (analog, 808 / kick bass (1.0.28), CS, wavetable, FM, phase dist, hard sync), each with a FOLD after it (CS: RING); SUPER, WAVEFOLDER and VOCAL removed in 1.0.28 | 1.0.28 |
+| Engines | 9 engines per oscillator (analog, 808 / kick bass (1.0.27), CS, wavetable, FM with 4 operators and 8 algorithms (1.0.28), GROWL and ADDITIVE (1.0.29), phase dist, hard sync), each with a 4th setting (FOLD; CS: RING, 808: CLICK, FM: ALGO, GROWL: TYPE, ADDITIVE: REGISTER); SUPER, WAVEFOLDER and VOCAL removed in 1.0.26 | 1.0.29 |
 | Oscillators | A + B (ADD, RING, X-MOD, SYNC), sub, noise, **OSC C sample** (18 sounds including 8 attacks, 9 textures; START / END cut, speed 25–400 % at the same pitch, forward / reverse / ping-pong, loop / once; 0.9.55) | 0.9.9-4 |
 | Filter | 7 characters (LP24, LP12, BAND, HIGH, NOTCH, VOWEL, COMB), drive, mod by envelope, keyboard, velocity | ≤ 0.9 |
 | Modulation | 3 envelopes, 3 LFOs locked to the tempo (the 3rd global, whatever the patch) (round grid option), STEP FX (16 patterns), 4-slot matrix, 4 MACROS × 4 targets | ≤ 0.9 |
@@ -55,7 +55,7 @@ This document says where the project stands: what is done, what has to be checke
 | Languages | Everything is in English by default; the home page, manual, README, specifications and notes also exist in French under `fr/`; the emulator and the installer switch with `?lang=fr` |
 
 ### Interface
-8 themes (CLASSIC, flat, since 1.0.28), 13 palettes + RAD gradient versions (INVERTED grey, RED, ICE, FLUO, PINK, GOLD…), 9 fonts, LOUPE, contrast fixed on MAX (DEEP BLACK), visuals everywhere (waves, envelopes with a dot, wavetable, FM operators, EQ…).
+8 themes (CLASSIC, flat, since 1.0.19), 13 palettes + RAD gradient versions (INVERTED grey, RED, ICE, FLUO, PINK, GOLD…), 9 fonts, LOUPE, contrast fixed on MAX (DEEP BLACK), visuals everywhere (waves, envelopes with a dot, wavetable, FM operators, EQ…).
 
 ### Stability and tooling
 Load governor; measured audio budget for the effects (the watchdog no longer sees the audio block); fallback to one core; **LAST STOP** (watchdog, low voltage, crash + address); automatic load tests (UBSan, A and B); web emulator A and B; one-page installer; standalone build.

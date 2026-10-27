@@ -460,6 +460,48 @@ static void vis_fm(const int8_t *o, uint32_t k, int32_t x, int32_t y, int32_t w,
     g_rect(cx + bw, by + bh / 2, x + w - 4 - cx - bw, 1, K_WAVE);   /* out */
     if (patch[X_MODE] == 2 && !k) g_text_r(T_XS, x + w - 4, y + 3, "+ B X-MOD", K_ORANGE);
 }
+static void vis_growl(const int8_t *o, uint32_t al, int32_t x, int32_t y, int32_t w, int32_t h)   /* GROWL: the three formants of the vowel now */
+{
+    const growl_t *gt = &GR_TYPE[al];
+    int32_t pos = o[3] * 258 * 4, vi = pos >> 15, fr = pos & 32767, wd = 3 + ((127 - o[4]) >> 4), j, i, px = 0, py = 0;
+    int32_t xc[3], W = w - 8, H = h - 16, by = y + h - 4;
+    char t[20];
+    if (vi > 3) { vi = 3; fr = 32767; }
+    for (j = 0; j < 3; j++) {                   /* (where each sits: 100 Hz .. 4 kHz, on a square-root scale) */
+        int32_t hz = GR_VOW[vi][j] + (((GR_VOW[vi + 1][j] - GR_VOW[vi][j]) * fr) >> 15), r = 0;
+        hz = (hz * gt->shift) >> 7;
+        while ((r + 1) * (r + 1) <= hz) r++;
+        xc[j] = x + 4 + (r - 10) * W / 54;
+    }
+    for (i = 0; i <= W; i += 2) {
+        int32_t xx = x + 4 + i, v = 0;
+        for (j = 0; j < 3; j++) { int32_t d = (xx - xc[j]) * 16 / wd; v += (j ? (j == 1 ? 700 : 420) : 1000) * 256 / (256 + d * d); }
+        v = by - v * H / 1100;
+        if (v < y + 12) v = y + 12;
+        if (i) g_line(px, py, xx, v, K_WAVE);
+        g_rect(xx, v + 1, 2, by - v, g_mix(K_BG, K_WAVE, 50));
+        px = xx; py = v;
+    }
+    for (j = 0; j < 3; j++) g_rect(xc[j], y + 12, 1, 3, K_CYAN);
+    { char *p = t; *p++ = "UOAEI"[vi + (fr > 16384)]; *p = 0; g_text_r(T_M, x + w - 6, y + 3, t, K_WAVE); }
+    str_cat(str_cat(t, "TYPE "), L_GRT[al]);
+    g_text(T_XS, x + 4, y + 3, t, K_GREY);
+}
+static void vis_add(const int8_t *o, uint32_t reg, int32_t x, int32_t y, int32_t w, int32_t h)   /* ADDITIVE: the 24 partials as drawbars */
+{
+    int32_t a[25], k, bw = (w - 10) / 24, H = h - 16, mx = 1;
+    char t[20];
+    add_amps(o[2] * 258, o[3] * 258, o[4] * 258, reg, (int32_t *)a);
+    for (k = 1; k <= 24; k++) if (a[k] > mx) mx = a[k];
+    for (k = 1; k <= 24; k++) {
+        int32_t bh = a[k] * H / mx, bx = x + 5 + (k - 1) * bw;
+        uint16_t c = k == 1 ? K_ORANGE : k & 1 ? K_CYAN : K_WAVE;
+        g_rect(bx, y + h - 4 - H, bw - 1, H, g_mix(K_BG, K_LINE, 60));
+        if (bh) g_rect(bx, y + h - 4 - bh, bw - 1, bh, c);
+    }
+    str_cat(str_cat(t, "REGISTER "), L_ADR[reg]);
+    g_text(T_XS, x + 4, y + 3, t, K_GREY);
+}
 static void vis_kick(const int8_t *o, int32_t x, int32_t y, int32_t w, int32_t h)   /* 808: the pitch falling from PUNCH to the note over DROP */
 {
     char t[24], *p;
@@ -538,6 +580,8 @@ static void vis_osc(uint32_t k, int32_t x, int32_t y, int32_t w, int32_t h)
     case E_FM: vis_fm(o, k, x, y, w, h); break;
     case E_CS: vis_cs(o, k ? prev_b : prev_a, x, y, w, h); break;
     case E_KICK: vis_kick(o, x, y, w, h); break;
+    case E_GROWL: vis_growl(o, (uint32_t)patch[k ? B_P4 : A_P4] >> 4 & 7u, x, y, w, h); break;
+    case E_ADD: vis_add(o, (uint32_t)patch[k ? B_P4 : A_P4] >> 4 & 7u, x, y, w, h); break;
     case E_ANALOG: vis_analog(o, k ? prev_b : prev_a, x, y, w, h); break;
     default: draw_poly(x + 3, y + 2, w - 6, h - 4, k ? prev_b : prev_a, 112, K_WAVE); break;
     }

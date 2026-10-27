@@ -239,6 +239,24 @@ static const uint16_t VOX_A[5][3] = {{32767, 16384, 8192}, {32767, 13107, 6554},
 
 static inline int64_t cs_pwc(int64_t w) { return w < 0x0CCCCCCCll ? 0x0CCCCCCCll : w > 0xF3333333ll ? 0xF3333333ll : w; }   /* (CS: a pulse width kept in 5 .. 95 %) */
 /* render n samples of one oscillator; pm (or 0): phase modulation per sample */
+static uint32_t add_amps(int32_t p1, int32_t p2, int32_t p3, uint32_t reg, int32_t *a)   /* ADDITIVE: the 24 partials' levels (a[1..24], Q15,
+                                                 * their sum at most full level); returns the highest one sounding */
+{
+    int32_t t = 14000 + ((p1 * 18767) >> 15), w = 32767, sum = 0, ev = p3 < 16384 ? 32767 - p3 * 2 : 32767, od = p3 < 16384 ? 32767 : 32767 - (p3 - 16384) * 2;
+    uint32_t k, j, nh = 1u + (((uint32_t)p2 * 11u) >> 15), top = 0;
+    for (k = 1; k <= 24u; k++) {
+        int32_t r = 0;
+        if (!reg) r = k & 1u ? 0 : 32767 / (int32_t)(k >> 1);   /* SAW: every harmonic of the note at 1/h */
+        else for (j = 0; j < 9u; j++) if (ADD_BAR[j] == k) r = (ADD_REG[reg][j] - '0') * 4095;
+        if (k > 2u * nh) r = 0;                 /* HARMONICS: how many of the note's */
+        if (!(k & 1u) && k >= 4u) r = (int32_t)(((int64_t)r * ((k >> 1) & 1u ? od : ev)) >> 15);   /* ODD/EVEN */
+        if (k > 2u) { w = (w * t) >> 15; r = (r * w) >> 15; }   /* TILT: each partial up a little darker */
+        a[k] = r; sum += r;
+        if (r) top = k;
+    }
+    if (sum > 32767) for (k = 1; k <= 24u; k++) a[k] = a[k] * 32767 / sum;
+    return top;
+}
 static void osc_core(osc_t *o, const oscp_t *q, int32_t *out, const int32_t *pm, uint32_t n)
 {
     uint32_t i, inc = q->inc, rcp = blep_rcp(inc), ph = o->ph[0], mp = q->mph, sy = q->sync;
@@ -379,6 +397,67 @@ static void osc_core(osc_t *o, const oscp_t *q, int32_t *out, const int32_t *pm,
         o->ph2 = pm2;
         break;
     }
+    case E_GROWL: {                             /* an FM pair (TYPE) driven by BITE into three formants that glide U O A E I (VOWEL) */
+        const growl_t *gt = &GR_TYPE[((uint32_t)q->p4 >> 12) & 7u];
+        int32_t ik = (int32_t)((((q->p1 * q->p1) >> 15) * 6366) >> 10), fk = gt->fb * 122, fc[3], j;
+        int32_t pos = q->p2 * 4, vi = pos >> 15, fr = pos & 32767, qd = 11500 - ((q->p3 * 9500) >> 15);
+        int32_t dg = 32768 + ((gt->drive * (8192 + (q->p3 >> 1))) >> 5), sl = gt->sub * 128;
+        int32_t *lp = (int32_t *)&o->ph[1], *bp = (int32_t *)&o->ph[5], b3 = (int32_t)o->f[0];
+        uint32_t im = (uint32_t)(((uint64_t)inc * gt->ratio) >> 8), pm2 = o->ph2, sp = o->ph[4];
+        if (vi > 3) { vi = 3; fr = 32767; }
+        for (j = 0; j < 3; j++) lp[j] = clampi(lp[j], -2000000, 2000000);   /* (the slots another engine used: whatever it left) */
+        bp[0] = clampi(bp[0], -2000000, 2000000); bp[1] = clampi(bp[1], -2000000, 2000000); b3 = clampi(b3, -2000000, 2000000);
+        for (j = 0; j < 3; j++) {               /* the formants now: the vowel's, shifted by TYPE; 2 sin(pi f / fs), Q15 */
+            int32_t hz = GR_VOW[vi][j] + (((GR_VOW[vi + 1][j] - GR_VOW[vi][j]) * fr) >> 15);
+            hz = (hz * gt->shift) >> 7;
+            if (hz > 7000) hz = 7000;
+            fc[j] = sin32((uint32_t)hz * 48695u) * 2;
+        }
+        for (i = 0; i < n; i++) {
+            int32_t m, c, x, y = 0, b[3];
+            pm2 += im; sp += inc >> 1;
+            m = sin32(pm2 + (uint32_t)((((o->fb1 + o->fb2) >> 1) * fk)));
+            o->fb2 = o->fb1;
+            o->fb1 = m;
+            SYNC_STEP();
+            ph += inc;
+            c = sin32(ph + (pm ? (uint32_t)pm[i] : 0u) + (uint32_t)((int64_t)m * ik));
+            x = sat15(mul15(c, dg));
+            b[0] = bp[0]; b[1] = bp[1]; b[2] = b3;
+            for (j = 0; j < 3; j++) {           /* (Chamberlin state variable, the band pass) */
+                int32_t hp;
+                lp[j] += mul15(fc[j], b[j]);
+                hp = x - lp[j] - mul15(qd, b[j]);
+                b[j] += mul15(fc[j], hp);
+                b[j] = clampi(b[j], -2000000, 2000000);   /* (kept bounded: a vowel or BITE jumped) */
+                lp[j] = clampi(lp[j], -2000000, 2000000);
+            }
+            bp[0] = b[0]; bp[1] = b[1]; b3 = b[2];
+            y = mul15(b[0], qd) + mul15(mul15(b[1], qd), 22000) + mul15(mul15(b[2], qd), 13000);
+            y = y + (c >> 2) + mul15(sin32(sp), sl);   /* (the note itself under it, and TYPE's sub: the low end stays) */
+            out[i] = sat15(y);
+        }
+        o->ph2 = pm2; o->ph[4] = sp; o->f[0] = (uint32_t)b3;
+        break;
+    }
+    case E_ADD: {                               /* 24 partials on half the note (the 16' sub first), by recursion: sin(k+1) = 2 cos sin(k) - sin(k-1) */
+        int32_t a[25];
+        uint32_t k, hb = inc >> 1, top = add_amps(q->p1, q->p2, q->p3, ((uint32_t)q->p4 >> 12) & 7u, a), pb = o->ph2;
+        uint32_t lim = 0x6C000000u / (hb + 1u);  /* (none past 0.42 of the sample rate) */
+        if (top > lim) top = lim;
+        for (i = 0; i < n; i++) {
+            int32_t s0 = 0, s1, c, acc, sn;
+            pb += hb;
+            ph += inc;
+            s1 = sin32(pb + (pm ? (uint32_t)pm[i] >> 1 : 0u));
+            c = sin32(pb + (pm ? (uint32_t)pm[i] >> 1 : 0u) + 0x40000000u);
+            acc = a[1] * s1;
+            for (k = 2; k <= top; k++) { sn = ((c * s1) >> 14) - s0; s0 = s1; s1 = sn; acc += a[k] * s1; }
+            out[i] = acc >> 15;
+        }
+        o->ph2 = pb;
+        break;
+    }
     case E_PHASE: {                             /* Casio CZ: a cosine read through a bent phase, or a windowed resonance */
         uint32_t ty = ((uint32_t)q->p2 * 6u) >> 15, k16, r1, r2, K, R;
         int32_t body = q->p3 >> 1;
@@ -471,7 +550,7 @@ static void osc_render(osc_t *o, const oscp_t *q, int32_t *out, const int32_t *p
 {
     uint32_t i;
     osc_core(o, q, out, pm, n);
-    if (q->p4 && q->eng != E_CS && q->eng != E_KICK && q->eng != E_FM) {              /* FOLD: the engine's wave driven into a triangle folder, 1 to 6 times (west coast, after any engine) */
+    if (q->p4 && q->eng != E_CS && q->eng != E_KICK && q->eng != E_FM && q->eng != E_GROWL && q->eng != E_ADD) {              /* FOLD: the engine's wave driven into a triangle folder, 1 to 6 times (west coast, after any engine) */
         int32_t g = 32768 + q->p4 * 5;
         for (i = 0; i < n; i++) {               /* (the wave as it is inside +-1; past it, reflected back, as often as it takes) */
             int32_t y = (int32_t)(((int64_t)out[i] * g) >> 15);

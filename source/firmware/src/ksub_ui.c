@@ -873,7 +873,7 @@ static uint32_t tag_of(const int8_t *p)
         int32_t e = p[k ? B_ENG : A_ENG];
         if (!(k ? gb : ga)) continue;
         if (e == E_CS && p[k ? B_P2 : A_P2] >= 40) t |= 1u << TG_REESE;   /* (CS, two channels well apart: the reese's beating) */
-        if (e == E_FM || e == E_PHASE || p[k ? B_P4 : A_P4] >= 40) t |= 1u << TG_GROWL;   /* (FM, PHASE, or folded hard) */
+        if (e == E_FM || e == E_GROWL || e == E_PHASE || p[k ? B_P4 : A_P4] >= 40) t |= 1u << TG_GROWL;   /* (FM, PHASE, or folded hard) */
     }
     if (p[F_TYPE] == FT_VOWEL) t |= 1u << TG_GROWL;
     if (p[S_LVL] >= 70 || (p[F_CUT] <= 45 && !ga && !gb)) t |= 1u << TG_SUB;
@@ -1930,6 +1930,20 @@ static void item_text(uint32_t id, char *b)
                 for (j = 0; j < 2u; j++) { *b++ = ' '; b = fmt_u(b, r[j] >> 8, 0); if (r[j] & 255u) { *b++ = '.'; b = fmt_u(b, (r[j] & 255u) * 10u >> 8, 0); } }
             }
         } else if (e == E_FM && k == 4) str_cat(b, L_ALG[v >> 4]);
+        else if (e == E_GROWL && k == 4) str_cat(b, L_GRT[v >> 4]);
+        else if (e == E_ADD && k == 4) str_cat(b, L_ADR[v >> 4]);
+        else if (e == E_GROWL && k == 2) {      /* VOWEL: U O A E I, and the glide between two */
+            int32_t pos = q * 4, vi = pos >> 15, fr = pos & 32767;
+            if (vi > 3) { vi = 3; fr = 32767; }
+            *b++ = "UOAEI"[vi];
+            if (fr > 28672) b[-1] = "UOAEI"[vi + 1];
+            else if (fr > 4096) { *b++ = '>'; *b++ = "UOAEI"[vi + 1]; }
+            *b = 0;
+        } else if (e == E_ADD && k == 2) { b = fmt_u(b, 1u + (((uint32_t)q * 11u) >> 15), 0); str_cat(b, " HARM"); }
+        else if (e == E_ADD && k == 3) {
+            if (!v) str_cat(b, "ALL");
+            else { b = str_cat(b, v < 64 ? "ODD " : "EVEN "); b = fmt_u(b, (uint32_t)(v < 64 ? v : v - 63) * 100u / 64u, 0); str_cat(b, "%"); }
+        }
         else if (e == E_PHASE && k == 2) str_cat(b, L_PDT[(q * 6) >> 15]);
         else if (e == E_SYNC && k == 1) { uint32_t r = 10u + (uint32_t)v * 70u / 127u; b = str_cat(b, "x"); b = fmt_u(b, r / 10u, 0); *b++ = '.'; fmt_u(b, r % 10u, 0); }
         else { b = fmt_u(b, (uint32_t)v * 100u / 127u, 0); str_cat(b, "%"); }
@@ -2288,7 +2302,7 @@ static void edit_item(uint32_t id, int32_t d)
     }
     {                                           /* WAVETABLE: the table (WAVE's 2nd setting) one per click: the 8 tables sit 16 values apart */
         uint32_t e2;
-        if (osc_pk(id, &e2) == 4 && e2 == E_FM) {   /* (and FM's ALGO, one per click) */
+        if (osc_pk(id, &e2) == 4 && (e2 == E_FM || e2 == E_GROWL || e2 == E_ADD)) {   /* (and FM's ALGO, GROWL's TYPE, ADDITIVE's REGISTER: one per click) */
             item_set(id, clampi((v >> 4) + (d > 0 ? 1 : d < 0 ? -1 : 0), 0, 7) * 16);
             return;
         }

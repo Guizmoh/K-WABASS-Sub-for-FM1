@@ -17,7 +17,7 @@
 
 ## Funciones clave
 
-1. **7 motores** por oscilador (ANALOG, **808**, CS, WAVETABLE, FM, PHASE DIST, HARD SYNC), cada uno con un **FOLD** (CS: **RING**) detrás.
+1. **9 motores** por oscilador (ANALOG, **808**, CS, WAVETABLE, **FM 4 operadores**, **GROWL**, **ADDITIVE**, PHASE DIST, HARD SYNC), cada uno con un **FOLD** (CS: **RING**) detrás.
 2. **Secuenciador de batería con condiciones y parameter locks** (también en el bajo: mantener un paso, girar un potenciómetro) y **automatización** (mantener REC durante la reproducción y girar cualquier potenciómetro; REC solo para borrar): 8 pistas de colores (kits 808, 909, dub techno, acústico), probabilidad y condiciones en cada paso, teclas negras para el instrumento, teclas blancas (pads) para sus pasos, OCT−/OCT+ para las páginas; REC en directo; salida sync para Pocket Operator y Volca.
 3. **LFO learn**: mantén `LFO` y gira cualquier potenciómetro, el LFO 2 se asigna a ese ajuste en un gesto (con `OCT−`: LFO 1, con `OCT+`: LFO 3).
 4. Modo **CLASSIC** o **SHIFT** (`OCT−` / `OCT+`) para ir más rápido, a elegir en las opciones.
@@ -44,8 +44,8 @@ Puedes volver a KAWA (`install/kawa-0.5.fwsc`) o al firmware de fábrica (M-UPGR
 
 ```sh
 cd source
-./build.sh --release 1.0.28          # -> build/k-wasub-1.0.28.fwsc
-APP_VER=1.0.28 bash web/make_emulator.sh      # emulador
+./build.sh --release 1.0.29          # -> build/k-wasub-1.0.29.fwsc
+APP_VER=1.0.29 bash web/make_emulator.sh      # emulador
 bash web/make_installer.sh                    # installer.html con el último paquete
 bash tests/run_stress.sh                      # pruebas de carga (UBSan)
 python3 tests/manual_shots.py                 # capturas del manual (docs/img)
