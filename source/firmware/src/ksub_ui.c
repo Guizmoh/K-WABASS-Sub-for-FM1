@@ -162,7 +162,8 @@ static struct {
     uint8_t lang;                               /* LANGUAGE: 0 ENGLISH, 1 FRANCAIS, 2 ESPANOL (the view titles; the rest stays in English) */
     uint8_t sync;                               /* SYNC OUT: 1 a pulse every eighth on the left (POCKET OPERATOR SY, VOLCA), the sound in mono on the right */
     int8_t l3[NL3];                             /* LFO 3: shape, sync, rate, division, depth, destination (whatever the patch: 1.0.17) */
-} set = {6, 0, 0, 0xFF, 1400, 0, 0, 1, 0, 0, 0, 0, 0, {0}, 1, 0, 0, 1, 0, 1, 1, 0, 1, 1, 1, 0, 3, 1, 0, 1, 0, 0, 0, {0, 1, 64, 9, 0, D_CUT}};
+    uint8_t fav2[4];                            /* the favourites 96 .. 127 (1.0.31: 80 factory presets) */
+} set = {6, 0, 0, 0xFF, 1400, 0, 0, 1, 0, 0, 0, 0, 0, {0}, 1, 0, 0, 1, 0, 1, 1, 0, 1, 1, 1, 0, 3, 1, 0, 1, 0, 0, 0, {0, 1, 64, 9, 0, D_CUT}, {0}};
 static void l3_push(void) { uint32_t i; for (i = 0; i < NL3; i++) l3cfg[i] = set.l3[i]; }   /* (the settings to the audio) */
 static char pname[14];
 static uint8_t new_arm;                         /* SAVE, K4 turned once: turn it again to start a new preset */
@@ -340,6 +341,10 @@ static const struct { const char *name, *t; uint8_t stretch; } SQP[] = {
     {"DUB STEPPA", "C0^ - C0 - G0 - F0 - C0^ - C0 - D#0 - F0~ G0", 0},
     {"TECHNO OFF", "- - C0 - - - C0^ - - - C0 - - - C0 C1", 0},
     {"TECHNO ROLL", "- C0 C0^ C0 - C0 C0^ C0 - C0 C0^ C0 - C0 C1^ C0", 0},   /* (the kick's step left free, three 16ths after it, the off-beat pushed) */
+    {"DNB ROLLER", "C0^ - - C0 - C0 - - C0^ - - C0 - C0 G0 -", 0},
+    {"BOUNCE", "C0^ - C1 - - C0 - C1^ - C0 - C1 - - G0~ C1", 0},
+    {"OFF BOUNCE", "- C0^:s - C0:s - C1^:s - C0:s - C0^:s - C1:s - C0^:s G0 C0", 0},
+    {"SUB PULSE", "C0^:4 - - - C0:2 - C0:2 - C0^:4 - - - G0:2 - F0:2 -", 0},
     {"HALFTIME", "C0^~ C0 - - - - - - F0^ - - - D#0~ C0 - -", 0},
     {"ACID", "C0 C1^ - C0~ D#0 C0 G0^ - C0 A#0~ C1 - C0^ F0 - D#0", 0},
     {"2-STEP", "C0^ - - C0 - - G0 - - C0 - - A#0~ G0 - -", 0},
@@ -790,8 +795,9 @@ static void redo(void)
 
 /* ---- favorites: a bit for each preset (A, then the user's B) */
 static uint32_t fav_i(uint32_t bank, uint32_t k) { return bank ? NFACTORY + k : k; }
-static int fav_is(uint32_t bank, uint32_t k) { uint32_t i = fav_i(bank, k); return i < 96u && (set.fav[i >> 3] >> (i & 7u) & 1u); }
-static int fav_any(void) { uint32_t i; for (i = 0; i < sizeof set.fav; i++) if (set.fav[i]) return 1; return 0; }
+static uint8_t *fav_b(uint32_t i) { return i < 96u ? &set.fav[i >> 3] : &set.fav2[(i - 96u) >> 3 & 3u]; }   /* (the byte holding favourite i, 0 .. 127) */
+static int fav_is(uint32_t bank, uint32_t k) { uint32_t i = fav_i(bank, k); return i < 128u && (*fav_b(i) >> (i & 7u) & 1u); }
+static int fav_any(void) { uint32_t i; for (i = 0; i < 128u; i += 8u) if (*fav_b(i)) return 1; return 0; }
 
 /* ---- compare: SEL held plays the saved sound, released the edited one comes back */
 static int8_t cmp_buf[NP_MAX];
@@ -2806,8 +2812,8 @@ static void compare(int on)
 static void favorite(void)                       /* the preset under the PRESETS cursor */
 {
     uint32_t bk = vcur[PG_PRE] ? 1u : 0u, k = pre_cur[bk], i = fav_i(bk, k);
-    if (i >= 96u || (bk && !up_valid(k))) { toast("EMPTY SLOT"); return; }
-    set.fav[i >> 3] ^= (uint8_t)(1u << (i & 7u));
+    if (i >= 128u || (bk && !up_valid(k))) { toast("EMPTY SLOT"); return; }
+    *fav_b(i) ^= (uint8_t)(1u << (i & 7u));
     set_dirty = 1;
     set_ms = fm1_ms;
     toast(fav_is(bk, k) ? "* FAVORITE" : "NOT A FAVORITE");
@@ -2827,7 +2833,7 @@ static void ask_done(uint32_t sel)
 {
     if (theme_ask) {                            /* (the very first start: on to the look) */
         theme_ask = 0;
-        if (set.ui != sel || first_run || set.askv < 2u) { set.ui = (uint8_t)sel; set.askv = 7; set_dirty = 1; set_ms = fm1_ms; first_run = 0; }
+        if (set.ui != sel || first_run || set.askv < 2u) { set.ui = (uint8_t)sel; if (set.askv < 9u) set.askv = 9; set_dirty = 1; set_ms = fm1_ms; first_run = 0; }
         ask_on = 2; ask_sel = 0; ask_ms = fm1_ms;
         theme_set(ASK_TH[0], set.pal);          /* (each one shown as it is chosen) */
         g_force = 1;
@@ -2835,7 +2841,7 @@ static void ask_done(uint32_t sel)
     }
     ask_on = 0;
     splash_until = 0;
-    if (set.ui != sel || first_run || set.askv < 2u) { set.ui = (uint8_t)sel; set.askv = 7; set_dirty = 1; set_ms = fm1_ms; first_run = 0; }
+    if (set.ui != sel || first_run || set.askv < 2u) { set.ui = (uint8_t)sel; if (set.askv < 9u) set.askv = 9; set_dirty = 1; set_ms = fm1_ms; first_run = 0; }
     toast(sel ? "SHIFT MODE" : "CLASSIC MODE");
     g_force = 1;
 }
@@ -3126,16 +3132,16 @@ static void app_init(void)
     uint32_t i;
     int ok;
     {                                           /* (a save from before a field was added: the fields it has, the rest as is) */
-        const uint32_t LEN[15] = {sizeof set, (uint32_t)((uint8_t *)set.l3 - (uint8_t *)&set), (uint32_t)((uint8_t *)&set.sync - (uint8_t *)&set), (uint32_t)((uint8_t *)&set.lang - (uint8_t *)&set), (uint32_t)((uint8_t *)&set.pquant - (uint8_t *)&set), (uint32_t)((uint8_t *)&set.asave - (uint8_t *)&set), (uint32_t)((uint8_t *)&set.eng8 - (uint8_t *)&set), (uint32_t)((uint8_t *)&set.qlfo - (uint8_t *)&set), (uint32_t)((uint8_t *)&set.bri - (uint8_t *)&set), (uint32_t)((uint8_t *)&set.norm - (uint8_t *)&set), (uint32_t)((uint8_t *)&set.contrast - (uint8_t *)&set), (uint32_t)((uint8_t *)&set.mstart - (uint8_t *)&set), (uint32_t)((uint8_t *)&set.zoom - (uint8_t *)&set),
+        const uint32_t LEN[16] = {sizeof set, (uint32_t)((uint8_t *)set.fav2 - (uint8_t *)&set), (uint32_t)((uint8_t *)set.l3 - (uint8_t *)&set), (uint32_t)((uint8_t *)&set.sync - (uint8_t *)&set), (uint32_t)((uint8_t *)&set.lang - (uint8_t *)&set), (uint32_t)((uint8_t *)&set.pquant - (uint8_t *)&set), (uint32_t)((uint8_t *)&set.asave - (uint8_t *)&set), (uint32_t)((uint8_t *)&set.eng8 - (uint8_t *)&set), (uint32_t)((uint8_t *)&set.qlfo - (uint8_t *)&set), (uint32_t)((uint8_t *)&set.bri - (uint8_t *)&set), (uint32_t)((uint8_t *)&set.norm - (uint8_t *)&set), (uint32_t)((uint8_t *)&set.contrast - (uint8_t *)&set), (uint32_t)((uint8_t *)&set.mstart - (uint8_t *)&set), (uint32_t)((uint8_t *)&set.zoom - (uint8_t *)&set),
                                  (uint32_t)((uint8_t *)&set.ui - (uint8_t *)&set), (uint32_t)((uint8_t *)&set.accel - (uint8_t *)&set)};
-        for (ok = 0, i = 0; i < 15u && !ok; i++) ok = !settings_load(&set, LEN[i]) && set.ver == 6u;
+        for (ok = 0, i = 0; i < 16u && !ok; i++) ok = !settings_load(&set, LEN[i]) && set.ver == 6u;
         theme_ask = !ok;                        /* (nothing saved yet: the very first start) */
         l3_push();
     }
     first_run = !ok || set.askv < 2u;           /* (the very first start, or a save from before 0.9.17: the question once) */
     if (!ok) {
         set.grid = set.browse = 0; set.font = 6; set.theme = 0; set.pal = 0;   /* (CLASSIC GLOW, FLUO GREEN, TEKTUR) */
-        memset(set.fav, 0, sizeof set.fav);
+        memset(set.fav, 0, sizeof set.fav); memset(set.fav2, 0, sizeof set.fav2);
         set.ver = 6; set.midich = 0; set.clock = 0; set.oct = 0xFF; set.bpm10 = 1400; set.bank = 0; set.idx = 0; set.cores = 1; set.accel = 2; set.c3col = 0; set.ui = 0; set.ask = 0; set.zoom = 1; set.mstart = 1; set.mprog = 1; set.mclk = 0; set.contrast = 1; set.norm = 1; set.deep = 1; set.bri = 3; set.qlfo = 1; set.eng8 = 0; set.asave = 1; set.lang = 0; set.askv = 7;
     }
     set.eng8 = set.eng8 ? 1u : 0u;
@@ -3168,15 +3174,27 @@ static void app_init(void)
     store_fixup();
     if (set.askv == 7u) {                       /* (1.0.24: 4 factory presets more, the CS ones: the user slots' favourites and MORPH codes follow, once) */
         int32_t i;
-        for (i = 95; i >= (int32_t)NFACTORY; i--) {
-            int32_t f = i - 4, on = f >= (int32_t)NFACTORY - 4 && (set.fav[f >> 3] >> (f & 7) & 1u);
+        for (i = 95; i >= 64; i--) {
+            int32_t f = i - 4, on = f >= 60 && (set.fav[f >> 3] >> (f & 7) & 1u);
             set.fav[i >> 3] = (uint8_t)((set.fav[i >> 3] & ~(1u << (i & 7))) | (on ? 1u << (i & 7) : 0u));
         }
-        for (i = (int32_t)NFACTORY - 4; i < (int32_t)NFACTORY; i++) set.fav[i >> 3] &= (uint8_t)~(1u << (i & 7));   /* (the new ones: not favourites) */
-        for (i = 0; i < 4; i++) if (perf.mx_pre[i] >= MX_VAR + NFACTORY - 4u && perf.mx_pre[i] + 4u < MX_NCODE) perf.mx_pre[i] = (uint8_t)(perf.mx_pre[i] + 4u);
-        if (perf.ab_pre >= MX_VAR + NFACTORY - 4u && perf.ab_pre + 4u < MX_NCODE) perf.ab_pre = (uint8_t)(perf.ab_pre + 4u);
+        for (i = 60; i < 64; i++) set.fav[i >> 3] &= (uint8_t)~(1u << (i & 7));   /* (the new ones: not favourites) */
+        for (i = 0; i < 4; i++) if (perf.mx_pre[i] >= MX_VAR + 60u && perf.mx_pre[i] + 4u < MX_VAR + 96u) perf.mx_pre[i] = (uint8_t)(perf.mx_pre[i] + 4u);
+        if (perf.ab_pre >= MX_VAR + 60u && perf.ab_pre + 4u < MX_VAR + 96u) perf.ab_pre = (uint8_t)(perf.ab_pre + 4u);
         perf_touch();
         set.askv = 8; set_dirty = 1; set_ms = fm1_ms;
+    }
+    if (set.askv == 8u) {                       /* (1.0.31: 16 factory presets more, after the 64: the user slots' favourites and MORPH codes move 16 on, once) */
+        int32_t i;
+        for (i = 127; i >= 64; i--) {
+            int32_t f = i - 16, on = f >= 64 && (*fav_b((uint32_t)f) >> (f & 7) & 1u);
+            uint8_t *b = fav_b((uint32_t)i);
+            *b = (uint8_t)((*b & ~(1u << (i & 7))) | (on ? 1u << (i & 7) : 0u));
+        }
+        for (i = 0; i < 4; i++) if (perf.mx_pre[i] >= MX_VAR + 64u && perf.mx_pre[i] + 16u < MX_NCODE) perf.mx_pre[i] = (uint8_t)(perf.mx_pre[i] + 16u);
+        if (perf.ab_pre >= MX_VAR + 64u && perf.ab_pre + 16u < MX_NCODE) perf.ab_pre = (uint8_t)(perf.ab_pre + 16u);
+        perf_touch();
+        set.askv = 9; set_dirty = 1; set_ms = fm1_ms;
     }
     load_preset(set.bank, set.idx);
     if (set.asave && work.magic == WK_MAGIC && work.sum == wk_sum() && work.bank == set.bank && work.idx == set.idx) {   /* AUTOSAVE: the sound as it was left */

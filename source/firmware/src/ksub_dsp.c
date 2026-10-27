@@ -401,7 +401,7 @@ static void osc_core(osc_t *o, const oscp_t *q, int32_t *out, const int32_t *pm,
         const growl_t *gt = &GR_TYPE[((uint32_t)q->p4 >> 12) & 7u];
         int32_t ik = (int32_t)((((q->p1 * q->p1) >> 15) * 6366) >> 10), fk = gt->fb * 122, fc[3], j;
         int32_t pos = q->p2 * 4, vi = pos >> 15, fr = pos & 32767, qd = 11500 - ((q->p3 * 9500) >> 15);
-        int32_t dg = 32768 + ((gt->drive * (8192 + (q->p3 >> 1))) >> 5), sl = gt->sub * 128;
+        int32_t dg = 32768 + ((gt->drive * (8192 + (q->p3 >> 1))) >> 5), sl = gt->sub * 128, mk = 32768 + ((q->p3 * 3) >> 1);
         int32_t *lp = (int32_t *)&o->ph[1], *bp = (int32_t *)&o->ph[5], b3 = (int32_t)o->f[0];
         uint32_t im = (uint32_t)(((uint64_t)inc * gt->ratio) >> 8), pm2 = o->ph2, sp = o->ph[4];
         if (vi > 3) { vi = 3; fr = 32767; }
@@ -434,7 +434,7 @@ static void osc_core(osc_t *o, const oscp_t *q, int32_t *out, const int32_t *pm,
             }
             bp[0] = b[0]; bp[1] = b[1]; b3 = b[2];
             y = mul15(b[0], qd) + mul15(mul15(b[1], qd), 22000) + mul15(mul15(b[2], qd), 13000);
-            y = y + (c >> 2) + mul15(sin32(sp), sl);   /* (the note itself under it, and TYPE's sub: the low end stays) */
+            y = mul15(y, mk) + (c >> 2) + mul15(sin32(sp), sl);   /* (BITE's narrower formants made up: the level holds) */   /* (the note itself under it, and TYPE's sub: the low end stays) */
             out[i] = sat15(y);
         }
         o->ph2 = pm2; o->ph[4] = sp; o->f[0] = (uint32_t)b3;

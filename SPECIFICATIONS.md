@@ -2,7 +2,7 @@
 
 [English](SPECIFICATIONS.md) · [Français](fr/CAHIER-DES-CHARGES.md)
 
-A modern bass synth for the M-VAVE FM-1 (JieLi AC79, two cores, no FPU). Last update: **1.0.30**.
+A modern bass synth for the M-VAVE FM-1 (JieLi AC79, two cores, no FPU). Last update: **1.0.31**.
 This document says where the project stands: what is done, what has to be checked, what is left, and ideas to go further.
 
 ## 1. Vision
@@ -23,7 +23,7 @@ This document says where the project stands: what is done, what has to be checke
 | Effects | Saturation, compressor + PUMP, bitcrush, chorus, phaser, delay (4 types), reverb (4 types), glue, sub boost, **4-band EQ** | 0.9.3 → 0.9.9-3 |
 | Master | **DEEP BASS** (shelf +4 / +7 dB under 90 Hz), **always-on limiter**, **AUTO LEVEL** (normaliser) | 0.9.10 |
 | Voices | Mono, legato, poly 4, glide with time | ≤ 0.9 |
-| Presets | 60 factory sounds by style (all on the 4 ESSENTIAL engines, 808 / ACID / SUB added and levels evened in 1.0.1), 32 user slots, favourites, UNDO / REDO | ≤ 0.9 |
+| Presets | 80 factory sounds by style (all on the 4 ESSENTIAL engines, 808 / ACID / SUB added and levels evened in 1.0.1), 32 user slots, favourites, UNDO / REDO | ≤ 0.9 |
 | SEQ / ARP / MIDI | SEQ BASS (16 patterns of up to 64 steps, probability, trig conditions and note length per step, 30 presets in 16/32/64, live REC; 0.9.53), **DRUMS** (808 / 909 / DUB TECHNO with its echo / ACOUSTIC (0.9.54), 8 coloured tracks, black keys = instrument, white keys = steps, OCT−/OCT+ = page, chance and conditions per step, 18 rhythm presets in 16/32/64, live REC; 0.9.53), **parameter locks** on the drums (LEVEL, TUNE, DECAY, TONE, RATCHET, ECHO: a step held + a knob) and SEQ BASS (CUTOFF, RESO, FILT ENV, DRIVE, WOB RATE, A SHAPE, SAMPLE START), recorded live with REC (0.9.57); **automation**: REC held while it plays records any sound setting turned, step by step; REC held alone erases it (0.9.59), ARP (5 modes), MIDI: learn, clock in/out, start/stop, program change; **SYNC OUT** for Pocket Operators / Volcas (a pulse every eighth on the left, 0.9.56); **USB audio** to a computer, a larger buffer for K-WASUB's long renders (0.9.56) | ≤ 0.9.8 |
 
 ### Playing and workflow
