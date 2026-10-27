@@ -861,7 +861,7 @@ static const char *foot_fixed(uint32_t vi)
 {
     switch (VIEWS[vi].lay) {
     case LY_PRESET: return "K1 SCROLL \xB7 K2 FAVS \xB7 K3 LOAD \xB7 K4 TAG";
-    case LY_SAVE: return "K1 SLOT \xB7 K2 PLACE \xB7 K3 LETTER \xB7 K4 STYLE";
+    case LY_SAVE: return "KEYS TYPE \xB7 K1 SLOT \xB7 K2 PLACE";
     default: return 0;
     }
 }
@@ -943,7 +943,7 @@ static void save_g(int32_t x, int32_t y0, int32_t w, int32_t ty)   /* the name b
     row_g(x - 2, y0 + 29, w, 24, "NOW IN SLOT", sub, 0, K_GREY, T_S);
     row_g(x - 2, y0 + 58, w, 24, "STYLE", L_STYLE[clampi(patch[P_STYLE], 0, NSTYLE - 1)], 0, K_CYAN, T_S);
     if (g_vis(y0 + 90, 26)) {
-        g_text(T_XS, x, y0 + 92, "K2 POSITION \xB7 K3 LETTER \xB7 K4 STYLE", K_GREY);
+        g_text(T_XS, x, y0 + 92, "KEYS: LETTERS \xB7 K2 PLACE \xB7 K3 SIGNS \xB7 K4 STYLE", K_GREY);
         g_text(T_XS, x, y0 + 104, "PRESS SAVE AGAIN TO WRITE", K_LIME);
     }
 }

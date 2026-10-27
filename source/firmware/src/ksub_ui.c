@@ -1359,6 +1359,22 @@ static void dk_key_up(uint32_t k)
     dk_hold = 0;
 }
 
+/* ---- SAVE (the patch's name): the keys are a letter keyboard, as drawn: black A B C | D E | F G H | I J | K, white L M N O P Q R S
+ * T U V W X Y Z and a space; a key writes its letter where the cursor is and moves on (K2 the place, K3 digits and signs) */
+static int save_view(void) { return page == PG_PRE && VIEWS[vidx()].lay == LY_SAVE && !win && !ask_on && !C3_ON; }
+static void save_key(uint32_t k)
+{
+    static const char BL[11] = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K'}, WH[16] = {'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', ' '};
+    uint32_t i;
+    char ch = 0;
+    for (i = 0; i < 11u; i++) if (PK_BLACK[i] == k) ch = BL[i];
+    for (i = 0; i < 16u; i++) if (PK_WHITE[i] == k) ch = WH[i];
+    if (!ch) return;
+    pname[save_pos % 13u] = ch;
+    save_pos = (uint8_t)(save_pos < 12u ? save_pos + 1u : 12u);
+    g_force = 1;
+}
+
 /* ---- items: a parameter of the patch, or one of the globals */
 static int item_patch(uint32_t id) { return id < NP; }
 static uint32_t rate_id(uint32_t id) { uint32_t o = id == I_L2RATE ? LFO_2 : 0u; return patch[L1_SYNC + o] ? L1_DIV + o : L1_RATE + o; }
@@ -2725,6 +2741,11 @@ static void ui_input(void)
     }
     for (k = 0; k < 27u; k++) {
         uint32_t m = 1u << k;
+        if (save_view()) {                      /* SAVE: the keys type the name */
+            if ((ne & m) || ((now & m) && !(prev_keys & m))) save_key(k);
+            else if (!(now & m) && (prev_keys & m) && phys[key_note[k]]) key_up(key_note[k]);
+            continue;
+        }
         if (dk_view()) {                        /* DRUMS: the keys program the drums */
             if ((ne & m) || ((now & m) && !(prev_keys & m))) dk_key(k);
             else if (!(now & m) && (prev_keys & m)) {
