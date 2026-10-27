@@ -100,7 +100,7 @@ static uint8_t *sq_fp(uint32_t k, uint32_t i) { k %= SQ_NPAT; i %= SQ_MAX; retur
 /* the EQ (held FX), on every sound: 4 biquads a side, Q24 (b0 b1 b2 a1 a2); the main loop works them out (eq_n),
  * the audio takes them at the next block (eq_new) */
 enum { EQ_OFF, EQ_LOCUT, EQ_LOSH, EQ_BELL, EQ_NOTCH, EQ_HISH, EQ_HICUT, NEQT };
-static int32_t eq_c[4][5], eq_n[4][5], eq_st[2][4][4];
+static int32_t eq_c[4][5], eq_n[4][5], eq_st[2][4][5];   /* (state: x1 x2 y1 y2, and what >> 24 dropped: fed back) */
 static volatile uint8_t eq_new, eq_nmask;
 static uint8_t eq_mask;
 static volatile uint8_t mc_val[4];              /* the four macros now, 0..127 (K1..K4 in the MACROS window; not stored) */
@@ -1775,7 +1775,9 @@ static void fx_render(const int32_t *in, int32_t *out, uint32_t n)
                     const int32_t *q = eq_c[b];
                     int32_t *z = eq_st[ch][b], y;
                     if (!(eq_mask >> b & 1u)) continue;
-                    y = (int32_t)(((int64_t)q[0] * c2[ch] + (int64_t)q[1] * z[0] + (int64_t)q[2] * z[1] - (int64_t)q[3] * z[2] - (int64_t)q[4] * z[3]) >> 24);
+                    int64_t acc = (int64_t)q[0] * c2[ch] + (int64_t)q[1] * z[0] + (int64_t)q[2] * z[1] - (int64_t)q[3] * z[2] - (int64_t)q[4] * z[3] + z[4];
+                    y = (int32_t)(acc >> 24);
+                    z[4] = (int32_t)(acc - ((int64_t)y << 24));   /* (fraction saving: a narrow notch's poles, near the circle, made a whistle of the rounding) */
                     y = clip(y, 400000);
                     z[1] = z[0]; z[0] = c2[ch]; z[3] = z[2]; z[2] = y;
                     c2[ch] = y;

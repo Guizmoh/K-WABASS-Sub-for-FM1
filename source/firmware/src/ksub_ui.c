@@ -426,17 +426,28 @@ static int eq_live(uint32_t k)                  /* a band that does something */
     uint32_t t = perf.eq_t[k];
     return t == EQ_LOCUT || t == EQ_HICUT || t == EQ_NOTCH || ((t == EQ_LOSH || t == EQ_BELL || t == EQ_HISH) && perf.eq_g[k]);
 }
-static void eq_coef(uint32_t k, int32_t *o, int32_t fq8, int32_t gdb)   /* RBJ's biquads, Q24, a0 taken out without a 64-bit division; */
+static int32_t q24_div(int64_t n, int64_t d)    /* n * 2^24 / d, rounded, by hand (the FM-1 has no 64-bit division) */
+{
+    uint64_t un = (uint64_t)(n < 0 ? -n : n) << 24, ud = (uint64_t)(d < 0 ? -d : d), q = 0, r = 0;
+    int i;
+    if (!ud) return 0;
+    for (i = 63; i >= 0; i--) {
+        r = r << 1 | (un >> i & 1u);
+        if (r >= ud) { r -= ud; q |= 1ull << i; }
+    }
+    if (2u * r >= ud) q++;
+    return (int32_t)((n < 0) != (d < 0) ? -(int64_t)q : (int64_t)q);
+}
+static void eq_coef(uint32_t k, int32_t *o, int32_t fq8, int32_t gdb)   /* RBJ's biquads, Q24 (a0 divided out exactly: q24_div)        */
 {                                                                        /* fq8: the frequency step, Q8 (between two steps: in between) */
     const int64_t ONE = 1 << 24;
     uint32_t fi, fr, ph, gi = (uint32_t)clampi(gdb + 12, 0, 24);
     fq8 = clampi(fq8, 0, 47 * 256);
     fi = (uint32_t)fq8 >> 8; fr = (uint32_t)fq8 & 255u;
     ph = fi < 47u ? KS_EQ_INC[fi] + (uint32_t)(((uint64_t)(KS_EQ_INC[fi + 1u] - KS_EQ_INC[fi]) * fr) >> 8) : KS_EQ_INC[47];
-    int64_t s = (int64_t)sin32(ph) << 9, c = (int64_t)sin32(ph + 0x40000000u) << 9;
+    int64_t s = (int64_t)sin32(ph) << 9, hs = (int64_t)sin32(ph >> 1) << 9, c = ONE - ((2 * hs * hs) >> 24);   /* (cos as 1 - 2 sin^2(w/2): exact near 0, where a narrow notch needs it) */
     int64_t al = (s * KS_EQ_IQ[perf.eq_q[k] & 7u]) >> 14, A = (int64_t)KS_EQ_A[gi] << 10, IA = (int64_t)KS_EQ_IA[gi] << 10;
     int64_t Ap = A + ONE, Am = A - ONE, sa = ((int64_t)KS_EQ_SQ[gi] << 10) * al >> 23, b0, b1, b2, a0, a1, a2;
-    int32_t inv;
     switch (perf.eq_t[k]) {
     case EQ_LOCUT: b0 = (ONE + c) / 2; b1 = -(ONE + c); b2 = b0; a0 = ONE + al; a1 = -2 * c; a2 = ONE - al; break;
     case EQ_HICUT: b0 = (ONE - c) / 2; b1 = ONE - c; b2 = b0; a0 = ONE + al; a1 = -2 * c; a2 = ONE - al; break;
@@ -450,9 +461,9 @@ static void eq_coef(uint32_t k, int32_t *o, int32_t fq8, int32_t gdb)   /* RBJ's
     default:                                    /* BELL */
         b0 = ONE + (al * A >> 24); b1 = -2 * c; b2 = ONE - (al * A >> 24); a0 = ONE + (al * IA >> 24); a1 = -2 * c; a2 = ONE - (al * IA >> 24); break;
     }
-    inv = (int32_t)((1 << 30) / (int32_t)(a0 >> 10));   /* (1/a0, Q16) */
-    o[0] = (int32_t)((b0 * inv) >> 16); o[1] = (int32_t)((b1 * inv) >> 16); o[2] = (int32_t)((b2 * inv) >> 16);
-    o[3] = (int32_t)((a1 * inv) >> 16); o[4] = (int32_t)((a2 * inv) >> 16);
+    /* (each one divided by a0 in full: the old 1/a0 in Q16 left the low narrow notches' */
+    o[0] = q24_div(b0, a0); o[1] = q24_div(b1, a0); o[2] = q24_div(b2, a0);   /* sums off, a rumble and a hiss) */
+    o[3] = q24_div(a1, a0); o[4] = q24_div(a2, a0);
 }
 static void p_eqhead(char *t)                  /* the band being set, its type and width (the EQ's top line) */
 {
