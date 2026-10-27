@@ -417,18 +417,17 @@ static void vis_fm(const int8_t *o, uint32_t k, int32_t x, int32_t y, int32_t w,
     g_rect(cx + bw, by + bh / 2, x + w - 4 - cx - bw, 1, K_WAVE);   /* out */
     if (patch[X_MODE] == 2 && !k) g_text_r(T_XS, x + w - 4, y + 3, "+ B X-MOD", K_ORANGE);
 }
-static void vis_super(const int8_t *o, int32_t x, int32_t y, int32_t w, int32_t h)   /* REESE: the saws, spread by the detune */
+static void vis_cs(const int8_t *o, const int16_t *wv, int32_t x, int32_t y, int32_t w, int32_t h)   /* CS: the two channels' wave, their gap, the motion */
 {
-    uint32_t n = SUPER_N[((uint32_t)o[4] * 258u) >> 13 & 3u], v0 = n == 2u ? 1u : 0u, i;
-    int32_t cx = x + w / 2, sp = (w / 2 - 10) * (8 + o[2]) / 135, side = 30 + o[3] * 70 / 127;
-    char t[24];
-    draw_poly(x + 3, y + 2, w - 6, h - 4, prev_wave, 224, g_mix(K_BG, K_LINE, 200));
-    for (i = v0; i < v0 + n; i++) {
-        int32_t d = (int32_t)SUPER_DET[i] * sp / 7210, hh = (h - 10) * (i == 0u ? 100 : side) / 100;
-        g_rect(cx + d - 1, y + h - 4 - hh, 3, hh, i == 0u ? K_WHITE : K_WAVE);
-    }
-    str_cat(fmt_u(t, n, 0), " SAWS");
+    char t[24], *p;
+    uint32_t c = (uint32_t)(((uint64_t)((uint32_t)o[3] * 258u) * ((uint32_t)o[3] * 258u) * 350u) >> 30);
+    draw_poly(x + 3, y + 2, w - 6, h - 4, wv, 112, K_WAVE);
+    if (h < 40) return;
+    p = str_cat(t, "I + II  ");
+    p = fmt_u(p, c / 10u, 0); *p++ = '.'; p = fmt_u(p, c % 10u, 0); str_cat(p, " CT");
     g_text(T_XS, x + 4, y + 3, t, K_GREY);
+    str_cat(fmt_u(str_cat(t, "MOTION "), (uint32_t)o[4] * 100u / 127u, 0), "%");
+    g_text_r(T_XS, x + w - 4, y + 3, t, o[4] > 64 ? K_LIME : K_GREY);
 }
 static void vis_analog(const int8_t *o, const int16_t *wv, int32_t x, int32_t y, int32_t w, int32_t h)   /* ANALOG: the wave, its place on the scale */
 {
@@ -477,7 +476,7 @@ static void vis_osc(uint32_t k, int32_t x, int32_t y, int32_t w, int32_t h)
     switch (o[0] & 7) {
     case E_WAVE: vis_wt(o, x, y, w, h); break;
     case E_FM: vis_fm(o, k, x, y, w, h); break;
-    case E_SUPER: vis_super(o, x, y, w, h); break;
+    case E_CS: vis_cs(o, k ? prev_b : prev_a, x, y, w, h); break;
     case E_ANALOG: vis_analog(o, k ? prev_b : prev_a, x, y, w, h); break;
     default: draw_poly(x + 3, y + 2, w - 6, h - 4, k ? prev_b : prev_a, 112, K_WAVE); break;
     }

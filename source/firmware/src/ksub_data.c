@@ -34,7 +34,7 @@ enum {
 #define OSC_B (B_ENG - A_ENG)
 #define LFO_2 (L2_SHP - L1_SHP)
 #define NENG 8
-enum { E_ANALOG, E_SUPER, E_WAVE, E_FM, E_PHASE, E_FOLD, E_SYNC, E_VOCAL };
+enum { E_ANALOG, E_CS, E_WAVE, E_FM, E_PHASE, E_FOLD, E_SYNC, E_VOCAL };
 enum { FT_LP24, FT_LP12, FT_BP, FT_HP, FT_NOTCH, FT_VOWEL, FT_COMB, NFT };
 enum { D_OFF, D_CUT, D_RES, D_PITCH, D_AP1, D_AP2, D_BP1, D_BP2, D_ALVL, D_BLVL, D_XMOD, D_DRV, D_AMP, D_SUB, D_NOISE,
        D_WOB, D_AP3, D_BP3, D_APIT, D_BPIT, D_NCOL, D_FENV, D_L2DEP,
@@ -73,7 +73,7 @@ enum { VM_MONO, VM_LEGATO, VM_POLY };
 /* formats of the values on the screen */
 enum { FM_PCT, FM_BIP, FM_LIST, FM_INT, FM_SEMI, FM_CENT, FM_TIME, FM_CUT, FM_LFOHZ, FM_DIV, FM_VOL, FM_OSCP, FM_DEST };
 
-static const char *const L_ENG[NENG] = {"ANALOG", "SUPER", "WAVE", "FM", "PHASE", "FOLD", "SYNC", "VOCAL"};
+static const char *const L_ENG[NENG] = {"ANALOG", "CS", "WAVE", "FM", "PHASE", "FOLD", "SYNC", "VOCAL"};
 static const char *const L_SUBW[] = {"SINE", "TRI", "SQUARE", "PULSE"};
 static const char *const L_SUBO[] = {"-2 OCT", "-1 OCT", "0 OCT"};
 static const char *const L_ROUTE[] = {"FILTER", "DIRECT"};
@@ -132,12 +132,12 @@ static const char *const L_STYLE[] = {"DNB", "DUB", "DUBSTEP", "TECHNO", "JUNGLE
 
 /* the engines' three timbre controls: names (long, short) and how they read */
 static const char *const ENG_P[NENG][3] = {
-    {"WAVE", "PWIDTH", "DRIVE"}, {"DETUNE", "MIX", "VOICES"}, {"POSITION", "TABLE", "WARP"},
+    {"WAVE", "PWIDTH", "DRIVE"}, {"WAVE", "DETUNE", "MOTION"}, {"POSITION", "TABLE", "WARP"},
     {"INDEX", "RATIO", "FEEDBACK"}, {"AMOUNT", "TYPE", "BODY"}, {"FOLD", "SYMMETRY", "SHAPE"},
     {"SYNC", "WAVE", "SOFT"}, {"VOWEL", "FORMANT", "WIDTH"}};
-static const char *const ENG_TITLE[NENG] = {"ANALOG / VA", "SUPER / REESE", "WAVETABLE", "FM / GROWL",
+static const char *const ENG_TITLE[NENG] = {"ANALOG / VA", "CS / DUAL", "WAVETABLE", "FM / GROWL",
                                             "PHASE DIST", "WAVEFOLDER", "HARD SYNC", "VOCAL / YOI"};
-static const char *const ENG_SUB[NENG] = {"SUBTRACTIVE CORE", "DETUNED SAW STACK", "8 TABLES x 8 FRAMES",
+static const char *const ENG_SUB[NENG] = {"SUBTRACTIVE CORE", "2 CHANNELS: SAW + PULSE, PWM, DRIFT", "8 TABLES x 8 FRAMES",
                                           "2-OP FM + FEEDBACK", "CZ-STYLE PHASE DISTORTION", "WEST COAST FOLDING",
                                           "MASTER / SLAVE SYNC", "FORMANT TALKING BASS"};
 static const char *const L_WT[8] = {"BASIC", "HARMONIC", "GROWL", "VOCAL", "FM", "PWM", "DIGITAL", "SYNC"};
@@ -146,7 +146,6 @@ static const char *const L_RATIO[16] = {"0.50", "1.00", "1.50", "2.00", "2.50", 
                                         "7.00", "8.00", "9.00", "11.0", "1.41", "3.14"};
 static const uint16_t RATIO_Q8[16] = {128, 256, 384, 512, 640, 768, 896, 1024, 1280, 1536, 1792, 2048, 2304, 2816, 361, 804};
 static const char *const L_VOX = "AEIOU";
-static const uint8_t SUPER_N[4] = {2, 3, 5, 7};
 
 typedef struct {
     const char *name, *sname;                   /* the row's name, the knob's (footer) */
@@ -242,9 +241,9 @@ static const preset_t FACTORY[] = {
        L2_SYNC, 1, L2_DIV, 2, CH_ON, 1, DL_ON, 1, DL_TIME, 8, DL_MIX, 25),
     PR("CONCRETE", MS_VOL, 70, P_STYLE, 3, A_ENG, E_FM, A_P1, 55, A_P2, 24, A_P3, 45, S_LVL, 60, F_CUT, 80, F_RES, 30,
        AE_D, 45, AE_S, 40, ME_AMT, 30, ME_DST, D_AP1, ME_D, 45, DR_ON, 1, DR_TYPE, 2, DR_AMT, 50, MS_GLUE, 60),
-    PR("REESE CLASSIC", MS_VOL, 113, P_STYLE, 0, A_ENG, E_SUPER, A_P1, 40, A_P2, 80, A_P3, 0, A_LVL, 100, S_LVL, 70, F_CUT, 75,
+    PR("REESE CLASSIC", MS_VOL, 113, P_STYLE, 0, A_ENG, E_CS, A_P1, 12, A_P2, 82, A_P3, 30, A_LVL, 100, S_LVL, 70, F_CUT, 75,
        F_RES, 25, L2_DEP, 18, L2_DST, D_AP1, L2_SYNC, 0, L2_RATE, 30, L2_SHP, 1, CH_ON, 1, CH_MIX, 40, X_DRIFT, 30),
-    PR("WIDE REESE", P_STYLE, 8, A_ENG, E_SUPER, A_P1, 70, A_P2, 100, A_P3, 127, B_ENG, E_SUPER, B_P1, 50, B_P3, 0,
+    PR("WIDE REESE", P_STYLE, 8, A_ENG, E_CS, A_P1, 10, A_P2, 100, A_P3, 70, B_ENG, E_CS, B_P1, 5, B_P2, 70, B_P3, 20,
        B_LVL, 70, B_OCT, -1, S_LVL, 85, F_CUT, 68, F_RES, 35, F_DRV, 40, CH_ON, 1, CH_DEP, 80, CH_MIX, 60,
        DR_ON, 1, DR_AMT, 25, DR_MIX, 50),
     PR("WOBBLE 01", P_STYLE, 2, A_ENG, E_ANALOG, A_P1, 85, B_ENG, E_ANALOG, B_P1, 127, B_LVL, 70, B_FINE, -10,
@@ -276,21 +275,21 @@ static const preset_t FACTORY[] = {
        ME_AMT, 40, ME_DST, D_AP1, ME_D, 60, L1_DIV, 11, L1_DEP, 30, L1_DST, D_AP1, DR_ON, 1, DR_TYPE, 2, DR_AMT, 45),
     PR("HOLLOW TUBE", MS_VOL, 119, P_STYLE, 2, A_ENG, E_WAVE, A_P1, 70, A_P2, 32, A_P3, 30, S_LVL, 90, F_TYPE, FT_NOTCH, F_CUT, 50,
        F_RES, 60, L1_SHP, 0, L1_DIV, 10, L1_DEP, 40, L1_DST, D_CUT, L1_TRIG, 1),
-    PR("WUB MACHINE", MS_VOL, 74, P_STYLE, 2, A_ENG, E_SUPER, A_P1, 30, A_P3, 64, B_ENG, E_FM, B_P1, 50, B_P2, 16, B_LVL, 60,
+    PR("WUB MACHINE", MS_VOL, 74, P_STYLE, 2, A_ENG, E_CS, A_P1, 16, A_P2, 45, A_P3, 40, B_ENG, E_FM, B_P1, 50, B_P2, 16, B_LVL, 60,
        S_LVL, 90, F_CUT, 30, F_RES, 60, F_DRV, 70, L1_SHP, 6, L1_DIV, 10, L1_DEP, 55, L1_DST, D_CUT, L1_TRIG, 1,
        M1_SRC, SR_LFO1, M1_DST, D_BP1, M1_AMT, 30, DR_ON, 1, DR_AMT, 60, MS_GLUE, 70),
     PR("DIGI BITE", MS_VOL, 108, P_STYLE, 10, A_ENG, E_WAVE, A_P1, 60, A_P2, 96, A_P3, 20, S_LVL, 85, F_CUT, 90, F_RES, 30,
        CR_ON, 1, CR_BITS, 70, CR_RATE, 40, CR_MIX, 70, L1_DIV, 11, L1_DEP, 45, L1_DST, D_AP1, L1_TRIG, 1),
     PR("ROLLER SUB", MS_VOL, 112, P_STYLE, 0, A_ENG, E_ANALOG, A_P1, 42, A_LVL, 60, S_LVL, 110, S_WAVE, 1, F_CUT, 60, F_RES, 10,
        AE_D, 50, AE_S, 100, AE_R, 25, V_MODE, VM_LEGATO, V_GLIDE, 20, MS_SUB, 50),
-    PR("HOOVER DNB", MS_VOL, 113, P_STYLE, 4, A_ENG, E_SUPER, A_P1, 90, A_P2, 110, A_P3, 127, B_ENG, E_ANALOG, B_P1, 127, B_P2, 80,
+    PR("HOOVER DNB", MS_VOL, 113, P_STYLE, 4, A_ENG, E_CS, A_P1, 70, A_P2, 110, A_P3, 95, B_ENG, E_ANALOG, B_P1, 127, B_P2, 80,
        B_LVL, 60, B_OCT, -1, S_LVL, 60, F_CUT, 95, ME_AMT, -20, ME_DST, D_PITCH, ME_A, 40, ME_D, 70,
        V_GLIDE, 40, CH_ON, 1, CH_MIX, 60, L2_DEP, 25, L2_DST, D_BP2, L2_SYNC, 0, L2_RATE, 50),
     PR("STEPPA DUB", MS_VOL, 109, P_STYLE, 1, A_ENG, E_ANALOG, A_P1, 10, A_P3, 30, S_LVL, 110, F_CUT, 45, F_RES, 15, AE_D, 70,
        AE_S, 60, DL_ON, 1, DL_TIME, 6, DL_FB, 70, DL_TONE, 25, DL_MIX, 35, MS_SUB, 60, MS_GLUE, 40),
     PR("LIQUID SUB", P_STYLE, 0, A_ENG, E_ANALOG, A_P1, 42, A_LVL, 60, S_LVL, 110, F_CUT, 75, AE_A, 8, AE_R, 50,
        V_MODE, VM_LEGATO, V_GLIDE, 30, CH_ON, 1, CH_MIX, 30),
-    PR("ROLLING REESE", P_STYLE, 0, A_ENG, E_SUPER, A_P1, 55, A_P3, 0, B_ENG, E_ANALOG, B_P1, 85, B_OCT, -1, B_LVL, 50,
+    PR("ROLLING REESE", P_STYLE, 0, A_ENG, E_CS, A_P1, 14, A_P2, 62, A_P3, 22, B_ENG, E_ANALOG, B_P1, 85, B_OCT, -1, B_LVL, 50,
        S_LVL, 90, F_CUT, 70, F_RES, 30, L2_DEP, 25, L2_DST, D_AP1, L2_SYNC, 1, L2_DIV, 6, DR_ON, 1, DR_TYPE, 1, DR_AMT, 30),
     PR("AMEN SUB", MS_VOL, 124, P_STYLE, 4, A_ENG, E_ANALOG, A_P1, 0, A_P3, 50, S_LVL, 100, ME_AMT, 20, ME_DST, D_PITCH, ME_D, 30,
        AE_D, 70, AE_S, 60, V_GLIDE, 20),
@@ -302,7 +301,7 @@ static const preset_t FACTORY[] = {
     PR("TEAROUT", MS_VOL, 105, P_STYLE, 2, A_ENG, E_FM, A_P1, 90, A_P2, 64, A_P3, 70, B_ENG, E_WAVE, B_P1, 60, B_P2, 32, B_LVL, 50, X_MODE, 2,
        X_AMT, 50, S_LVL, 80, F_TYPE, FT_COMB, F_CUT, 80, F_RES, 80, F_KEY, 127, L1_SHP, 6, L1_DIV, 11, L1_DEP, 40,
        L1_DST, D_AP1, L1_TRIG, 1, DR_ON, 1, DR_TYPE, 3, DR_AMT, 50, MS_GLUE, 90),
-    PR("BROSTEP SAW", MS_VOL, 74, P_STYLE, 2, A_ENG, E_SUPER, A_P1, 60, A_P3, 127, S_LVL, 85, F_CUT, 30, F_RES, 70, F_DRV, 60,
+    PR("BROSTEP SAW", MS_VOL, 74, P_STYLE, 2, A_ENG, E_CS, A_P1, 30, A_P2, 80, A_P3, 60, S_LVL, 85, F_CUT, 30, F_RES, 70, F_DRV, 60,
        L1_DIV, 9, L1_DEP, 55, L1_DST, D_CUT, L1_TRIG, 1, DR_ON, 1, DR_AMT, 60),
     PR("NEURO STAB", P_STYLE, 8, A_ENG, E_WAVE, A_P1, 70, A_P2, 112, B_ENG, E_FM, B_P1, 50, B_LVL, 60, X_MODE, 1,
        S_LVL, 70, F_CUT, 85, F_RES, 45, ME_AMT, 50, ME_DST, D_AP1, ME_D, 40, AE_D, 50, AE_S, 30, DR_ON, 1, DR_TYPE, 2,
@@ -325,7 +324,7 @@ static const preset_t FACTORY[] = {
        DL_ON, 1, DL_TIME, 8, DL_FB, 95, DL_TONE, 20, DL_MIX, 60, RV_ON, 1, RV_SIZE, 120, RV_MIX, 50, CH_ON, 1),
     PR("SKANK UNIT", P_STYLE, 1, A_ENG, E_ANALOG, A_P1, 42, S_LVL, 110, F_CUT, 50, AE_A, 10, AE_D, 75, AE_S, 70,
        DL_ON, 1, DL_TIME, 6, DL_FB, 60, DL_MIX, 25, MS_SUB, 70),
-    PR("BREAKS HOOVER", P_STYLE, 10, A_ENG, E_SUPER, A_P1, 100, A_P2, 120, A_P3, 127, ME_AMT, -25, ME_DST, D_PITCH,
+    PR("BREAKS HOOVER", P_STYLE, 10, A_ENG, E_CS, A_P1, 64, A_P2, 120, A_P3, 100, ME_AMT, -25, ME_DST, D_PITCH,
        ME_A, 30, ME_D, 60, F_CUT, 90, S_LVL, 60, V_GLIDE, 35, CH_ON, 1, CH_MIX, 70),
     PR("MINIMAL CLICK", P_STYLE, 11, MS_VOL, 127, A_LVL, 120, A_ENG, E_FM, A_P1, 50, A_P2, 40, A_P3, 0, S_LVL, 70, AE_D, 35, AE_S, 0, AE_R, 20, F_CUT, 70,
        F_ENV, 30, FE_D, 25, FE_S, 0, DL_ON, 1, DL_TIME, 10, DL_MIX, 20),
@@ -344,7 +343,7 @@ static const preset_t FACTORY[] = {
     PR("TAPE TECHNO", SM_SEL, 12, SM_LVL, 35, MS_VOL, 127, P_STYLE, 3, A_ENG, E_ANALOG, A_P1, 85, N_LVL, 20, S_LVL, 90, F_CUT, 45, F_RES, 45, F_ENV, 30, FE_D, 45,
        FE_S, 0, AE_D, 55, AE_S, 50, DL_ON, 1, DL_TYPE, 1, DL_TIME, 8, DL_FB, 75, DL_MIX, 30, RV_ON, 1, RV_SIZE, 100,
        RV_MIX, 25, CP_ON, 1, CP_AMT, 60, CP_PUMP, 50),
-    PR("REESE PHASER", P_STYLE, 0, A_ENG, E_SUPER, A_P1, 50, A_P2, 90, A_P3, 64, S_LVL, 80, F_CUT, 70, F_RES, 25, PH_ON, 1,
+    PR("REESE PHASER", P_STYLE, 0, A_ENG, E_CS, A_P1, 20, A_P2, 90, A_P3, 50, S_LVL, 80, F_CUT, 70, F_RES, 25, PH_ON, 1,
        PH_RATE, 20, PH_DEP, 100, PH_FB, 60, PH_MIX, 70, X_DRIFT, 25, CP_ON, 1, CP_AMT, 40),
     PR("FM 808", MS_VOL, 75, SM_SEL, 2, SM_LVL, 70, P_STYLE, 6, A_ENG, E_FM, A_P1, 30, A_P2, 8, A_LVL, 120, S_LVL, 60, AE_D, 100, AE_S, 30, AE_R, 60, ME_AMT, 30,
        ME_DST, D_PITCH, ME_D, 25, DR_ON, 1, DR_TYPE, 0, DR_AMT, 50, CP_ON, 1, CP_AMT, 60, F_CUT, 127, F_RES, 0),
@@ -377,6 +376,15 @@ static const preset_t FACTORY[] = {
        AE_R, 35, DR_ON, 1, DR_TYPE, 1, DR_AMT, 25, DR_MIX, 50, V_MODE, VM_LEGATO, V_GLIDE, 20),
     PR("FM SUB GROWL", P_STYLE, 1, A_ENG, E_FM, A_P1, 25, A_P2, 8, A_P3, 20, A_LVL, 100, S_LVL, 100, F_CUT, 70, F_RES, 15,
        L1_SYNC, 1, L1_DIV, 9, L1_DEP, 20, L1_DST, D_AP1, L1_TRIG, 1, V_MODE, VM_LEGATO, V_GLIDE, 25),
+    /* the CS engine (1.0.24, after twochannels/CS-1): its two channels, the PWM, the drift (the 96 favourite bits: full) */
+    PR("CS BRASS BASS", MS_VOL, 100, P_STYLE, 3, A_ENG, E_CS, A_P1, 64, A_P2, 50, A_P3, 40, A_LVL, 110, S_LVL, 80, F_TYPE, FT_LP24,
+       F_CUT, 45, F_RES, 30, F_ENV, 50, FE_A, 20, FE_D, 60, FE_S, 30, AE_A, 8, AE_S, 90, AE_R, 30),
+    PR("CS SQUELCH", MS_VOL, 127, P_STYLE, 11, A_ENG, E_CS, A_P1, 100, A_P2, 20, A_P3, 30, A_LVL, 110, S_LVL, 60, F_TYPE, FT_LP12,
+       F_CUT, 30, F_RES, 95, F_ENV, 70, FE_D, 40, FE_S, 0, AE_D, 60, AE_S, 50, V_MODE, VM_LEGATO, V_GLIDE, 30),
+    PR("CS XMAS BASS", MS_VOL, 100, P_STYLE, 1, A_ENG, E_CS, A_P1, 0, A_P2, 30, A_P3, 20, A_LVL, 105, S_LVL, 90, F_CUT, 55, F_RES, 40,
+       F_ENV, 40, FE_D, 55, FE_S, 20, AE_A, 4, AE_S, 100, AE_R, 25),
+    PR("CS DRIFT PAD", MS_VOL, 100, P_STYLE, 9, A_ENG, E_CS, A_P1, 40, A_P2, 100, A_P3, 110, A_LVL, 100, S_LVL, 40, F_CUT, 60, F_RES, 20,
+       V_MODE, VM_POLY, AE_A, 60, AE_S, 100, AE_R, 70, RV_ON, 1, RV_SIZE, 110, RV_MIX, 50, DL_ON, 1, DL_MIX, 30, CH_ON, 1),
 };
 #define NFACTORY (sizeof FACTORY / sizeof FACTORY[0])
 
@@ -386,7 +394,7 @@ static void patch_defaults(int8_t *p)
     for (i = 0; i < NP_MAX; i++)
         p[i] = i < NP ? PD[i].def : 0;
     p[B_LVL] = 0;
-    p[B_ENG] = E_SUPER;
+    p[B_ENG] = E_CS;
     p[L2_SYNC] = 0;
     p[L2_SHP] = 1;
 }

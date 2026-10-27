@@ -234,10 +234,10 @@ typedef struct {
 /* hard sync, in the loops that read ph: when the master turns, ph starts again where the master is in its turn */
 #define SYNC_STEP() do { if (sy) { uint32_t m0 = mp; mp += q->minc; if (mp < m0) ph = (mp >> 8) * q->mrq - inc; } } while (0)
 
-static const int32_t SUPER_DET[7] = {0, -7210, 7210, -4121, 4121, -1279, 1279};   /* JP-8000 spread, Q16 */
 static const uint16_t VOX_F[5][3] = {{800, 1150, 2900}, {400, 1600, 2700}, {270, 1850, 2600}, {450, 800, 2830}, {325, 700, 2530}};
 static const uint16_t VOX_A[5][3] = {{32767, 16384, 8192}, {32767, 13107, 6554}, {32767, 9830, 6554}, {32767, 14746, 3277}, {32767, 8192, 2621}};
 
+static inline int64_t cs_pwc(int64_t w) { return w < 0x0CCCCCCCll ? 0x0CCCCCCCll : w > 0xF3333333ll ? 0xF3333333ll : w; }   /* (CS: a pulse width kept in 5 .. 95 %) */
 /* render n samples of one oscillator; pm (or 0): phase modulation per sample */
 static void osc_render(osc_t *o, const oscp_t *q, int32_t *out, const int32_t *pm, uint32_t n)
 {
@@ -263,28 +263,52 @@ static void osc_render(osc_t *o, const oscp_t *q, int32_t *out, const int32_t *p
         }
         break;
     }
-    case E_SUPER: {                             /* 2, 3, 5 or 7 saws, detuned around the note */
-        uint32_t nv = SUPER_N[q->p3 >> 13], cap = ks_shed >= 3u ? 2u : ks_shed >= 2u ? 3u : 7u, inc_k[7], rc[7], v0;
-        if (nv > cap) nv = cap;
-        v0 = nv == 2u ? 1u : 0u;
-        int32_t s = (int32_t)(((int64_t)q->p1 * q->p1) >> 15), cg = 32767 - (q->p2 >> 1), sg = nv == 2u ? 32767 : 6000 + ((q->p2 * 26767) >> 15), norm;
-        norm = nv == 2u ? 19000 : nv == 3u ? 15000 : nv == 5u ? 11500 : 9800;
-        for (i = v0; i < v0 + nv; i++) {
-            int32_t d = (int32_t)(((int64_t)SUPER_DET[i] * s) >> 15);
-            inc_k[i] = inc + (uint32_t)(((int64_t)inc * d) >> 16);
-            rc[i] = blep_rcp(inc_k[i]);
+    case E_CS: {                                /* CS: a CS-80 voice's two channels (after twochannels/CS-1): each a sawtooth and a pulse
+                                                 * (WAVE: saw > both > pulse, the pulse narrowing at the top), its own PWM triangle
+                                                 * (0.47 / 0.71 Hz), channel II detuned (DETUNE, quadratic: up to 35 cents apart);
+                                                 * MOTION: PWM depth, then the voice cards' drift (each channel wanders on its own,
+                                                 * up to 8 cents) and a breath of noise */
+        int32_t wv = q->p1, sw = wv < 16384 ? 32767 : 32767 - ((wv - 16384) << 1), uw = wv < 16384 ? wv << 1 : 32767;
+        int32_t det = (int32_t)(((int64_t)q->p2 * q->p2) >> 15), dq = (det * 662) >> 15;   /* (Q16: +-17.5 cents each) */
+        int32_t mo = q->p3, pd = mo >= 16384 ? 32767 : mo << 1, dr = mo > 16384 ? (mo - 16384) << 1 : 0, nz = dr >> 4;
+        int32_t norm = (int32_t)((32767u << 15) / (uint32_t)(sw + uw)), d1, d2, l1, l2, dc1, dc2;
+        int64_t pwb = 0x80000000ll - (int64_t)(((uint64_t)(wv > 16384 ? wv - 16384 : 0) * 0x59999999u) >> 14);   /* 50 % > 15 % */
+        uint32_t inc1, inc2, rc1, rc2, pw1, pw2, ph1 = o->ph[1], nr = o->f[0] ? o->f[0] : 0x1234567u;
+        int two = ks_shed < 3u;                  /* (the CPU short: channel I alone) */
+        if (dr) {                                /* the drift: a slow random walk each */
+            o->fb1 += (((int32_t)(rnd() >> 17) - 16384) >> 4) - (o->fb1 >> 7);
+            o->fb2 += (((int32_t)(rnd() >> 17) - 16384) >> 4) - (o->fb2 >> 7);
+            o->fb1 = clip(o->fb1, 32767); o->fb2 = clip(o->fb2, 32767);
         }
+        d1 = -dq + (int32_t)(((int64_t)mul15(o->fb1, dr) * 302) >> 15);   /* (302: 8 cents, Q16) */
+        d2 = dq + (int32_t)(((int64_t)mul15(o->fb2, dr) * 302) >> 15);
+        inc1 = inc + (uint32_t)(int32_t)(((int64_t)inc * d1) >> 16);
+        inc2 = inc + (uint32_t)(int32_t)(((int64_t)inc * d2) >> 16);
+        rc1 = blep_rcp(inc1); rc2 = blep_rcp(inc2);
+        inc = inc1;                              /* (SYNC_STEP: channel I follows the master) */
+        o->ph[2] += 45773u * n; o->ph[3] += 69147u * n;   /* (the two PWM triangles, once a block) */
+        l1 = tri32(o->ph[2]); l2 = tri32(o->ph[3] + 0x80000000u);
+        pw1 = (uint32_t)cs_pwc(pwb + (((int64_t)mul15(l1, pd) * 0x26666666ll) >> 15));   /* (+-15 %, kept in 5 .. 95 %) */
+        pw2 = (uint32_t)cs_pwc(pwb + (((int64_t)mul15(l2, pd) * 0x26666666ll) >> 15));
+        dc1 = 32767 - (int32_t)(pw1 >> 16); dc2 = 32767 - (int32_t)(pw2 >> 16);
         for (i = 0; i < n; i++) {
-            int32_t acc = 0;
-            uint32_t k;
-            for (k = v0; k < v0 + nv; k++) {
-                uint32_t p;
-                o->ph[k] += inc_k[k];
-                p = o->ph[k] + (pm ? (uint32_t)pm[i] : 0u);
-                acc += mul15(saw_bl(p, inc_k[k], rc[k]), k == 0u ? cg : sg);
-            }
-            out[i] = mul15(acc, norm) << 1;
+            int32_t a, b, x;
+            uint32_t p, p2;
+            SYNC_STEP();
+            ph += inc1;
+            p = ph + (pm ? (uint32_t)pm[i] : 0u);
+            a = mul15(saw_bl(p, inc1, rc1), sw) + mul15(sqr_bl(p, pw1, inc1, rc1) - dc1, uw);   /* (dc: a narrow pulse's offset taken out) */
+            if (two) {
+                ph1 += inc2;
+                p2 = ph1 + (pm ? (uint32_t)pm[i] : 0u);
+                b = mul15(saw_bl(p2, inc2, rc2), sw) + mul15(sqr_bl(p2, pw2, inc2, rc2) - dc2, uw);
+                x = (a + b) >> 1;
+            } else x = a;
+            x = mul15(x, norm);
+            if (nz) { nr ^= nr << 13; nr ^= nr >> 17; nr ^= nr << 5; x += mul15((int32_t)(nr >> 17) - 16384, nz); }
+            out[i] = clip(x, 32767);
         }
+        o->ph[0] = ph; o->ph[1] = ph1; o->f[0] = nr;
         return;
     }
     case E_WAVE: {                              /* 8 frames, read with a warp of the phase */

@@ -156,7 +156,7 @@ static struct {
     uint8_t norm, deep, askv;                   /* AUTO LEVEL on, DEEP BASS (0 off, 1 deep, 2 max); askv: the start question was switched off once (0.10) */
     uint8_t bri;                                /* BRIGHTNESS: 0 ECO, 1 NORMAL, 2 BRIGHT, 3 MAX */
     uint8_t qlfo;                               /* QUICK ASSIGN (LFO held + a knob): 0 LFO 1, 1 LFO 2 */
-    uint8_t eng8;                               /* ENGINES: 0 ESSENTIAL (the first four: ANALOG SUPER WAVE FM), 1 ALL (eight) */
+    uint8_t eng8;                               /* ENGINES: 0 ESSENTIAL (the first four: ANALOG CS WAVE FM), 1 ALL (eight) */
     uint8_t asave;                              /* AUTOSAVE: the sound being made kept every minute (back at the next start) */
     uint8_t pquant;                             /* FX PADS: the keys wait for the next 0 OFF, 1 BAR, 1/2, 1/4, 1/8, 1/16, 1/24, 1/32, 1/64 */
     uint8_t lang;                               /* LANGUAGE: 0 ENGLISH, 1 FRANCAIS, 2 ESPANOL (the view titles; the rest stays in English) */
@@ -872,7 +872,7 @@ static uint32_t tag_of(const int8_t *p)
     for (k = 0; k < 2u; k++) {
         int32_t e = p[k ? B_ENG : A_ENG];
         if (!(k ? gb : ga)) continue;
-        if (e == E_SUPER) t |= 1u << TG_REESE;
+        if (e == E_CS && p[k ? B_P2 : A_P2] >= 40) t |= 1u << TG_REESE;   /* (CS, two channels well apart: the reese's beating) */
         if (e == E_FM || e == E_VOCAL || e == E_FOLD || e == E_PHASE) t |= 1u << TG_GROWL;
     }
     if (p[F_TYPE] == FT_VOWEL) t |= 1u << TG_GROWL;
@@ -1906,7 +1906,13 @@ static void item_text(uint32_t id, char *b)
             static const char *const W[4] = {"SINE", "TRI", "SAW", "SQUARE"};
             if ((v * 3) % 127 != 0) *b++ = '~';
             str_cat(b, W[(v * 3 + 63) / 127]);
-        } else if (e == E_SUPER && k == 3) fmt_u(b, SUPER_N[q >> 13], 0);
+        } else if (e == E_CS && k == 1) {          /* CS WAVE: SAW, BOTH, PULSE (~ in between) */
+            static const char *const W[3] = {"SAW", "BOTH", "PULSE"};
+            str_cat(b, W[(v * 2 + 63) / 127]);
+        } else if (e == E_CS && k == 2) {          /* CS DETUNE: the two channels apart, cents */
+            uint32_t c = (uint32_t)(((uint64_t)q * q * 350u) >> 30);   /* (tenths: 0 .. 350) */
+            b = fmt_u(b, c / 10u, 0); *b++ = '.'; b = fmt_u(b, c % 10u, 0); str_cat(b, " CT");
+        }
         else if (e == E_WAVE && k == 2) str_cat(b, L_WT[q >> 12]);
         else if (e == E_FM && k == 2) str_cat(b, L_RATIO[q >> 11]);
         else if (e == E_PHASE && k == 2) str_cat(b, L_PDT[(q * 6) >> 15]);
@@ -3121,6 +3127,18 @@ static void app_init(void)
     ks_bpm10 = set.bpm10;
     store_load();
     store_fixup();
+    if (set.askv == 7u) {                       /* (1.0.24: 4 factory presets more, the CS ones: the user slots' favourites and MORPH codes follow, once) */
+        int32_t i;
+        for (i = 95; i >= (int32_t)NFACTORY; i--) {
+            int32_t f = i - 4, on = f >= (int32_t)NFACTORY - 4 && (set.fav[f >> 3] >> (f & 7) & 1u);
+            set.fav[i >> 3] = (uint8_t)((set.fav[i >> 3] & ~(1u << (i & 7))) | (on ? 1u << (i & 7) : 0u));
+        }
+        for (i = (int32_t)NFACTORY - 4; i < (int32_t)NFACTORY; i++) set.fav[i >> 3] &= (uint8_t)~(1u << (i & 7));   /* (the new ones: not favourites) */
+        for (i = 0; i < 4; i++) if (perf.mx_pre[i] >= MX_VAR + NFACTORY - 4u && perf.mx_pre[i] + 4u < MX_NCODE) perf.mx_pre[i] = (uint8_t)(perf.mx_pre[i] + 4u);
+        if (perf.ab_pre >= MX_VAR + NFACTORY - 4u && perf.ab_pre + 4u < MX_NCODE) perf.ab_pre = (uint8_t)(perf.ab_pre + 4u);
+        perf_touch();
+        set.askv = 8; set_dirty = 1; set_ms = fm1_ms;
+    }
     load_preset(set.bank, set.idx);
     if (set.asave && work.magic == WK_MAGIC && work.sum == wk_sum() && work.bank == set.bank && work.idx == set.idx) {   /* AUTOSAVE: the sound as it was left */
         int8_t p[NP_MAX];
