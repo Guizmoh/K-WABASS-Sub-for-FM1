@@ -939,13 +939,14 @@ static void save_g(int32_t x, int32_t y0, int32_t w, int32_t ty)   /* the name b
     if (g_vis(ty + T_L->h, 2)) { char ch[2] = {pname[save_pos] ? pname[save_pos] : ' ', 0}; g_rect(cx, ty + T_L->h, g_text_w(T_L, ch), 2, K_LIME); }
     p = str_cat(b, "B");
     fmt_u(p, save_slot + 1u, 2);
-    row_g(x - 2, y0, w, 24, "SLOT", b, 1, K_CYAN, T_S);
+    row_g(x - 2, y0, w, 21, "SLOT", b, 1, K_CYAN, T_S);
     str_cat(sub, up_valid(save_slot) ? ustore[save_slot].name : "- EMPTY -");
-    row_g(x - 2, y0 + 29, w, 24, "NOW IN SLOT", sub, 0, K_GREY, T_S);
-    row_g(x - 2, y0 + 58, w, 24, "STYLE", L_STYLE[clampi(patch[P_STYLE], 0, NSTYLE - 1)], 0, K_CYAN, T_S);
-    if (g_vis(y0 + 90, 26)) {
-        g_text(T_XS, x, y0 + 92, "KEYS: LETTERS \xB7 K2 PLACE \xB7 K3 SIGNS \xB7 K4 STYLE", K_GREY);
-        g_text(T_XS, x, y0 + 104, "PRESS SAVE AGAIN TO WRITE", K_LIME);
+    row_g(x - 2, y0 + 23, w, 21, "NOW IN SLOT", sub, 0, K_GREY, T_S);
+    row_g(x - 2, y0 + 46, w, 21, "STYLE", L_STYLE[clampi(patch[P_STYLE], 0, NSTYLE - 1)], 0, K_CYAN, T_S);
+    row_g(x - 2, y0 + 69, w, 21, "NEW PRESET", new_arm ? "TURN K4 AGAIN" : "K4 \xB7 INIT", 0, new_arm ? K_LIME : K_CYAN, T_S);
+    if (g_vis(y0 + 92, 20)) {
+        g_text(T_XS, x, y0 + 92, "KEYS: LETTERS \xB7 K2 PLACE \xB7 K3 SIGNS \xB7 ALGO STYLE", K_GREY);
+        g_text(T_XS, x, y0 + 101, "PRESS SAVE AGAIN TO WRITE", K_LIME);
     }
 }
 

@@ -160,6 +160,8 @@ static struct {
     uint8_t sync;                               /* SYNC OUT: 1 a pulse every eighth on the left (POCKET OPERATOR SY, VOLCA), the sound in mono on the right */
 } set = {6, 0, 0, 0xFF, 1400, 0, 0, 1, 0, 0, 0, 0, 0, {0}, 1, 0, 0, 1, 0, 1, 1, 0, 1, 1, 1, 0, 3, 1, 0, 1, 0, 0};
 static char pname[14];
+static uint8_t new_arm;                         /* SAVE, K4 turned once: turn it again to start a new preset */
+static uint32_t new_ms;
 static uint8_t page, vcur[NPAGE], cursor[sizeof VIEWS / sizeof VIEWS[0]], pre_cur[2], save_slot, save_pos, hold;
 static uint8_t key_note[27], latched[128], phys[128];
 static uint32_t prev_keys, toast_ms, set_ms, last_turn_ms, turn_start_ms, tap_ms[4];
@@ -2079,6 +2081,7 @@ static void ui_leds(void)
 {
     uint32_t i, beat = ((ks_beats >> 24) & 1u) == 0u && ((ks_beats >> 21) & 7u) < 2u;
     for (i = 0; i < 41u; i++) led_want[i] = 0;
+    if (new_arm && fm1_ms - new_ms > 3000u) { new_arm = 0; g_force = 1; }
     for (i = 0; i < NPAGE; i++) led(PAGE_BTN[i], i == page ? 2u : 1u);
     led(BTN_PLAY, sq_play ? (beat ? 2u : 1u) : hold ? 1u : 0u);
     led(BTN_REC, sq_rec ? 2u : beat ? 1u : 0u);
@@ -2238,6 +2241,22 @@ static void save_open(void)
     save_pos = 0;
     page = PG_PRE;
     vcur[PG_PRE] = 2;
+}
+static void save_new(void)                    /* SAVE, K4: a new preset: the INIT sound (turn twice in 3 s; SAVE held + OCT- brings the old one back) and an empty name */
+{
+    uint32_t k, i;
+    char nm[14];
+    if (!new_arm || fm1_ms - new_ms > 3000u) { new_arm = 1; new_ms = fm1_ms; g_force = 1; return; }
+    new_arm = 0;
+    for (k = 0; k < NFACTORY; k++) { int8_t pp[NP_MAX]; preset_factory(k, pp, nm); if (nm[0] == 'I' && nm[1] == 'N' && nm[2] == 'I' && nm[3] == 'T' && !nm[4]) break; }
+    if (k >= NFACTORY) { toast("NO INIT SOUND"); return; }
+    load_preset(0, k);
+    for (i = 0; i < 13u; i++) pname[i] = ' ';
+    pname[13] = 0;
+    save_pos = 0;
+    for (save_slot = 0; save_slot < NUSER - 1u && up_valid(save_slot); save_slot++) {}
+    toast("NEW PRESET: TYPE A NAME");
+    g_force = 1;
 }
 static void name_trim(void) { int32_t i; for (i = 12; i >= 0 && pname[i] == ' '; i--) pname[i] = 0; }
 
@@ -2447,12 +2466,13 @@ static void on_enc(uint32_t e, int32_t d)
     if (v->lay == LY_SAVE) {
         if (e == ENC_KNOB1 || e == ENC_SELECT) save_slot = (uint8_t)clampi(save_slot + d, 0, NUSER - 1);
         else if (e == ENC_KNOB2) save_pos = (uint8_t)clampi(save_pos + d, 0, 12);
-        else if (e == ENC_KNOB3 || e == ENC_ALGORITHM) {
+        else if (e == ENC_KNOB3) {
             static const char CH[] = " ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-/.#";
             int32_t i, n = (int32_t)sizeof CH - 1;
             for (i = 0; i < n && CH[i] != pname[save_pos]; i++) {}
             pname[save_pos] = CH[((i + d) % n + n) % n];
-        } else if (e == ENC_KNOB4) patch[P_STYLE] = (int8_t)clampi(patch[P_STYLE] + d, 0, NSTYLE - 1);
+        } else if (e == ENC_ALGORITHM) patch[P_STYLE] = (int8_t)clampi(patch[P_STYLE] + d, 0, NSTYLE - 1);
+        else if (e == ENC_KNOB4) save_new();
         return;
     }
     if (e == ENC_SELECT) {
@@ -3061,7 +3081,7 @@ WASM_EXPORT("ksub_knob_label") const char *ksub_knob_label(uint32_t i)
     const view_t *v = view();
     if (i >= 4u) return "";
     if (v->lay == LY_PRESET) return i == 0u ? "SCROLL" : i == 2u ? "LOAD" : "";
-    if (v->lay == LY_SAVE) return i == 0u ? "SLOT" : i == 1u ? "POSITION" : i == 2u ? "LETTER" : "STYLE";
+    if (v->lay == LY_SAVE) return i == 0u ? "SLOT" : i == 1u ? "POSITION" : i == 2u ? "LETTER" : "INIT";
     if (win == 3u) { static const char *const KE[4] = {"FREQ", "GAIN", "Q", "SHAPE"}; return KE[i]; }
     if (win == 6u) { static const char *const KP[4] = {"CUTOFF", "RESO", "TYPE", "A/B"}; return KP[i]; }
     if (win == 7u) return mc_name(i);
