@@ -32,6 +32,7 @@ enum { I_L1RATE = 140, I_L2RATE, I_ABMIX, G_MIDICH, G_BPM, G_CLOCK, G_OCT, G_COR
        G_SQ_ON,                                                                      /* SEQ BASS: the sequence ON / OFF (OFF: the drums play, the bass is free to play live) */
        G_NEWSONG,                                                                    /* SYSTEM: NEW SONG (the sound, every pattern, the locks and the automation back to empty) */
        G_L3_RATE, G_L3_DEP, G_L3_SHP, G_L3_DST, G_L3_SYNC,                           /* LFO 3 (in the settings: whatever the patch) */
+       G_DK_KSAT, G_DK_SNAP, G_DK_ECHO,                                              /* DRUMS: KICK DRIVE, SNAPPY, DUB ECHO (1.0.32, in dk.pad) */
        I_NONE = 255 };
 
 typedef struct {
@@ -55,8 +56,8 @@ static const view_t VIEWS[] = {
     {LY_BOX, "FILTER / COLOUR", 4, {F_CUT, F_RES, F_DRV, F_TYPE}, "FX"},
     {LY_LIST, "FILTER MOD", 6, {F_ENV, F_KEY, F_VEL, F_TYPE, F_CUT, F_RES}, "FX"},
     {LY_LIST, "SEQ BASS", 14, {G_SQ_ON, G_SQ_STEP, G_SQ_NOTE, G_SQ_GATE, G_SQ_TYPE, G_SQ_PROB, G_SQ_COND, G_SQ_LKP, G_SQ_LKV, G_SQ_PAT, G_SQ_PRESET, G_SQ_LEN, G_SQ_RATE, G_SQ_SWING}, "SEQ"},
-    {LY_LIST, "DRUMS", 16, {G_DK_LVL, G_DK_TUNE, G_DK_DEC, G_DK_TONE, G_DK_TRK, G_DK_STEP, G_DK_HIT, G_DK_PROB, G_DK_COND, G_DK_PAT, G_DK_PRE,
-                            G_DK_LEN, G_DK_KIT, G_DK_VOL, G_DK_MODE, G_DK_SWING}, "SEQ"},   /* (black keys: the track, white: its steps, OCT: the page) */
+    {LY_LIST, "DRUMS", 19, {G_DK_LVL, G_DK_TUNE, G_DK_DEC, G_DK_TONE, G_DK_TRK, G_DK_STEP, G_DK_HIT, G_DK_PROB, G_DK_COND, G_DK_PAT, G_DK_PRE,
+                            G_DK_LEN, G_DK_KIT, G_DK_VOL, G_DK_KSAT, G_DK_SNAP, G_DK_ECHO, G_DK_MODE, G_DK_SWING}, "SEQ"},   /* (black keys: the track, white: its steps, OCT: the page) */
     {LY_LFO, "LFO 1 \xB7 WOBBLE", 9, {I_L1RATE, L1_DEP, L1_SHP, L1_DST, G_GRID, L1_SYNC, L1_TRIG, L1_PH, L1_SMO}, "LFO"},
     {LY_LFO, "LFO 2 \xB7 MOTION", 9, {I_L2RATE, L2_DEP, L2_SHP, L2_DST, G_GRID, L2_SYNC, L2_TRIG, L2_PH, L2_SMO}, "LFO"},
     {LY_STEP, "STEP FX", 7, {ST_PAT, ST_RATE, ST_GATE, ST_DEP, ST_ON, ST_DST, ST_SMO}, "LFO"},
@@ -110,7 +111,7 @@ static struct {                                 /* the user slots' settings past
     uint8_t magic, sum;
     int8_t p[NUSER][NP_MAX - NP_STORE];
 } uext;
-typedef char ids_fit[G_L3_SYNC < I_NONE ? 1 : -1];
+typedef char ids_fit[G_DK_ECHO < I_NONE ? 1 : -1];
 typedef char np_fits[NP <= I_L1RATE && NP <= NP_MAX ? 1 : -1];   /* (the patch's ids under the others') */
 #define CC_MAGIC 0x44u                          /* (0x43: before 0.9.55, the ids past the patch 4 lower) */
 #define WK_AT 0xC00u                            /* (the 2nd sector, after the slots' rest: the sound being made, AUTOSAVE) */
@@ -162,7 +163,7 @@ static struct {
     uint8_t lang;                               /* LANGUAGE: 0 ENGLISH, 1 FRANCAIS, 2 ESPANOL (the view titles; the rest stays in English) */
     uint8_t sync;                               /* SYNC OUT: 1 a pulse every eighth on the left (POCKET OPERATOR SY, VOLCA), the sound in mono on the right */
     int8_t l3[NL3];                             /* LFO 3: shape, sync, rate, division, depth, destination (whatever the patch: 1.0.17) */
-    uint8_t fav2[4];                            /* the favourites 96 .. 127 (1.0.31: 80 factory presets) */
+    uint8_t fav2[4];                            /* the favourites 96 .. 127 (1.0.32: 96 factory presets, 32 user) */
 } set = {6, 0, 0, 0xFF, 1400, 0, 0, 1, 0, 0, 0, 0, 0, {0}, 1, 0, 0, 1, 0, 1, 1, 0, 1, 1, 1, 0, 3, 1, 0, 1, 0, 0, 0, {0, 1, 64, 9, 0, D_CUT}, {0}};
 static void l3_push(void) { uint32_t i; for (i = 0; i < NL3; i++) l3cfg[i] = set.l3[i]; }   /* (the settings to the audio) */
 static char pname[14];
@@ -218,7 +219,7 @@ static void dk_defaults(void)                   /* the patterns empty (PLAY play
     memset(&dk, 0, sizeof dk);
     dk.magic = DK_MAGIC; dk.vol = 100;
     memcpy(dk.prm, P0, sizeof dk.prm);
-    for (k = 0; k < DK_NPAT; k++) dk.pat[k].len = 16;
+    for (k = 0; k < DK_NPAT; k++) dk.pat[k].len = 32;
     dk_mark();
 }
 /* PARAMETER LOCKS: the 6th sector (pl is 2 KiB) */
@@ -627,9 +628,10 @@ static uint32_t sq_gl_near(uint32_t g, uint32_t m)   /* a note length index, m t
     for (i = 0; i < 15u; i++) { uint64_t d = SQ_GL[i] > want ? SQ_GL[i] - want : want - SQ_GL[i]; if (d < bd) { bd = d; best = i; } }
     return best;
 }
-static void sq_load_preset(uint32_t sel)        /* 1.. : SQP[(sel - 1) / 3] in 16, 32 or 64 steps */
+static uint32_t pre_size(uint32_t l) { return l <= 16u ? 16u : l <= 32u ? 32u : 64u; }   /* (a library pattern: as long as the pattern it goes in) */
+static void sq_load_preset(uint32_t sel)        /* 1.. : SQP[sel - 1], at the pattern's length: 32 the riff and its fill, 64 twice that, 16 the riff alone */
 {
-    uint32_t pi = (sel - 1u) / 3u % NSQP, size = 16u << ((sel - 1u) % 3u), m = size / 16u, k = perf.cur % SQ_NPAT, i, seg, root = 12;
+    uint32_t pi = (sel - 1u) % NSQP, size = pre_size(sq_len()), m = size / 16u, k = perf.cur % SQ_NPAT, i, seg, root = 12;
     uint8_t n[16], f[16], g[16];
     sq_parse(SQP[pi].t, n, f, g);
     for (i = 0; i < 16u; i++) if (f[i] & SF_ON) { root = n[i]; break; }
@@ -655,9 +657,9 @@ static void sq_load_preset(uint32_t sel)        /* 1.. : SQP[(sel - 1) / 3] in 1
     if (sq_cur_step >= size) sq_cur_step = 0;
     sqx_touch();
 }
-static void dk_load_preset(uint32_t sel)        /* 1.. : DKP[(sel - 1) / 3] in 16, 32 or 64 steps */
+static void dk_load_preset(uint32_t sel)        /* 1.. : DKP[sel - 1], at the pattern's length (as SEQ BASS) */
 {
-    uint32_t pi = (sel - 1u) / 3u % NDKP, size = 16u << ((sel - 1u) % 3u), m = size / 16u, t, i, seg;
+    uint32_t pi = (sel - 1u) % NDKP, size = pre_size(dk_len()), m = size / 16u, t, i, seg;
     dkpat_t *q = &dk.pat[dk.cur % DK_NPAT];
     const char *c = DKP[pi].t;
     memset(q->on, 0, sizeof q->on); memset(q->acc, 0, sizeof q->acc); memset(q->pc, 0, sizeof q->pc);
@@ -1452,10 +1454,12 @@ static void item_range(uint32_t id, int32_t *lo, int32_t *hi)
     if (id == G_SQ_LKP) *hi = NPKB - 1;
     if (id == G_SQ_LKV) { *lo = PD[PB_ID[sq_lkp % NPKB]].lo - 1; *hi = PD[PB_ID[sq_lkp % NPKB]].hi; }   /* (under the setting's range: OFF) */
     if (id == G_SQ_GATE) *hi = 15;
-    if (id == G_SQ_PRESET) *hi = (int32_t)(NSQP * 3u);
+    if (id == G_SQ_PRESET) *hi = (int32_t)NSQP;
+    if (id == G_DK_KSAT || id == G_DK_SNAP) { *lo = 0; *hi = 7; }
+    if (id == G_DK_ECHO) { *lo = 0; *hi = 1; }
     if (id >= G_DK_LVL && id <= G_DK_SWING) {
         static const int16_t LO[16] = {0, -64, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0};
-        static const int16_t HI[16] = {127, 63, 127, 127, NDK - 1, DK_MAX - 1, 2, 15, NSC - 1, DK_NPAT - 1, NDKP * 3, DK_MAX, DK_NKIT - 1, 127, 2, 50};
+        static const int16_t HI[16] = {127, 63, 127, 127, NDK - 1, DK_MAX - 1, 2, 15, NSC - 1, DK_NPAT - 1, NDKP, DK_MAX, DK_NKIT - 1, 127, 2, 50};
         *lo = LO[id - G_DK_LVL]; *hi = HI[id - G_DK_LVL];
         if (id == G_DK_STEP) *hi = (int32_t)dk_len() - 1;
     }
@@ -1525,6 +1529,9 @@ static int32_t item_get(uint32_t id)
     case G_SQ_LKV: { int32_t i = pl_find(PL_BASS | perf.cur % SQ_NPAT, sq_cur_step % SQ_MAX, sq_lkp % NPKB); return i >= 0 ? pl.l[i].v : PD[PB_ID[sq_lkp % NPKB]].lo - 1; }
     case G_SQ_GATE: return sqx.p[perf.cur % SQ_NPAT].cond[sq_cur_step % SQ_MAX] >> 4;
     case G_SQ_PRESET: return sq_psel;
+    case G_DK_KSAT: return dk.pad & 7u;
+    case G_DK_SNAP: return dk.pad >> 3 & 7u;
+    case G_DK_ECHO: return !(dk.pad & 0x40u);
     case G_DK_LVL: case G_DK_TUNE: case G_DK_DEC: case G_DK_TONE: return dk.prm[dk_trk % NDK][id - G_DK_LVL];
     case G_DK_TRK: return dk_trk;
     case G_DK_STEP: return dk_cur;
@@ -1626,6 +1633,13 @@ static void item_set(uint32_t id, int32_t v)
         dk_touch();
         return;
     }
+    if (id == G_DK_KSAT || id == G_DK_SNAP || id == G_DK_ECHO) {   /* (three settings in dk.pad: bits 0-2, 3-5, 6 the echo OFF) */
+        uint32_t p = dk.pad;
+        p = id == G_DK_KSAT ? (p & ~7u) | (uint32_t)v : id == G_DK_SNAP ? (p & ~0x38u) | (uint32_t)v << 3 : v ? p & ~0x40u : p | 0x40u;
+        dk.pad = (uint8_t)p;
+        dk_touch();
+        return;
+    }
     if (id == G_SQ_PRESET) {                    /* the library: at once; back to 0 puts the pattern back as it was */
         if (!sq_psel && v) sq_backup(0);
         if (v) sq_load_preset((uint32_t)v);
@@ -1652,7 +1666,7 @@ static void item_set(uint32_t id, int32_t v)
             else if (dk_bk.ok && dk_bk.k == dk.cur) *q = dk_bk.p;
             dk_psel = (uint8_t)v;
             break;
-        case G_DK_LEN: q->len = (uint8_t)v; if (dk_cur >= v) dk_cur = (uint8_t)(v - 1); dk_edited(); break;
+        case G_DK_LEN: q->len = (uint8_t)v; if (dk_cur >= v) dk_cur = (uint8_t)(v - 1); if (dk_psel) dk_load_preset(dk_psel); else dk_edited(); break;   /* (a preset: played again at the new length) */
         case G_DK_KIT: dk.kit = (uint8_t)v; break;
         case G_DK_VOL: dk.vol = (uint8_t)v; break;
         case G_DK_MODE: dk.mode = (uint8_t)((dk.mode & 4u) | (uint32_t)v); break;
@@ -1670,7 +1684,7 @@ static void item_set(uint32_t id, int32_t v)
         case G_SQ_NOTE: *sq_np(perf.cur, sq_cur_step) = (uint8_t)v; if (!(*nf & SF_ON)) *nf = SF_ON; if (sq_cur_step >= 16u) sqx_mark(); sq_edited(); break;
         case G_SQ_TYPE: *nf = SQ_FL[v]; if (sq_cur_step >= 16u) sqx_mark(); sq_edited(); break;
         case G_SQ_PAT: perf.cur = (uint8_t)v; sq_edited(); if (sq_cur_step >= sq_len()) sq_cur_step = 0; break;
-        case G_SQ_LEN: q->len = (uint8_t)v; if (sq_cur_step >= v) sq_cur_step = (uint8_t)(v - 1); sq_edited(); break;
+        case G_SQ_LEN: q->len = (uint8_t)v; if (sq_cur_step >= v) sq_cur_step = (uint8_t)(v - 1); if (sq_psel) sq_load_preset(sq_psel); else sq_edited(); break;
         case G_SQ_RATE: q->rate = (uint8_t)v; sq_edited(); break;
         case G_SQ_SWING: q->swing = (uint8_t)v; sq_edited(); break;
         case G_AR_ON: perf.ar_on = (uint8_t)v; break;
@@ -1820,6 +1834,9 @@ static const char *item_name(uint32_t id)
     case G_SQ_ON: return "SEQUENCE";
     case G_NEWSONG: return "NEW SONG";
     case G_DK_SWING: return "SWING";
+    case G_DK_KSAT: return "KICK DRIVE";
+    case G_DK_SNAP: return "SNARE SNAPPY";
+    case G_DK_ECHO: return "DUB ECHO";
     case G_SQ_RATE: return "RATE";
     case G_SQ_SWING: return "SWING";
     case G_AR_ON: return "ARP";
@@ -2026,9 +2043,9 @@ static void item_text(uint32_t id, char *b)
         }
         case G_SQ_PRESET: case G_DK_PRE:
             if (!v) { str_cat(b, "MY PATTERN"); break; }
-            b = str_cat(b, id == G_SQ_PRESET ? SQP[(uint32_t)(v - 1) / 3u % NSQP].name : DKP[(uint32_t)(v - 1) / 3u % NDKP].name);
+            b = str_cat(b, id == G_SQ_PRESET ? SQP[(uint32_t)(v - 1) % NSQP].name : DKP[(uint32_t)(v - 1) % NDKP].name);
             b = str_cat(b, " \xB7 ");
-            fmt_u(b, 16u << ((uint32_t)(v - 1) % 3u), 0);
+            fmt_u(b, pre_size(id == G_SQ_PRESET ? sq_len() : dk_len()), 0);
             break;
         case G_DK_LVL: case G_DK_DEC: case G_DK_TONE: case G_DK_VOL: fmt_u(b, (uint32_t)v, 0); break;
         case G_DK_TUNE: if (v) fmt_s(b, v); else str_cat(b, "0"); break;
@@ -2039,6 +2056,8 @@ static void item_text(uint32_t id, char *b)
         case G_DK_PAT: b = str_cat(b, "P"); fmt_u(b, (uint32_t)v + 1u, 0); break;
         case G_DK_LEN: b = fmt_u(b, (uint32_t)v, 0); str_cat(b, " STEPS"); break;
         case G_DK_KIT: str_cat(b, dk_kname((uint32_t)v)); break;
+        case G_DK_KSAT: case G_DK_SNAP: if (v) fmt_u(b, (uint32_t)v, 0); else str_cat(b, "OFF"); break;
+        case G_DK_ECHO: str_cat(b, v ? "ON" : "OFF"); break;
         case G_SQ_ON: str_cat(b, v ? "ON" : "OFF (BASS LIVE)"); break;
         case G_NEWSONG: str_cat(b, new_arm == 2u ? "TURN AGAIN: ERASES ALL" : "TURN ALGO"); break;
         case G_DK_MODE: str_cat(b, v == 2 ? "BASS ONLY" : v ? "DRUMS ONLY" : "BASS + DRUMS"); break;
@@ -2386,7 +2405,7 @@ static void song_new(void)                      /* NEW SONG: the INIT sound, the
     notes_all_off();
     init_sound();
     dk_defaults(); pl_defaults(); sqx_defaults(); eq_defaults(); eq_dirty = 1;
-    for (k = 0; k < SQ_NPAT; k++) { memset(&perf.pat[k], 0, sizeof perf.pat[k]); perf.pat[k].len = 16; perf.pat[k].rate = 3; }
+    for (k = 0; k < SQ_NPAT; k++) { memset(&perf.pat[k], 0, sizeof perf.pat[k]); perf.pat[k].len = 32; perf.pat[k].rate = 3; }
     perf.cur = 0; sq_cur_step = 0; sq_psel = dk_psel = 0; sq_bk.ok = dk_bk.ok = 0;
     dk_cur = dk_trk = 0;
     sqx_touch(); dk_touch(); pl_mark(); perf_touch();
@@ -2833,7 +2852,7 @@ static void ask_done(uint32_t sel)
 {
     if (theme_ask) {                            /* (the very first start: on to the look) */
         theme_ask = 0;
-        if (set.ui != sel || first_run || set.askv < 2u) { set.ui = (uint8_t)sel; if (set.askv < 9u) set.askv = 9; set_dirty = 1; set_ms = fm1_ms; first_run = 0; }
+        if (set.ui != sel || first_run || set.askv < 2u) { set.ui = (uint8_t)sel; if (set.askv < 10u) set.askv = 10; set_dirty = 1; set_ms = fm1_ms; first_run = 0; }
         ask_on = 2; ask_sel = 0; ask_ms = fm1_ms;
         theme_set(ASK_TH[0], set.pal);          /* (each one shown as it is chosen) */
         g_force = 1;
@@ -2841,7 +2860,7 @@ static void ask_done(uint32_t sel)
     }
     ask_on = 0;
     splash_until = 0;
-    if (set.ui != sel || first_run || set.askv < 2u) { set.ui = (uint8_t)sel; if (set.askv < 9u) set.askv = 9; set_dirty = 1; set_ms = fm1_ms; first_run = 0; }
+    if (set.ui != sel || first_run || set.askv < 2u) { set.ui = (uint8_t)sel; if (set.askv < 10u) set.askv = 10; set_dirty = 1; set_ms = fm1_ms; first_run = 0; }
     toast(sel ? "SHIFT MODE" : "CLASSIC MODE");
     g_force = 1;
 }
@@ -3195,6 +3214,18 @@ static void app_init(void)
         if (perf.ab_pre >= MX_VAR + 64u && perf.ab_pre + 16u < MX_NCODE) perf.ab_pre = (uint8_t)(perf.ab_pre + 16u);
         perf_touch();
         set.askv = 9; set_dirty = 1; set_ms = fm1_ms;
+    }
+    if (set.askv == 9u) {                       /* (1.0.32: 16 more again, 96 factory presets: the same move, from 80) */
+        int32_t i;
+        for (i = 127; i >= 80; i--) {
+            int32_t f = i - 16, on = f >= 80 && (*fav_b((uint32_t)f) >> (f & 7) & 1u);
+            uint8_t *b = fav_b((uint32_t)i);
+            *b = (uint8_t)((*b & ~(1u << (i & 7))) | (on ? 1u << (i & 7) : 0u));
+        }
+        for (i = 0; i < 4; i++) if (perf.mx_pre[i] >= MX_VAR + 80u && perf.mx_pre[i] + 16u < MX_NCODE) perf.mx_pre[i] = (uint8_t)(perf.mx_pre[i] + 16u);
+        if (perf.ab_pre >= MX_VAR + 80u && perf.ab_pre + 16u < MX_NCODE) perf.ab_pre = (uint8_t)(perf.ab_pre + 16u);
+        perf_touch();
+        set.askv = 10; set_dirty = 1; set_ms = fm1_ms;
     }
     load_preset(set.bank, set.idx);
     if (set.asave && work.magic == WK_MAGIC && work.sum == wk_sum() && work.bank == set.bank && work.idx == set.idx) {   /* AUTOSAVE: the sound as it was left */

@@ -1299,9 +1299,9 @@ static const uint16_t DK_TR[32] = {256, 280, 306, 335, 366, 400, 438, 479, 524, 
 #define DK_NKIT 4u
 enum { DK_808, DK_909, DK_DUB, DK_ACOU };
 static const uint16_t DK_TMIN[DK_NKIT][NDK] = {{80, 30, 25, 4, 60, 50, 25, 150}, {50, 25, 22, 4, 50, 40, 6, 120},
-                                              {150, 22, 40, 5, 80, 70, 60, 200}, {60, 45, 25, 5, 70, 80, 40, 260}};   /* the shortest decay (ms) */
-static const uint16_t DK_TRIM[DK_NKIT][NDK] = {{295, 315, 675, 1855, 1915, 305, 320, 2095}, {300, 335, 990, 2615, 2615, 285, 360, 2590},
-                                              {300, 360, 1030, 1740, 1855, 305, 485, 1835}, {310, 250, 640, 2210, 1795, 300, 340, 1190}};   /* (levels evened out at the default sounds, Q8; the hats were far too quiet before 0.9.54) */
+                                              {150, 22, 40, 5, 80, 70, 60, 200}, {60, 30, 25, 4, 40, 80, 40, 140}};   /* (ACOUSTIC's snare, hats, cymbal drier: 1.0.32) */   /* the shortest decay (ms) */
+static const uint16_t DK_TRIM[DK_NKIT][NDK] = {{470, 315, 675, 1855, 1915, 305, 320, 2095}, {480, 335, 990, 2615, 2615, 285, 360, 2590},
+                                              {480, 360, 1030, 1740, 1855, 305, 485, 1835}, {495, 250, 640, 2210, 1795, 300, 340, 1190}};   /* (levels evened out at the default sounds, Q8; the hats were far too quiet before 0.9.54) */
 static const uint16_t DK_SEND[NDK] = {0, 16000, 18000, 3000, 9000, 14000, 22000, 7000};   /* DUB TECHNO: into its echo, Q15 */
 static const uint32_t DK_METAL[6] = {19994485u, 29645987u, 35995916u, 50906562u, 52591436u, 77913239u};   /* 808: 205 304 370 523 540 800 Hz */
 static uint32_t dk_cf(uint32_t ms10) { uint32_t tau = ms10 * 441u / 100u; return 0xFFFFFFFFu / (tau < 20u ? 20u : tau); }   /* (2^32/tau, 32-bit: no 64-bit divide on the chip) */   /* (tenths of ms) */
@@ -1336,14 +1336,15 @@ static void dk_start(uint32_t t, uint32_t vel)
         break;
     }
     case DK_SNARE: {                            /* two sines and a high-passed noise (TONE: the snares) */
-        static const uint8_t N1[DK_NKIT] = {54, 55, 57, 53}, N2[DK_NKIT] = {64, 66, 69, 60}, NL[DK_NKIT] = {12, 15, 9, 24};
+        static const uint8_t N1[DK_NKIT] = {54, 55, 57, 53}, N2[DK_NKIT] = {64, 66, 69, 60}, NL[DK_NKIT] = {12, 15, 9, 14};
+        uint32_t snap = dk.pad >> 3 & 7u;      /* SNAPPY: the wires louder and longer */
         v->inc = pitch_inc(N1[kit] * 256 + tq8);
         v->inc2 = pitch_inc(N2[kit] * 256 + tq8);
         v->sweep = kit == DK_909 ? v->inc / 3u : kit == DK_ACOU ? v->inc / 2u : 0u;
         v->pe = 1 << 30; v->pcf = dk_cf(kit == DK_ACOU ? 60u : 150u);
-        v->ne = 1 << 30; v->ncf = dk_cf(ms10 * NL[kit] / 10u);
+        v->ne = 1 << 30; v->ncf = dk_cf(ms10 * NL[kit] * (10u + snap * 4u) / 100u);
         v->fa = kit == DK_909 ? 9000 : kit == DK_DUB ? 4500 : kit == DK_ACOU ? 7000 : 6000;
-        v->fq = kit == DK_ACOU ? 88 : kit == DK_DUB ? 56 : 64;   /* (the noise's share, /32) */
+        v->fq = (kit == DK_ACOU ? 88 : kit == DK_DUB ? 56 : 64) * (8 + (int32_t)snap * 2) / 8;   /* (the noise's share, /32) */
         break;
     }
     case DK_CLAP:                               /* noise in a band, four quick bursts, then the tail */
@@ -1403,6 +1404,7 @@ static int32_t dk_voice(dkv_t *v, uint32_t t, uint32_t kit)   /* one sample */
         if (v->ne) s += mul15(dk_noise(), dk_env(&v->ne, v->ncf));
         if (kit == DK_909) s = sat15(s + (s >> 1));
         else if (kit == DK_ACOU) { v->lo += (s - v->lo) >> 2; s = sat15(v->lo + (v->lo >> 2)); }   /* (the beater a little dulled) */
+        if (dk.pad & 7u) s = sat15(mul15(s, 32768 + (int32_t)(dk.pad & 7u) * 14000));   /* KICK DRIVE: up to 4 times into a soft clip */
         return mul15(s, a);
     case DK_SNARE: {
         int32_t n = dk_noise(), e = dk_env(&v->ne, v->ncf), body;
@@ -1504,7 +1506,7 @@ static void dk_render(uint32_t n)               /* the drums for this block -> d
     for (t = 0; t < NDK; t++) {
         dkv_t *v = &dkv[t];
         uint32_t at = dk_trig_at[t];
-        int32_t snd = kit != DK_DUB ? 0 : dk_lkm[t] >> PK_ECHO & 1u ? dk_lkv[t][PK_ECHO] * 258 : DK_SEND[t], o;
+        int32_t snd = kit != DK_DUB || (dk.pad & 0x40u) ? 0 : dk_lkm[t] >> PK_ECHO & 1u ? dk_lkv[t][PK_ECHO] * 258 : DK_SEND[t], o;
         if (at == 0xFFFFu && !v->on && !dk_rn[t]) continue;
         dk_trig_at[t] = 0xFFFFu;
         for (i = 0; i < n; i++) {
@@ -1517,7 +1519,7 @@ static void dk_render(uint32_t n)               /* the drums for this block -> d
             if (v->amp < (1 << 16) && (t != DK_CLAP || v->clk >= 4u)) v->on = 0;
         }
     }
-    if (kit == DK_DUB) dk_echo(n);
+    if (kit == DK_DUB && !(dk.pad & 0x40u)) dk_echo(n);   /* (DUB ECHO OFF: the kit dry) */
     else de.on = 0;
 }
 
