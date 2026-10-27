@@ -2,7 +2,7 @@
 
 [English](SPECIFICATIONS.md) · [Français](fr/CAHIER-DES-CHARGES.md)
 
-A modern bass synth for the M-VAVE FM-1 (JieLi AC79, two cores, no FPU). Last update: **1.0.16**.
+A modern bass synth for the M-VAVE FM-1 (JieLi AC79, two cores, no FPU). Last update: **1.0.17**.
 This document says where the project stands: what is done, what has to be checked, what is left, and ideas to go further.
 
 ## 1. Vision
@@ -19,7 +19,7 @@ This document says where the project stands: what is done, what has to be checke
 | Engines | 8 engines per oscillator (analog, super/reese, wavetable, FM, phase dist, wavefolder, sync, vocal); `SYSTEM › ENGINES` picks the first 4 (ESSENTIAL, default) or all 8 | ≤ 0.9, 0.9.19 |
 | Oscillators | A + B (ADD, RING, X-MOD, SYNC), sub, noise, **OSC C sample** (18 sounds including 8 attacks, 9 textures; START / END cut, speed 25–400 % at the same pitch, forward / reverse / ping-pong, loop / once; 0.9.55) | 0.9.9-4 |
 | Filter | 7 characters (LP24, LP12, BAND, HIGH, NOTCH, VOWEL, COMB), drive, mod by envelope, keyboard, velocity | ≤ 0.9 |
-| Modulation | 3 envelopes, 2 LFOs locked to the tempo (round grid option), STEP FX (16 patterns), 4-slot matrix, 4 MACROS × 4 targets | ≤ 0.9 |
+| Modulation | 3 envelopes, 3 LFOs locked to the tempo (the 3rd global, whatever the patch) (round grid option), STEP FX (16 patterns), 4-slot matrix, 4 MACROS × 4 targets | ≤ 0.9 |
 | Effects | Saturation, compressor + PUMP, bitcrush, chorus, phaser, delay (4 types), reverb (4 types), glue, sub boost, **4-band EQ** | 0.9.3 → 0.9.9-3 |
 | Master | **DEEP BASS** (shelf +4 / +7 dB under 90 Hz), **always-on limiter**, **AUTO LEVEL** (normaliser) | 0.9.10 |
 | Voices | Mono, legato, poly 4, glide with time | ≤ 0.9 |

@@ -60,7 +60,7 @@ footer{margin-top:50px;border-top:1px solid var(--rule);padding-top:18px;color:v
 
 <section class="sec"><h2>What is it for?</h2>
 <div class="cards">
-<div class="card"><h3>Play a living bass</h3><p>The 27 keys play the bass, <b>K1–K4</b> set the four settings that matter on each page. Hold LFO and turn a knob: LFO 2 is wired to whatever that knob sets (or LFO 1, in the options).</p></div>
+<div class="card"><h3>Play a living bass</h3><p>The 27 keys play the bass, <b>K1–K4</b> set the four settings that matter on each page. Hold LFO and turn a knob: LFO 2 is wired to whatever that knob sets (with OCT−: LFO 1, with OCT+: <b>LFO 3</b>, the global one). <b>Three LFOs</b>, almost every setting a destination, the EQ included.</p></div>
 <div class="card"><h3>Effects on the keys</h3><p><b>FX PADS</b>: white keys set the wobble speed (4, 8, 16, 24, 32, 48), black keys play stutters, tape stop, DJ filter, saturation, phaser…</p></div>
 <div class="card"><h3>A real bass sound</h3><p>2 oscillators with 4 or 8 engines (reese, FM, wavetable…, your choice in the options), a sub locked on A, a sample layer and <b>resample</b>, 7 filters, <b>multiband OTT</b>, mono bass, compressor with pump, 4-band EQ, limiter and automatic level.</p></div>
 <div class="card"><h3>Morph between sounds</h3><p><b>MORPH X/Y</b>: four sounds in the corners of a square, a dot that blends them (an LFO can walk it). <b>MORPH A/B</b>: a fade on the beat.</p></div>
@@ -95,13 +95,14 @@ footer{margin-top:50px;border-top:1px solid var(--rule);padding-top:18px;color:v
 <section class="sec" id="news"><h2>Latest updates</h2>
 <!-- news: newest first; the first four in full -->
 <ol class="news">
+<li><span class="v">1.0.17</span><ul><li><b>LFO 3</b>: a third LFO, global (it stays when you change sound), the LFO page's last view: RATE / DIVISION, DEPTH, SHAPE, DEST, SYNC. Hold LFO + OCT+ and turn a knob to send it there; it is a source in the matrix too</li><li>README, manual and promo picture: 3 LFOs</li></ul></li>
 <li><span class="v">1.0.16</span><ul><li><b>LFO assign</b> (LFO held + a knob) now works in the <b>EQ</b> window (each band's FREQ and GAIN, swept smoothly between the steps), in FX PADS and in MORPH</li><li>37 new destinations for the LFOs, the matrix and the macros: the EQ, the three envelopes, GLIDE, DRIFT, KEY TRACK, FILTER VELOCITY, STEP depth, OSC C (level, tune, speed, start, end), the compressor (attack, release, pump), OTT (amount, low, high), phaser feedback, delay time</li><li>a knob that cannot be assigned says so</li></ul></li>
 <li><span class="v">1.0.15</span><ul><li><b>NEW SONG</b>: start a piece from zero in one gesture. On the SAVE screen, K4 to the left twice (to the right: NEW PRESET); or SYSTEM › NEW SONG, ALGO twice. The INIT sound, every drum and SEQ BASS pattern, the parameter locks and the automation are emptied; saved patches, macros, EQ and settings stay</li></ul></li>
 <li><span class="v">1.0.14</span><ul><li><b>SAVE</b>: one row per knob, its name written in a column in the middle (SLOT K1, PLACE K2, LETTER K3, STYLE ALGO, NEW PRESET K4); the slot's current name sits on the SLOT row</li></ul></li>
-<li><span class="v">1.0.13</span><ul><li><b>SAVE</b>: a 4th row, <b>NEW PRESET</b>: turn K4 twice and the patch becomes the INIT sound with an empty name, ready to be typed (SAVE held + OCT− brings the old sound back); the style moves to ALGO</li><li>Manual: which pages the PRESETS knob changes, and what HOLD (PLAY held) and PANIC (REC held, or OCT− + OCT+) do</li></ul></li>
 </ol>
-<details class="olds"><summary>Older versions (62)</summary>
+<details class="olds"><summary>Older versions (63)</summary>
 <ol class="news old">
+<li><span class="v">1.0.13</span><div><b>SAVE</b>: a 4th row, <b>NEW PRESET</b>: turn K4 twice and the patch becomes the INIT sound with an empty name, ready to be typed (SAVE held + OCT− brings the old sound back); the style moves to ALGO · Manual: which pages the PRESETS knob changes, and what HOLD (PLAY held) and PANIC (REC held, or OCT− + OCT+) do</div></li>
 <li><span class="v">1.0.12</span><div><b>SEQ BASS</b>: a <b>SEQUENCE</b> ON / OFF at the very top of the list; OFF, the bass sequence stays silent while the drums run, and the keys play the bass live (no transposing of the sequence, the arpeggiator works). It is saved with the drums</div></li>
 <li><span class="v">1.0.11</span><div><b>DRUMS</b>: the white keys of the FM-1 stay lit where the chosen instrument hits on the page shown (kick, snare, hats…), a landmark you can see on the keyboard; it follows the instrument you choose and OCT− / OCT+</div></li>
 <li><span class="v">1.0.10</span><div><b>SAVE</b>: the black keys of the drawn keyboard have no outline any more, so their letters read better</div></li>

@@ -19,7 +19,7 @@ Ce document dit où en est le projet : ce qui est fait, ce qui est à vérifier,
 | Moteurs | 8 moteurs par oscillateur (analog, super/reese, wavetable, FM, phase dist, wavefolder, sync, vocal) ; `SYSTEM › ENGINES` choisit les 4 premiers (ESSENTIAL, défaut) ou les 8 | ≤ 0.9, 0.9.19 |
 | Oscillateurs | A + B (ADD, RING, X-MOD, SYNC), sub, bruit, **OSC C sample** (10 sons, 5 textures, boucle / une fois, vitesse) | 0.9.9-4 |
 | Filtre | 7 caractères (LP24, LP12, BAND, HIGH, NOTCH, VOWEL, COMB), drive, mod par enveloppe, clavier, vélocité | ≤ 0.9 |
-| Modulation | 3 enveloppes, 2 LFO calés sur le tempo (grille ronde en option), STEP FX (16 motifs), matrice 4 slots, 4 MACROS × 4 cibles | ≤ 0.9 |
+| Modulation | 3 enveloppes, 3 LFO calés sur le tempo (le 3e global, quel que soit le patch) (grille ronde en option), STEP FX (16 motifs), matrice 4 slots, 4 MACROS × 4 cibles | ≤ 0.9 |
 | Effets | Saturation, compresseur + PUMP, bitcrush, chorus, phaser, delay (4 types), reverb (4 types), glue, sub boost, **EQ 4 bandes** | 0.9.3 → 0.9.9-3 |
 | Master | **DEEP BASS** (shelf +4 / +7 dB sous 90 Hz), **limiteur toujours actif**, **AUTO LEVEL** (normaliseur) | 0.9.10 |
 | Voix | Mono, legato, poly 4, glide avec durée | ≤ 0.9 |

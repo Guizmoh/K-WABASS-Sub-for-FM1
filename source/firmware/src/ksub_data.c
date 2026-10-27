@@ -67,7 +67,7 @@ static const uint8_t GD_ID[ND - D_N0] = {AE_A, AE_D, AE_S, AE_R, FE_A, FE_D, FE_
 /* the parameter each global destination moves */
 #define D_G0 D_L1RATE
 
-enum { SR_OFF, SR_LFO1, SR_LFO2, SR_FENV, SR_MENV, SR_VEL, SR_WHEEL, SR_PRESS, SR_NOTE, SR_RAND, SR_STEP, NSRC };
+enum { SR_OFF, SR_LFO1, SR_LFO2, SR_FENV, SR_MENV, SR_VEL, SR_WHEEL, SR_PRESS, SR_NOTE, SR_RAND, SR_STEP, SR_LFO3, NSRC };
 enum { VM_MONO, VM_LEGATO, VM_POLY };
 
 /* formats of the values on the screen */
@@ -101,7 +101,7 @@ static const char *const L_DST[ND] = {"OFF", "CUTOFF", "RESO", "PITCH", "A SHAPE
                                       "STEP DEPTH", "C LEVEL", "C TUNE", "C SPEED", "C START", "C END", "COMP ATTACK", "COMP RELEASE",
                                       "COMP PUMP", "PHASER FDBK", "OTT AMOUNT", "OTT LOW", "OTT HIGH", "DELAY TIME"};
 static const char *const L_SRC[NSRC] = {"OFF", "LFO 1", "LFO 2", "FILT ENV", "MOD ENV", "VELOCITY", "MOD WHEEL",
-                                        "PRESSURE", "NOTE", "RANDOM", "STEP"};
+                                        "PRESSURE", "NOTE", "RANDOM", "STEP", "LFO 3"};
 /* the STEP patterns: 16 steps, a level 0..F each ("RANDOM": a new one every bar) */
 static const char *const L_SPAT[16] = {"OFFBEAT", "PUMP", "DUB CHOP", "TRANCE", "TRIPLET", "BROKEN", "SKANK", "GALLOP",
                                       "STAIRS UP", "STAIRS DN", "DNB ROLL", "HALFTIME", "STUTTER", "ACID", "SYNCOPE", "RANDOM"};

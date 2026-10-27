@@ -21,11 +21,11 @@
 
 1. **4 efficient engines** for modern basses, or **8 engines** for bass, pads & leads (`SYSTEM › ENGINES`).
 2. **Drum sequencer with conditions & parameter locks** (on the bass too: hold a step, turn a knob) and **automation** (hold REC while it plays and turn any knob; hold REC alone to erase): 8 coloured tracks (808, 909, dub techno, acoustic kits), chance and trig conditions on every step, black keys choose the instrument, white keys (pads) place its steps, OCT−/OCT+ turn the pages; live REC; sync out for Pocket Operators and Volcas.
-3. **LFO learn**: hold `LFO` and turn any knob, LFO 2 is assigned to that setting in one gesture.
+3. **LFO learn**: hold `LFO` and turn any knob, LFO 2 is assigned to that setting in one gesture (`OCT−` too: LFO 1, `OCT+` too: LFO 3).
 4. **CLASSIC** or **SHIFT** mode (`OCT−` / `OCT+`) for a faster workflow, chosen in the options.
 5. **SEL windows**: PERFORM, MORPH, FX LIVE, MACROS.
 6. **A/B morph**: blend two sounds live.
-7. A live **LFO page** to reshape your wobble basses while you play.
+7. **Three LFOs** (the third one global: it stays when you change sound) and a live **LFO page** to reshape your wobble basses while you play.
 8. **SEQ BASS** (up to 64 steps, probability, trig conditions and note length per step, 30 presets, live REC), **OSC C** samples (attacks, textures; start / end cut, faster or slower, reverse, ping-pong), **DRUMS** (808 / 909 / dub techno / acoustic kits, 8 coloured tracks, rhythm presets: techno, dub, dnb…), **ARP**, **MIDI**.
 9. The sound: engines, filters, effects, master, and **FX PADS**.
 10. Animated oscillator visuals, live.
@@ -46,8 +46,8 @@ You can go back to KAWA (`install/kawa-0.5.fwsc`) or to the stock firmware (M-UP
 
 ```sh
 cd source
-./build.sh --release 1.0.16          # -> build/k-wasub-1.0.16.fwsc
-APP_VER=1.0.16 bash web/make_emulator.sh      # emulator
+./build.sh --release 1.0.17          # -> build/k-wasub-1.0.17.fwsc
+APP_VER=1.0.17 bash web/make_emulator.sh      # emulator
 bash web/make_installer.sh                    # installer.html with the newest package
 bash tests/run_stress.sh                      # load tests (UBSan)
 python3 tests/manual_shots.py                 # the manual's screenshots (docs/img)

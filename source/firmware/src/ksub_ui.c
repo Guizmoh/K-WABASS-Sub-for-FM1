@@ -31,6 +31,7 @@ enum { I_L1RATE = 140, I_L2RATE, I_ABMIX, G_MIDICH, G_BPM, G_CLOCK, G_OCT, G_COR
        G_SQ_LKP, G_SQ_LKV,                                                           /* SEQ BASS: the step's PARAMETER LOCK (what, its value) */
        G_SQ_ON,                                                                      /* SEQ BASS: the sequence ON / OFF (OFF: the drums play, the bass is free to play live) */
        G_NEWSONG,                                                                    /* SYSTEM: NEW SONG (the sound, every pattern, the locks and the automation back to empty) */
+       G_L3_RATE, G_L3_DEP, G_L3_SHP, G_L3_DST, G_L3_SYNC,                           /* LFO 3 (in the settings: whatever the patch) */
        I_NONE = 255 };
 
 typedef struct {
@@ -60,6 +61,7 @@ static const view_t VIEWS[] = {
     {LY_LFO, "LFO 2 \xB7 MOTION", 9, {I_L2RATE, L2_DEP, L2_SHP, L2_DST, G_GRID, L2_SYNC, L2_TRIG, L2_PH, L2_SMO}, "LFO"},
     {LY_STEP, "STEP FX", 7, {ST_PAT, ST_RATE, ST_GATE, ST_DEP, ST_ON, ST_DST, ST_SMO}, "LFO"},
     {LY_LIST, "MOD MATRIX", 12, {M1_AMT, M2_AMT, M3_AMT, M4_AMT, M1_SRC, M1_DST, M2_SRC, M2_DST, M3_SRC, M3_DST, M4_SRC, M4_DST}, "LFO"},
+    {LY_LIST, "LFO 3 \xB7 GLOBAL", 5, {G_L3_RATE, G_L3_DEP, G_L3_SHP, G_L3_DST, G_L3_SYNC}, "LFO"},   /* (1.0.17: the third LFO, whatever the patch) */
     FXV(DR_AMT, DR_MIX, DR_TYPE, DR_ON),       /* (in order of what changes a bass most; MASTER last) */
     {LY_LIST, "FX RACK", 3, {OT_AMT, OT_LOW, OT_HIGH}, "FX"},
     {LY_LIST, "FX RACK", 6, {CP_AMT, CP_PUMP, CP_ATK, CP_REL, CP_PRATE, CP_ON}, "FX"},
@@ -82,12 +84,12 @@ static const view_t VIEWS[] = {
 static uint32_t vknob(const view_t *v, uint32_t i) { return v->lay == LY_PRESET || v->lay == LY_SAVE || i >= v->n ? I_NONE : v->it[i]; }
 #define NFXV 10u                                /* the FX page's views, in order: their ON (0: none), their title */
 static const uint8_t FX_ON[NFXV] = {DR_ON, 0, CP_ON, 0, DL_ON, RV_ON, CH_ON, PH_ON, CR_ON, 0};
-static const uint8_t PAGE_V0[NPAGE + 1] = {0, 2, 7, 10, 14, 18, 28, 32, 34};   /* each page's first view */
-#define V_EQ 21u
+static const uint8_t PAGE_V0[NPAGE + 1] = {0, 2, 7, 10, 14, 19, 29, 33, 35};   /* each page's first view */
+#define V_EQ 22u
 #define V_SMP 6u
 #define V_SEQ 12u                               /* SEQ BASS (the SEQ button's third view), DRUMS (its fourth), ARP (the ARP button's last) */
 #define V_DRUM 13u
-#define V_ARP 31u
+#define V_ARP 32u
 static const char *const FX_TITLE[NFXV] = {"SATURATION", "MULTIBAND", "COMPRESSOR", "EQ", "DELAY", "REVERB", "CHORUS", "PHASER", "BITCRUSH", "MASTER"};
 static const char *const FT_TITLE[NFT] = {"DARK EDGE", "SOFT EDGE", "BAND RAZOR", "THIN AIR", "HOLLOW", "TALK BOX", "METAL COMB"};
 static const char *const FT_SUB[NFT] = {"LOW PASS \xB7 24 dB", "LOW PASS \xB7 12 dB", "BAND PASS \xB7 12 dB", "HIGH PASS \xB7 24 dB",
@@ -108,7 +110,7 @@ static struct {                                 /* the user slots' settings past
     uint8_t magic, sum;
     int8_t p[NUSER][NP_MAX - NP_STORE];
 } uext;
-typedef char ids_fit[G_NEWSONG < I_NONE ? 1 : -1];
+typedef char ids_fit[G_L3_SYNC < I_NONE ? 1 : -1];
 typedef char np_fits[NP <= I_L1RATE && NP <= NP_MAX ? 1 : -1];   /* (the patch's ids under the others') */
 #define CC_MAGIC 0x44u                          /* (0x43: before 0.9.55, the ids past the patch 4 lower) */
 #define WK_AT 0xC00u                            /* (the 2nd sector, after the slots' rest: the sound being made, AUTOSAVE) */
@@ -159,7 +161,9 @@ static struct {
     uint8_t pquant;                             /* FX PADS: the keys wait for the next 0 OFF, 1 BAR, 1/2, 1/4, 1/8, 1/16, 1/24, 1/32, 1/64 */
     uint8_t lang;                               /* LANGUAGE: 0 ENGLISH, 1 FRANCAIS, 2 ESPANOL (the view titles; the rest stays in English) */
     uint8_t sync;                               /* SYNC OUT: 1 a pulse every eighth on the left (POCKET OPERATOR SY, VOLCA), the sound in mono on the right */
-} set = {6, 0, 0, 0xFF, 1400, 0, 0, 1, 0, 0, 0, 0, 0, {0}, 1, 0, 0, 1, 0, 1, 1, 0, 1, 1, 1, 0, 3, 1, 0, 1, 0, 0};
+    int8_t l3[NL3];                             /* LFO 3: shape, sync, rate, division, depth, destination (whatever the patch: 1.0.17) */
+} set = {6, 0, 0, 0xFF, 1400, 0, 0, 1, 0, 0, 0, 0, 0, {0}, 1, 0, 0, 1, 0, 1, 1, 0, 1, 1, 1, 0, 3, 1, 0, 1, 0, 0, 0, {0, 1, 64, 9, 0, D_CUT}};
+static void l3_push(void) { uint32_t i; for (i = 0; i < NL3; i++) l3cfg[i] = set.l3[i]; }   /* (the settings to the audio) */
 static char pname[14];
 static uint8_t new_arm;                         /* SAVE, K4 turned once: turn it again to start a new preset */
 static uint32_t new_ms;
@@ -1409,10 +1413,14 @@ static void item_range(uint32_t id, int32_t *lo, int32_t *hi)
         return;
     }
     *lo = 0;
-    *hi = id == G_MIDICH ? 16 : id == G_BPM ? 2400 : id == G_CLOCK || id == G_QLFO || id == G_ENG8 || id == G_ASAVE || id == G_LANG || id == G_NORM || id == G_RS_GO || id == G_GRID || id == G_BROWSE || id == G_C3COL || id == G_UI || id == G_ASK || id == G_ZOOM || id == G_MLEARN || id == G_MSTART || id == G_MPROG || id == G_MCLK || id == G_SYNC || id == G_SQ_ON || id == G_NEWSONG ? 1 : id == G_MMAP ? 16 : id == I_ABMIX ? 127 : id == G_BRI ? 3 : id == G_ACCEL || id == G_CON || id == G_DEEP || id == G_RS_LEN ? 2 : id == G_THEME ? 6 : id == G_FONT ? (int32_t)NFONT - 1 : id == G_PAL ? (int32_t)(2u * NPAL_BASE - 1u) : id == G_OCT ? 6 : 0;
+    *hi = id == G_MIDICH ? 16 : id == G_BPM ? 2400 : id == G_CLOCK || id == G_QLFO || id == G_ENG8 || id == G_ASAVE || id == G_LANG || id == G_NORM || id == G_RS_GO || id == G_GRID || id == G_BROWSE || id == G_C3COL || id == G_UI || id == G_ASK || id == G_ZOOM || id == G_MLEARN || id == G_MSTART || id == G_MPROG || id == G_MCLK || id == G_SYNC || id == G_SQ_ON || id == G_NEWSONG || id == G_L3_SYNC ? 1 : id == G_MMAP ? 16 : id == I_ABMIX ? 127 : id == G_BRI ? 3 : id == G_ACCEL || id == G_CON || id == G_DEEP || id == G_RS_LEN ? 2 : id == G_THEME ? 6 : id == G_FONT ? (int32_t)NFONT - 1 : id == G_PAL ? (int32_t)(2u * NPAL_BASE - 1u) : id == G_OCT ? 6 : 0;
     if (id == G_ACCEL) *hi = 3;                 /* (OFF, ON, FAST, ULTRA) */
     if (id == G_LANG) *hi = 2;                  /* (ENGLISH, FRANCAIS, ESPANOL) */
     if (id == G_BPM) *lo = 600;
+    if (id == G_L3_RATE) *hi = set.l3[L3_SYNC] ? 15 : 127;
+    if (id == G_L3_DEP) { *lo = -64; *hi = 63; }
+    if (id == G_L3_SHP) { *lo = PD[L1_SHP].lo; *hi = PD[L1_SHP].hi; }
+    if (id == G_L3_DST) *hi = ND - 1;
     if (id >= G_SQ_STEP && id <= G_AR_GATE) {
         static const int8_t LO[12] = {0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1}, HI[12] = {15, 48, 4, 15, 16, 5, 50, 1, 4, 5, 3, 10};
         *lo = LO[id - G_SQ_STEP]; *hi = HI[id - G_SQ_STEP];
@@ -1452,6 +1460,11 @@ static int32_t item_get(uint32_t id)
     case G_BPM: return set.bpm10;
     case G_CLOCK: return set.clock;
     case G_SYNC: return set.sync;
+    case G_L3_RATE: return set.l3[set.l3[L3_SYNC] ? L3_DIV : L3_RATE];
+    case G_L3_DEP: return set.l3[L3_DEP];
+    case G_L3_SHP: return set.l3[L3_SHP];
+    case G_L3_DST: return set.l3[L3_DST];
+    case G_L3_SYNC: return set.l3[L3_SYNC];
     case G_OCT: return OCT + 3;
     case G_THEME: return set.theme;
     case G_PAL: return set.pal;
@@ -1654,6 +1667,11 @@ static void item_set(uint32_t id, int32_t v)
     case G_BPM: set.bpm10 = (uint16_t)v; ks_bpm10 = (uint32_t)v; break;
     case G_CLOCK: set.clock = (uint8_t)v; break;
     case G_SYNC: set.sync = (uint8_t)v; ks_sync = (uint8_t)v; break;
+    case G_L3_RATE: set.l3[set.l3[L3_SYNC] ? L3_DIV : L3_RATE] = (int8_t)v; l3_push(); break;
+    case G_L3_DEP: set.l3[L3_DEP] = (int8_t)v; l3_push(); break;
+    case G_L3_SHP: set.l3[L3_SHP] = (int8_t)v; l3_push(); break;
+    case G_L3_DST: set.l3[L3_DST] = (int8_t)v; l3_push(); break;
+    case G_L3_SYNC: set.l3[L3_SYNC] = (int8_t)v; l3_push(); break;
     case G_OCT: set.oct = (uint8_t)(int8_t)(v - 3); break;
     case G_THEME: set.theme = (uint8_t)v; theme_set(set.theme, set.pal); g_force = 1; break;
     case G_PAL:
@@ -1717,6 +1735,11 @@ static const char *item_name(uint32_t id)
     case G_BPM: return "TEMPO";
     case G_CLOCK: return "CLOCK";
     case G_SYNC: return "SYNC OUT";
+    case G_L3_RATE: return set.l3[L3_SYNC] ? "DIVISION" : "RATE";   /* (the view says LFO 3) */
+    case G_L3_DEP: return "DEPTH";
+    case G_L3_SHP: return "SHAPE";
+    case G_L3_DST: return "DEST";
+    case G_L3_SYNC: return "SYNC";
     case G_OCT: return "KEYS OCTAVE";
     case G_CPU: return "CPU LOAD";
     case G_THEME: return "THEME";
@@ -1885,6 +1908,11 @@ static void item_text(uint32_t id, char *b)
         case G_BPM: b = fmt_u(b, (uint32_t)v / 10u, 0); *b++ = '.'; b = fmt_u(b, (uint32_t)v % 10u, 0); str_cat(b, " BPM"); break;
         case G_CLOCK: str_cat(b, v ? "MIDI" : "INTERNAL"); break;
         case G_SYNC: str_cat(b, v ? "PO / VOLCA (LEFT)" : "OFF"); break;
+        case G_L3_RATE: lk_text(set.l3[L3_SYNC] ? L1_DIV : L1_RATE, v, b); break;   /* (shown as LFO 1's are) */
+        case G_L3_DEP: lk_text(L1_DEP, v, b); break;
+        case G_L3_SHP: lk_text(L1_SHP, v, b); break;
+        case G_L3_DST: str_cat(b, dst_name((uint32_t)v)); break;
+        case G_L3_SYNC: lk_text(L1_SYNC, v, b); break;
         case G_OCT: fmt_s(b, v - 3); break;
         case G_THEME: { static const char *const TN[7] = {"CLASSIC GLOW", "STUDIO", "PURE", "RACK", "TECH", "RIBBON", "RIBBON CLASSIC"}; str_cat(b, TN[(uint32_t)v % 7u]); break; }
         case G_PAL: { static const char *const PN[11] = {"SYNTHWAVE", "MINT", "BLACK / WHITE", "INVERTED", "RED", "ICE", "FLUO", "PINK", "GOLD", "SKY", "BLAZE"}; int32_t q = v >= (int32_t)NPAL_BASE ? v - (int32_t)NPAL_BASE : v; str_cat(b, q < 2 ? PAL_NAME[set.theme % 7u][q] : PN[(q - 2) % 11]); if (v >= (int32_t)NPAL_BASE) str_cat(b, " RAD"); break; }
@@ -2200,7 +2228,7 @@ static void edit_item(uint32_t id, int32_t d)
         str_cat(str_cat(t, f < NFXV ? FX_TITLE[f] : "STEP FX"), " ON");
         toast(t);
     }
-    if (item_patch(id) && PD[id].fmt == FM_DEST) { item_set(id, dst_step(v, d)); dpop_id = (uint8_t)id; dpop_ms = fm1_ms | 1u; return; }
+    if ((item_patch(id) && PD[id].fmt == FM_DEST) || id == G_L3_DST) { item_set(id, dst_step(v, d)); dpop_id = (uint8_t)id; dpop_ms = fm1_ms | 1u; return; }
     if (item_patch(id) && PD[id].list == L_SRC) { item_set(id, v + d); dpop_id = (uint8_t)id; dpop_ms = fm1_ms | 1u; return; }   /* (a source: the list too) */
     if (set.grid && (rate_like(id) == L1_DIV || rate_like(id) == L2_DIV)) {   /* STRAIGHT: from round to round */
         int32_t i, at = 0;
@@ -2579,7 +2607,7 @@ static const char *hold_label(uint32_t b)
     if (b == BTN_OCT_DOWN) return "UNDO  (OR TURN A KNOB: SHIFT)";
     if (b == BTN_OCT_UP) return "REDO  (OR TURN A KNOB: SHIFT)";
     if (b == BTN_PLAY) return hold ? "HOLD OFF" : "HOLD: THE KEYS STAY ON";
-    if (b == BTN_LFO) return set.qlfo ? "KNOB: LFO 2 \xB7 +OCT-: LFO 1" : "KNOB: LFO 1 \xB7 +OCT-: LFO 2";
+    if (b == BTN_LFO) return set.qlfo ? "KNOB: LFO 2 \xB7 OCT-: 1 \xB7 OCT+: 3" : "KNOB: LFO 1 \xB7 OCT-: 2 \xB7 OCT+: 3";
     if (b == BTN_ENV) return "TURN A KNOB: MOD ENV ON IT";
     str_cat(str_cat(t, "RANDOM "), PAGE_SHORT[pg >= 0 ? pg : 0]);
     return t;
@@ -2588,6 +2616,7 @@ static const char *hold_label(uint32_t b)
 /* QUICK ASSIGN (as Pure SUB's drag and drop): an LFO (or the mod envelope) onto what this knob moves, the turn
  * sets how much. LFO held: the LFO of SYSTEM's LFO HELD (LFO 2 at first); with OCT- held too, the other one */
 static uint32_t qa_lfo2(void) { return (fm1_in.buttons >> BTN_OCT_DOWN & 1u) ? !set.qlfo : set.qlfo; }
+static int qa_lfo3(void) { return (fm1_in.buttons >> BTN_OCT_UP & 1u) != 0u; }   /* (LFO and OCT+ held: LFO 3) */
 static void aut_turn(uint32_t e, int32_t d)     /* REC held, a knob: record what it sets on the step playing */
 {
     const view_t *v = view();
@@ -2647,6 +2676,15 @@ static void qa_dst(uint32_t src, int32_t dst, int32_t d)
     uint32_t pd = src == BTN_LFO ? L1_DST + o : ME_DST, pa = src == BTN_LFO ? L1_DEP + o : ME_AMT;
     char t[32], *p;
     if (dst < 0) { toast("NOT A DESTINATION"); return; }
+    if (src == BTN_LFO && qa_lfo3()) {         /* LFO 3: kept in the settings */
+        if (set.l3[L3_DST] != dst) { set.l3[L3_DST] = (int8_t)dst; set.l3[L3_DEP] = 0; }
+        set.l3[L3_DEP] = (int8_t)clampi(set.l3[L3_DEP] + d * 2, -64, 63);
+        l3_push(); set_dirty = 1; set_ms = fm1_ms;
+        p = str_cat(t, "LFO3 > "); p = str_cat(p, dst_name((uint32_t)dst)); *p++ = ' ';
+        lk_text(L1_DEP, set.l3[L3_DEP], p);
+        toast(t);
+        return;
+    }
     if (patch[pd] != dst) { undo_mark(pd); patch[pd] = (int8_t)dst; patch[pa] = 0; }
     undo_mark(pa);
     patch[pa] = (int8_t)clampi(patch[pa] + d * 2, -64, 63);
@@ -2810,7 +2848,7 @@ static void ui_input(void)
         if (cmp_on) continue;                   /* (comparing: nothing changes) */
         if (hb.b <= BTN_OCT_UP && b >= ENC_KNOB1 && b <= ENC_KNOB4) hb.used = 1;   /* (SHIFT: no octave on release) */
         if (hb.b == BTN_REC && sq_play && b != ENC_PRESETS) { hb.used = 1; aut_erasing = 0; aut_turn(b, d); continue; }   /* AUTOMATION: recorded */
-        if (hb.b != 0xFF && (hb.b == BTN_LFO || hb.b == BTN_ENV || (hb.b == BTN_OCT_DOWN && (fm1_in.buttons >> BTN_LFO & 1u))) && ((b >= ENC_KNOB1 && b <= ENC_KNOB4) || b == ENC_ALGORITHM)) {   /* (OCT- then LFO held: LFO 1 too) */
+        if (hb.b != 0xFF && (hb.b == BTN_LFO || hb.b == BTN_ENV || ((hb.b == BTN_OCT_DOWN || hb.b == BTN_OCT_UP) && (fm1_in.buttons >> BTN_LFO & 1u))) && ((b >= ENC_KNOB1 && b <= ENC_KNOB4) || b == ENC_ALGORITHM)) {   /* (OCT- then LFO held: LFO 1 too) */
             const view_t *v = view();
             uint32_t id = b == ENC_ALGORITHM ? (v->n ? v->it[cursor[vidx()]] : I_NONE) : vknob(v, b - ENC_KNOB1);
             hb.used = 1;
@@ -2995,9 +3033,10 @@ static void app_init(void)
     uint32_t i;
     int ok;
     {                                           /* (a save from before a field was added: the fields it has, the rest as is) */
-        const uint32_t LEN[14] = {sizeof set, (uint32_t)((uint8_t *)&set.sync - (uint8_t *)&set), (uint32_t)((uint8_t *)&set.lang - (uint8_t *)&set), (uint32_t)((uint8_t *)&set.pquant - (uint8_t *)&set), (uint32_t)((uint8_t *)&set.asave - (uint8_t *)&set), (uint32_t)((uint8_t *)&set.eng8 - (uint8_t *)&set), (uint32_t)((uint8_t *)&set.qlfo - (uint8_t *)&set), (uint32_t)((uint8_t *)&set.bri - (uint8_t *)&set), (uint32_t)((uint8_t *)&set.norm - (uint8_t *)&set), (uint32_t)((uint8_t *)&set.contrast - (uint8_t *)&set), (uint32_t)((uint8_t *)&set.mstart - (uint8_t *)&set), (uint32_t)((uint8_t *)&set.zoom - (uint8_t *)&set),
+        const uint32_t LEN[15] = {sizeof set, (uint32_t)((uint8_t *)set.l3 - (uint8_t *)&set), (uint32_t)((uint8_t *)&set.sync - (uint8_t *)&set), (uint32_t)((uint8_t *)&set.lang - (uint8_t *)&set), (uint32_t)((uint8_t *)&set.pquant - (uint8_t *)&set), (uint32_t)((uint8_t *)&set.asave - (uint8_t *)&set), (uint32_t)((uint8_t *)&set.eng8 - (uint8_t *)&set), (uint32_t)((uint8_t *)&set.qlfo - (uint8_t *)&set), (uint32_t)((uint8_t *)&set.bri - (uint8_t *)&set), (uint32_t)((uint8_t *)&set.norm - (uint8_t *)&set), (uint32_t)((uint8_t *)&set.contrast - (uint8_t *)&set), (uint32_t)((uint8_t *)&set.mstart - (uint8_t *)&set), (uint32_t)((uint8_t *)&set.zoom - (uint8_t *)&set),
                                  (uint32_t)((uint8_t *)&set.ui - (uint8_t *)&set), (uint32_t)((uint8_t *)&set.accel - (uint8_t *)&set)};
-        for (ok = 0, i = 0; i < 14u && !ok; i++) ok = !settings_load(&set, LEN[i]) && set.ver == 6u;
+        for (ok = 0, i = 0; i < 15u && !ok; i++) ok = !settings_load(&set, LEN[i]) && set.ver == 6u;
+        l3_push();
     }
     first_run = !ok || set.askv < 2u;           /* (the very first start, or a save from before 0.9.17: the question once) */
     if (!ok) {

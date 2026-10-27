@@ -114,7 +114,9 @@ static volatile uint32_t ks_beats;              /* Q24 beats, kept modulo 48 bea
 static volatile uint8_t ks_sounding;
 static int16_t scope[512];                      /* the output, one sample in 4 (the PLAY page draws it) */
 static volatile uint32_t scope_w;
-static volatile uint32_t lfo_ph_show[2];        /* where the LFOs are (the LFO page's dot) */
+static volatile uint32_t lfo_ph_show[3];
+enum { L3_SHP, L3_SYNC, L3_RATE, L3_DIV, L3_DEP, L3_DST, NL3 };
+static volatile int8_t l3cfg[NL3];              /* LFO 3 (1.0.17): kept in the settings, whatever the patch (the main loop copies them in) */        /* where the LFOs are (the LFO page's dot) */
 static volatile uint8_t env_st_show[3];         /* the newest voice's envelopes: stage, level Q15 (the ENV dots) */
 static volatile int32_t env_lv_show[3], cut_show; /* ... and its cutoff after the modulation (Q8 units) */
 static volatile uint32_t sm_show;               /* the newest voice's place in its sample (Q16; the SAMPLE view) */
@@ -461,8 +463,8 @@ typedef struct {
     uint32_t ph, b0, last;
     int32_t out, sh, sh0;
 } lfo_t;
-static lfo_t lfo[2];
-static uint32_t lfo_key[2];                     /* a note asked the LFOs to start again */
+static lfo_t lfo[3];
+static uint32_t lfo_key[3];                     /* a note asked the LFOs to start again */
 static int32_t lfo_shape(lfo_t *l, uint32_t ph, uint32_t shape)
 {
     switch (shape) {
@@ -483,7 +485,12 @@ static int32_t lfo_shape(lfo_t *l, uint32_t ph, uint32_t shape)
 static void lfo_run(uint32_t k, uint32_t beats)
 {
     lfo_t *l = &lfo[k];
-    const int8_t *p = patch + k * LFO_2;
+    static int8_t l3p[L1_SMO + 1];               /* (LFO 3: its settings, from the song, where LFO 1's are) */
+    const int8_t *p = k < 2u ? patch + k * LFO_2 : l3p;
+    if (k >= 2u) {
+        l3p[L1_SHP] = l3cfg[L3_SHP]; l3p[L1_SYNC] = l3cfg[L3_SYNC]; l3p[L1_RATE] = l3cfg[L3_RATE]; l3p[L1_DIV] = l3cfg[L3_DIV];
+        l3p[L1_DEP] = l3cfg[L3_DEP]; l3p[L1_DST] = l3cfg[L3_DST]; l3p[L1_TRIG] = l3p[L1_PH] = l3p[L1_SMO] = 0;
+    }
     uint32_t ph, off = (uint32_t)(uint8_t)p[L1_PH] << 25;
     int32_t raw, smo = p[L1_SMO];
     if (lfo_key[k]) {
@@ -493,12 +500,12 @@ static void lfo_run(uint32_t k, uint32_t beats)
     if (p[L1_SYNC]) {
         uint32_t b = beats - (p[L1_TRIG] ? l->b0 : 0u);
         if (b >= BEATS_WRAP) b += BEATS_WRAP;   /* (wrapped below the start) */
-        int32_t dv = clampi((k ? p[L1_DIV] : LKB(PB_WOB, p[L1_DIV])) + (gmod[D_L1RATE + k] >> 8) * 15 / 127, 0, 15);
+        int32_t dv = clampi((k ? p[L1_DIV] : LKB(PB_WOB, p[L1_DIV])) + (k < 2u ? gmod[D_L1RATE + k] >> 8 : 0) * 15 / 127, 0, 15);
         if (ks_straight) dv = DIV_NEAR[dv];
         ph = (uint32_t)((uint64_t)(b >> 8) * DIV_CPB[dv]);
         l->ph = ph;
     } else
-        ph = l->ph += KS_LFO_INC[clampi(p[L1_RATE] + (gmod[D_L1RATE + k] >> 8), 0, 127)];
+        ph = l->ph += KS_LFO_INC[clampi(p[L1_RATE] + (k < 2u ? gmod[D_L1RATE + k] >> 8 : 0), 0, 127)];
     ph += off;
     if (ph < l->last && l->last - ph > 0x40000000u) {   /* a new cycle: a new random value */
         l->sh0 = l->sh;
@@ -650,6 +657,7 @@ static void voice_mods(voice_t *v, int32_t *m, int32_t fenv, int32_t menv)
     src[SR_NOTE] = clip(((int32_t)v->note - 60) * 512, 32767);
     src[SR_RAND] = v->rand;
     src[SR_STEP] = step_val;
+    src[SR_LFO3] = lfo[2].out;
     route(m, src);
     m[D_CUT] += ((LKB(PB_ENV, patch[F_ENV]) + (m[D_FENV] >> 8)) * fenv) >> 6;
     m[D_CUT] += (int32_t)((((int64_t)(v->pitch - 60 * 256) * 276) >> 8) * GP(D_FKEY) >> 7);
@@ -676,6 +684,11 @@ static void route(int32_t *m, const int32_t *src)
         if (!dst || !d) continue;
         if (IS_PITCH(dst)) m[dst] += (int32_t)(((int64_t)(d < 0 ? -d * d : d * d) * 3 * lfo[k].out) >> 15);
         else m[dst] += (d * lfo[k].out) >> 6;
+    }
+    if (l3cfg[L3_DEP] && l3cfg[L3_DST] > 0 && l3cfg[L3_DST] < ND) {   /* LFO 3 */
+        int32_t d = l3cfg[L3_DEP], dst = l3cfg[L3_DST];
+        if (IS_PITCH(dst)) m[dst] += (int32_t)(((int64_t)(d < 0 ? -d * d : d * d) * 3 * lfo[2].out) >> 15);
+        else m[dst] += (d * lfo[2].out) >> 6;
     }
     if (patch[ST_ON] && patch[ST_DST] && GP(D_STDEP)) {   /* the STEP effect's own destination */
         int32_t a = GP(D_STDEP);
@@ -713,6 +726,7 @@ static void fx_mods(void)
     src[SR_NOTE] = v ? clip(((int32_t)v->note - 60) * 512, 32767) : 0;
     src[SR_RAND] = v ? v->rand : 0;
     src[SR_STEP] = step_val;
+    src[SR_LFO3] = lfo[2].out;
     route(m, src);
     for (k = D_G0; k < ND; k++) gmod[k] = m[k];
 }
@@ -1447,6 +1461,7 @@ static void voices_render(int32_t *dst, uint32_t n, uint32_t t0, uint32_t budget
         ks_beats = (ks_beats + binc) % BEATS_WRAP;
         lfo_run(0, ks_beats);
         lfo_run(1, ks_beats);
+        lfo_run(2, ks_beats);
         step_run(ks_beats);
         sq_at = i;
         seq_clock(ks_beats);

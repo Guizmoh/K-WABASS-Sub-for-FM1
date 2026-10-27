@@ -20,11 +20,11 @@
 
 1. **4 moteurs efficaces** pour des basses modernes, ou **8 moteurs** pour basses, pads et leads (`SYSTEM › ENGINES`).
 2. **Séquenceur de batterie avec conditions & parameter locks** (sur la basse aussi : maintenir un pas, tourner un potard) et **automation** (maintenir REC pendant la lecture et tourner n'importe quel potard ; REC maintenu seul pour effacer) : 8 pistes colorées (kits 808, 909, dub techno, acoustique), chance et conditions sur chaque pas, touches noires pour l'instrument, touches blanches (pads) pour ses pas, OCT−/OCT+ pour les pages ; REC en direct ; sortie sync pour Pocket Operator et Volca.
-3. **LFO learn** : `LFO` maintenu + n'importe quel potard, le LFO 2 se branche sur ce réglage en un geste.
+3. **LFO learn** : `LFO` maintenu + n'importe quel potard, le LFO 2 se branche sur ce réglage en un geste (avec `OCT−` : LFO 1, avec `OCT+` : LFO 3).
 4. Mode **CLASSIC** ou **SHIFT** (`OCT−` / `OCT+`) pour aller plus vite, au choix dans les options.
 5. **Fenêtres SEL** : PERFORM, MORPH, FX LIVE, MACROS.
 6. **Morph A/B** : fondu entre deux sons en direct.
-7. Une **page LFO** en direct pour retravailler tes basses wobble en jouant.
+7. **Trois LFO** (le troisième global : il reste quand tu changes de son) et une **page LFO** en direct pour retravailler tes basses wobble en jouant.
 8. **SEQ BASS** (jusqu'à 64 pas, probabilité, conditions de déclenchement et durée de note par pas, 30 presets, REC en direct), samples **OSC C** (attaques, textures ; début / fin coupés, plus rapide ou plus lent, inversé, ping-pong), **DRUMS** (kits 808 / 909 / dub techno / acoustique, 8 pistes colorées, presets de rythmes : techno, dub, dnb…), **ARP**, **MIDI**.
 9. Le son : moteurs, filtres, effets, master, et **FX PADS**.
 10. Visuels d'oscillateur animés, en direct.
@@ -45,8 +45,8 @@ Retour à KAWA (`install/kawa-0.5.fwsc`) ou au firmware officiel (M-UPGRADE) pos
 
 ```sh
 cd source
-./build.sh --release 1.0.16          # -> build/k-wasub-1.0.16.fwsc
-APP_VER=1.0.16 bash web/make_emulator.sh      # émulateur
+./build.sh --release 1.0.17          # -> build/k-wasub-1.0.17.fwsc
+APP_VER=1.0.17 bash web/make_emulator.sh      # émulateur
 bash web/make_installer.sh                    # installer.html avec le dernier paquet
 bash tests/run_stress.sh                      # tests de charge (UBSan)
 python3 tests/manual_shots.py                 # captures du manuel (docs/img)

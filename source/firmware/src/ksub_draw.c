@@ -10,13 +10,13 @@ enum { TH_GLOW, TH_STUDIO, TH_PURE, TH_RACK, TH_TECH, TH_RIBBON, TH_RIBBONC, NTH
 enum { VZ_NONE, VZ_SCOPE, VZ_OSCA, VZ_OSCB, VZ_SUB, VZ_MIX, VZ_ENV0, VZ_ENV1, VZ_ENV2, VZ_FILT, VZ_LFO1, VZ_LFO2, VZ_STEP,
        VZ_SEQ, VZ_SMP, VZ_DRIVE, VZ_CRUSH, VZ_CHORUS, VZ_DELAY, VZ_REVERB, VZ_MASTER, VZ_COMP, VZ_PHASER, VZ_OTT, VZ_CPU, VZ_DRUM };
 static const uint8_t VZ_OF[] = {VZ_SCOPE, VZ_SCOPE, VZ_OSCA, VZ_OSCB, VZ_SUB, VZ_MIX, VZ_SMP, VZ_ENV0, VZ_ENV1, VZ_ENV2, VZ_FILT, VZ_FILT,
-                                VZ_SEQ, VZ_DRUM, VZ_LFO1, VZ_LFO2, VZ_STEP, VZ_NONE, VZ_DRIVE, VZ_OTT, VZ_COMP, VZ_NONE, VZ_DELAY, VZ_REVERB,
+                                VZ_SEQ, VZ_DRUM, VZ_LFO1, VZ_LFO2, VZ_STEP, VZ_NONE, VZ_NONE, VZ_DRIVE, VZ_OTT, VZ_COMP, VZ_NONE, VZ_DELAY, VZ_REVERB,
                                 VZ_CHORUS, VZ_PHASER, VZ_CRUSH, VZ_MASTER, VZ_NONE, VZ_NONE, VZ_NONE, VZ_NONE, VZ_CPU, VZ_NONE};
 typedef char vz_fits[sizeof VZ_OF == sizeof VIEWS / sizeof VIEWS[0] ? 1 : -1];
 static const char *const PAGE_SHORT[NPAGE] = {"PLAY", "BASS", "ENV", "FILT", "LFO", "FX", "PRE", "SYS"};
 /* LANGUAGE (SYSTEM): only the view titles (v->cat, top of every screen) are translated; parameter names and values
  * stay in English, as on most hardware synths, and to keep every screen's layout untouched */
-static const char *const L_CAT[26][3] = {
+static const char *const L_CAT[27][3] = {
     {"CURRENT PATCH", "PATCH ACTUEL", "PARCHE ACTUAL"},
     {"LIVE MIX", "MIX EN DIRECT", "MEZCLA EN VIVO"},
     {"OSCILLATOR A", "OSCILLATEUR A", "OSCILADOR A"},
@@ -34,6 +34,7 @@ static const char *const L_CAT[26][3] = {
     {"LFO 2 \xB7 MOTION", "LFO 2 \xB7 MOUVEMENT", "LFO 2 \xB7 MOVIMIENTO"},
     {"STEP FX", "STEP FX", "STEP FX"},
     {"MOD MATRIX", "MATRICE DE MOD", "MATRIZ DE MOD"},
+    {"LFO 3 \xB7 GLOBAL", "LFO 3 \xB7 GLOBAL", "LFO 3 \xB7 GLOBAL"},
     {"FX RACK", "RACK FX", "RACK FX"},
     {"EQ", "EQ", "EQ"},
     {"PRESET BANK A", "BANQUE DE PRESETS A", "BANCO DE PRESETS A"},
@@ -48,7 +49,7 @@ static const char *cat_tr(const char *cat)      /* v->cat in the user's language
 {
     uint32_t i;
     if (!set.lang) return cat;
-    for (i = 0; i < 26u; i++) if (str_eq(cat, L_CAT[i][0])) return L_CAT[i][set.lang];
+    for (i = 0; i < 27u; i++) if (str_eq(cat, L_CAT[i][0])) return L_CAT[i][set.lang];
     return cat;
 }
 static const uint16_t KNOB_RGB[4] = {RGB(255, 92, 92), RGB(255, 204, 64), RGB(92, 226, 116), RGB(84, 164, 255)};
@@ -129,6 +130,7 @@ static const char *mod_tag(uint32_t id)         /* what modulates it, in two or 
     if (d < 0) return 0;
     if (patch[L1_DEP] && patch[L1_DST] == d) return "L1";
     if (patch[L2_DEP] && patch[L2_DST] == d) return "L2";
+    if (set.l3[L3_DEP] && set.l3[L3_DST] == d) return "L3";
     if (patch[ST_ON] && patch[ST_DEP] && patch[ST_DST] == d) return "STP";
     if ((patch[ME_AMT] && patch[ME_DST] == d) || (d == D_CUT && patch[F_ENV])) return "ENV";
     for (k = 0; k < 4; k++) if (patch[M1_SRC + 3 * k] && patch[M1_AMT + 3 * k] && patch[M1_DST + 3 * k] == d) return "MX";
@@ -741,6 +743,12 @@ static const char *view_title(uint32_t vi, char *t, char *sub)
         return vi == PAGE_V0[PG_ENV] ? "ADSR CONTROL" : vi == PAGE_V0[PG_ENV] + 1u ? "FILTER ADSR" : "PITCH / MOD";
     }
     if (page == PG_FILT) { str_cat(sub, FT_SUB[patch[F_TYPE]]); return FT_TITLE[patch[F_TYPE]]; }
+    if (page == PG_LFO && vi == PAGE_V0[PG_LFO] + 4u) {   /* LFO 3: its shape, where it goes, how much */
+        char *q = str_cat(sub, L_SHAPE[clampi(set.l3[L3_SHP], 0, 8)]);
+        q = str_cat(q, " \xB7 "); q = str_cat(q, dst_name((uint32_t)set.l3[L3_DST])); *q++ = ' ';
+        lk_text(L1_DEP, set.l3[L3_DEP], q);
+        return "LFO 3";
+    }
     if (page == PG_LFO) { str_cat(sub, "4 SLOTS \xB7 SOURCE > DEST"); return "ROUTING"; }
     {
         uint32_t f = vi - PAGE_V0[PG_FX];

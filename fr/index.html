@@ -60,7 +60,7 @@ footer{margin-top:50px;border-top:1px solid var(--rule);padding-top:18px;color:v
 
 <section class="sec"><h2>À quoi ça sert ?</h2>
 <div class="cards">
-<div class="card"><h3>Jouer une basse vivante</h3><p>Les 27 touches jouent la basse, <b>K1–K4</b> règlent les 4 réglages importants de chaque page. Un appui long sur LFO et un potard : le LFO 2 est branché sur ce que tu règles (ou le LFO 1, dans les options).</p></div>
+<div class="card"><h3>Jouer une basse vivante</h3><p>Les 27 touches jouent la basse, <b>K1–K4</b> règlent les 4 réglages importants de chaque page. Un appui long sur LFO et un potard : le LFO 2 est branché sur ce que tu règles (avec OCT− : LFO 1, avec OCT+ : <b>LFO 3</b>, le global). <b>Trois LFO</b>, presque tous les réglages en destination, l’EQ compris.</p></div>
 <div class="card"><h3>Des effets sur les touches</h3><p><b>FX PADS</b> : touches blanches = vitesse du wobble (4, 8, 16, 24, 32, 48), touches noires = stutters, tape stop, DJ filter, saturation, phaser…</p></div>
 <div class="card"><h3>Un vrai son de basse</h3><p>2 oscillateurs de 4 ou 8 moteurs (reese, FM, wavetable…, au choix dans les options), un sub verrouillé sur A, un sample et le <b>resample</b>, 7 filtres, <b>OTT multibande</b>, mono-bass, compresseur avec pump, EQ 4 bandes, limiteur et niveau automatique.</p></div>
 <div class="card"><h3>Morpher entre des sons</h3><p><b>MORPH X/Y</b> : quatre sons aux coins d'un carré, un point qui les mélange (un LFO peut le promener). <b>MORPH A/B</b> : un fondu sur le tempo.</p></div>
@@ -95,13 +95,14 @@ footer{margin-top:50px;border-top:1px solid var(--rule);padding-top:18px;color:v
 <section class="sec" id="nouveautes"><h2>Dernières mises à jour</h2>
 <!-- news: newest first; the first four in full -->
 <ol class="news">
+<li><span class="v">1.0.17</span><ul><li><b>LFO 3</b> : un troisième LFO, global (il reste quand tu changes de son), la dernière vue de la page LFO : RATE / DIVISION, DEPTH, SHAPE, DEST, SYNC. LFO + OCT+ maintenus et un potard pour l’y envoyer ; c’est aussi une source dans la matrice</li><li>README, manuel et image promo : 3 LFO</li></ul></li>
 <li><span class="v">1.0.16</span><ul><li><b>Assignation au LFO</b> (LFO maintenu + un potard) marche maintenant dans la fenêtre <b>EQ</b> (FREQ et GAIN de chaque bande, balayés en douceur entre les crans), dans FX PADS et dans MORPH</li><li>37 nouvelles destinations pour les LFO, la matrice et les macros : l’EQ, les trois enveloppes, GLIDE, DRIFT, KEY TRACK, FILTER VELOCITY, la profondeur du STEP, OSC C (niveau, accord, vitesse, début, fin), le compresseur (attaque, relâchement, pump), l’OTT (quantité, grave, aigu), le feedback du phaser, le temps du delay</li><li>un potard non assignable le dit</li></ul></li>
 <li><span class="v">1.0.15</span><ul><li><b>NEW SONG</b> : repartir de zéro en un geste. Sur l’écran SAVE, K4 vers la gauche deux fois (vers la droite : NEW PRESET) ; ou SYSTEM › NEW SONG, ALGO deux fois. Le son INIT, tous les patterns de batterie et de SEQ BASS, les parameter locks et l’automation sont vidés ; patches sauvegardés, macros, EQ et réglages restent</li></ul></li>
 <li><span class="v">1.0.14</span><ul><li><b>SAVE</b> : une ligne par potard, son nom écrit dans une colonne au milieu (SLOT K1, PLACE K2, LETTER K3, STYLE ALGO, NEW PRESET K4) ; le nom actuel du slot est sur la ligne SLOT</li></ul></li>
-<li><span class="v">1.0.13</span><ul><li><b>SAVE</b> : une 4e ligne, <b>NEW PRESET</b> : tourne K4 deux fois et le patch devient le son INIT avec un nom vide, prêt à être écrit (SAVE maintenu + OCT− rend l’ancien son) ; le style passe sur ALGO</li><li>Manuel : les pages où le potard PRESETS change de vue, et ce que font HOLD (PLAY maintenu) et PANIC (REC maintenu, ou OCT− + OCT+)</li></ul></li>
 </ol>
-<details class="olds"><summary>Versions précédentes (63)</summary>
+<details class="olds"><summary>Versions précédentes (64)</summary>
 <ol class="news old">
+<li><span class="v">1.0.13</span><div><b>SAVE</b> : une 4e ligne, <b>NEW PRESET</b> : tourne K4 deux fois et le patch devient le son INIT avec un nom vide, prêt à être écrit (SAVE maintenu + OCT− rend l’ancien son) ; le style passe sur ALGO · Manuel : les pages où le potard PRESETS change de vue, et ce que font HOLD (PLAY maintenu) et PANIC (REC maintenu, ou OCT− + OCT+)</div></li>
 <li><span class="v">1.0.12</span><div><b>SEQ BASS</b> : un réglage <b>SEQUENCE</b> ON / OFF tout en haut de la liste ; OFF, la séquence de basse reste muette pendant que la batterie tourne, et les touches jouent la basse en direct (elles ne transposent plus la séquence, l’arpégiateur marche). Il est sauvegardé avec la batterie</div></li>
 <li><span class="v">1.0.11</span><div><b>DRUMS</b> : les touches blanches du FM-1 restent allumées là où l’instrument choisi joue sur la page affichée (grosse caisse, caisse claire, charleys…), un repère visible sur le clavier ; il suit l’instrument choisi et OCT− / OCT+</div></li>
 <li><span class="v">1.0.10</span><div><b>SAVE</b> : les touches noires du clavier dessiné n’ont plus de contour, leurs lettres se lisent mieux</div></li>
