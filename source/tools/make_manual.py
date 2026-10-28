@@ -65,7 +65,7 @@ def build(L):
             ("ENV", T("amp, filter, mod envelopes", "enveloppes ampli, filtre, mod"), T("+ knob: the mod envelope on it", "+ potard : l’enveloppe de mod dessus")),
             ("SEQ", T("filter, filter mod, SEQ BASS, DRUMS", "filtre, mod du filtre, SEQ BASS, DRUMS"), T("random of the page", "aléatoire de la page")),
             ("LFO", T("LFO 1 (wobble), LFO 2, STEP, matrix, LFO 3", "LFO 1 (wobble), LFO 2, STEP, matrice, LFO 3"), T("+ knob: LFO 2 on it · with OCT−: LFO 1 · with OCT+: LFO 3", "+ potard : LFO 2 dessus · avec OCT− : LFO 1 · avec OCT+ : LFO 3")),
-            ("FX", T("SAT, OTT, COMP, EQ, DELAY, VERB, CHORUS, PHASER, CRUSH, MASTER", "SAT, OTT, COMP, EQ, DELAY, VERB, CHORUS, PHASER, CRUSH, MASTER"), T("<b>FX PADS</b>", "<b>FX PADS</b>")),
+            ("FX", T("SAT, VERB, DELAY, OTT, COMP, EQ, CHORUS, PHASER, CRUSH, MASTER", "SAT, VERB, DELAY, OTT, COMP, EQ, CHORUS, PHASER, CRUSH, MASTER"), T("<b>FX PADS</b>", "<b>FX PADS</b>")),
             ("ARP", T("presets A / B, SAVE, ARP", "presets A / B, SAVE, ARP"), T("random of the page", "aléatoire de la page")),
             ("GLO", T("SYSTEM, MIDI", "SYSTEM, MIDI"), T("CLASSIC ↔ SHIFT", "CLASSIC ↔ SHIFT")),
             ("SEL", T("PERFORM → MORPH X/Y → FX LIVE → MACROS → MORPH A/B", "PERFORM → MORPH X/Y → FX LIVE → MACROS → MORPH A/B"), T("hear the saved sound (compare)", "écouter le son enregistré (comparer)")),
@@ -93,7 +93,7 @@ def build(L):
              ("ENV", T("AMP ENVELOPE, FILTER ENVELOPE, MOD ENVELOPE", "ENVELOPPE AMPLI, ENVELOPPE FILTRE, ENVELOPPE MOD")),
              ("SEQ", T("FILTER / COLOUR, FILTER MOD, SEQ BASS, DRUMS", "FILTRE / COULEUR, MOD DU FILTRE, SEQ BASS, DRUMS")),
              ("LFO", T("LFO 1 · WOBBLE, LFO 2 · MOTION, STEP FX, MOD MATRIX, LFO 3 · GLOBAL", "LFO 1 · WOBBLE, LFO 2 · MOUVEMENT, STEP FX, MATRICE DE MOD, LFO 3 · GLOBAL")),
-             ("FX", T("SATURATION, MULTIBAND (OTT), COMPRESSOR, EQ, DELAY, REVERB, CHORUS, PHASER, CRUSH, MASTER", "SATURATION, MULTIBANDE (OTT), COMPRESSEUR, EQ, DELAY, REVERB, CHORUS, PHASER, CRUSH, MASTER")),
+             ("FX", T("SATURATION, REVERB, DELAY, MULTIBAND (OTT), COMPRESSOR, EQ, CHORUS, PHASER, CRUSH, MASTER (each effect\'s first row: its ON / OFF)", "SATURATION, REVERB, DELAY, MULTIBANDE (OTT), COMPRESSEUR, EQ, CHORUS, PHASER, CRUSH, MASTER (la première ligne de chaque effet : son ON / OFF)")),
              ("ARP", T("PRESET BANK A, PRESET BANK B, SAVE PATCH, ARPEGGIATOR", "BANQUE DE PRESETS A, BANQUE DE PRESETS B, ENREGISTRER LE PATCH, ARPEGIATEUR")),
              ("GLO", T("GLOBAL SETUP, MIDI", "REGLAGES GENERAUX, MIDI"))]
     chaps.append(("pages", t(T("3 · The pages", "3 · Les pages")),

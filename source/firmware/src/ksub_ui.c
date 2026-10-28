@@ -63,15 +63,15 @@ static const view_t VIEWS[] = {
     {LY_STEP, "STEP FX", 7, {ST_PAT, ST_RATE, ST_GATE, ST_DEP, ST_ON, ST_DST, ST_SMO}, "LFO"},
     {LY_LIST, "MOD MATRIX", 12, {M1_AMT, M2_AMT, M3_AMT, M4_AMT, M1_SRC, M1_DST, M2_SRC, M2_DST, M3_SRC, M3_DST, M4_SRC, M4_DST}, "LFO"},
     {LY_LIST, "LFO 3 \xB7 GLOBAL", 5, {G_L3_RATE, G_L3_DEP, G_L3_SHP, G_L3_DST, G_L3_SYNC}, "LFO"},   /* (1.0.17: the third LFO, whatever the patch) */
-    FXV(DR_AMT, DR_MIX, DR_TYPE, DR_ON),       /* (in order of what changes a bass most; MASTER last) */
+    FXV(DR_ON, DR_AMT, DR_MIX, DR_TYPE),       /* (SATURATION, REVERB, DELAY first, each with its ON first (1.0.37); MASTER last) */
+    {LY_LIST, "FX RACK", 5, {RV_ON, RV_SIZE, RV_MIX, RV_TYPE, RV_DAMP}, "FX"},
+    {LY_LIST, "FX RACK", 6, {DL_ON, DL_TIME, DL_FB, DL_MIX, DL_TYPE, DL_TONE}, "FX"},
     {LY_LIST, "FX RACK", 3, {OT_AMT, OT_LOW, OT_HIGH}, "FX"},
-    {LY_LIST, "FX RACK", 6, {CP_AMT, CP_PUMP, CP_ATK, CP_REL, CP_PRATE, CP_ON}, "FX"},
+    {LY_LIST, "FX RACK", 6, {CP_ON, CP_AMT, CP_PUMP, CP_ATK, CP_REL, CP_PRATE}, "FX"},
     {LY_EQ, "EQ", 0, {0}, "FX"},                /* (the EQ: opens as the window it is, win 3) */
-    {LY_LIST, "FX RACK", 6, {DL_TIME, DL_FB, DL_MIX, DL_TYPE, DL_TONE, DL_ON}, "FX"},
-    {LY_LIST, "FX RACK", 5, {RV_SIZE, RV_MIX, RV_TYPE, RV_DAMP, RV_ON}, "FX"},
-    FXV(CH_RATE, CH_DEP, CH_MIX, CH_ON),
-    {LY_LIST, "FX RACK", 5, {PH_RATE, PH_DEP, PH_FB, PH_MIX, PH_ON}, "FX"},
-    FXV(CR_BITS, CR_RATE, CR_MIX, CR_ON),
+    FXV(CH_ON, CH_RATE, CH_DEP, CH_MIX),
+    {LY_LIST, "FX RACK", 5, {PH_ON, PH_RATE, PH_DEP, PH_FB, PH_MIX}, "FX"},
+    FXV(CR_ON, CR_BITS, CR_RATE, CR_MIX),
     {LY_LIST, "FX RACK", 4, {MS_VOL, MS_GLUE, MS_SUB, MB_MONO}, "FX"},
     {LY_PRESET, "PRESET BANK A", 0, {0}, "PRESET"},
     {LY_PRESET, "PRESET BANK B", 0, {0}, "PRESET"},
@@ -84,14 +84,14 @@ static const view_t VIEWS[] = {
 /* what K1..K4 turn: the first four rows (the preset lists and SAVE have their own) */
 static uint32_t vknob(const view_t *v, uint32_t i) { return v->lay == LY_PRESET || v->lay == LY_SAVE || i >= v->n ? I_NONE : v->it[i]; }
 #define NFXV 10u                                /* the FX page's views, in order: their ON (0: none), their title */
-static const uint8_t FX_ON[NFXV] = {DR_ON, 0, CP_ON, 0, DL_ON, RV_ON, CH_ON, PH_ON, CR_ON, 0};
+static const uint8_t FX_ON[NFXV] = {DR_ON, RV_ON, DL_ON, 0, CP_ON, 0, CH_ON, PH_ON, CR_ON, 0};
 static const uint8_t PAGE_V0[NPAGE + 1] = {0, 2, 7, 10, 14, 19, 29, 33, 35};   /* each page's first view */
-#define V_EQ 22u
+#define V_EQ 24u
 #define V_SMP 6u
 #define V_SEQ 12u                               /* SEQ BASS (the SEQ button's third view), DRUMS (its fourth), ARP (the ARP button's last) */
 #define V_DRUM 13u
 #define V_ARP 32u
-static const char *const FX_TITLE[NFXV] = {"SATURATION", "MULTIBAND", "COMPRESSOR", "EQ", "DELAY", "REVERB", "CHORUS", "PHASER", "BITCRUSH", "MASTER"};
+static const char *const FX_TITLE[NFXV] = {"SATURATION", "REVERB", "DELAY", "MULTIBAND", "COMPRESSOR", "EQ", "CHORUS", "PHASER", "BITCRUSH", "MASTER"};
 static const char *const FT_TITLE[NFT] = {"DARK EDGE", "SOFT EDGE", "BAND RAZOR", "THIN AIR", "HOLLOW", "TALK BOX", "METAL COMB"};
 static const char *const FT_SUB[NFT] = {"LOW PASS \xB7 24 dB", "LOW PASS \xB7 12 dB", "BAND PASS \xB7 12 dB", "HIGH PASS \xB7 24 dB",
                                         "NOTCH \xB7 12 dB", "FORMANT \xB7 A E I O U", "COMB \xB7 TUNED BY CUTOFF"};

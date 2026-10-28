@@ -10,7 +10,7 @@ enum { TH_GLOW, TH_STUDIO, TH_PURE, TH_RACK, TH_TECH, TH_RIBBON, TH_RIBBONC, TH_
 enum { VZ_NONE, VZ_SCOPE, VZ_OSCA, VZ_OSCB, VZ_SUB, VZ_MIX, VZ_ENV0, VZ_ENV1, VZ_ENV2, VZ_FILT, VZ_LFO1, VZ_LFO2, VZ_STEP,
        VZ_SEQ, VZ_SMP, VZ_DRIVE, VZ_CRUSH, VZ_CHORUS, VZ_DELAY, VZ_REVERB, VZ_MASTER, VZ_COMP, VZ_PHASER, VZ_OTT, VZ_CPU, VZ_DRUM };
 static const uint8_t VZ_OF[] = {VZ_SCOPE, VZ_SCOPE, VZ_OSCA, VZ_OSCB, VZ_SUB, VZ_MIX, VZ_SMP, VZ_ENV0, VZ_ENV1, VZ_ENV2, VZ_FILT, VZ_FILT,
-                                VZ_SEQ, VZ_DRUM, VZ_LFO1, VZ_LFO2, VZ_STEP, VZ_NONE, VZ_NONE, VZ_DRIVE, VZ_OTT, VZ_COMP, VZ_NONE, VZ_DELAY, VZ_REVERB,
+                                VZ_SEQ, VZ_DRUM, VZ_LFO1, VZ_LFO2, VZ_STEP, VZ_NONE, VZ_NONE, VZ_DRIVE, VZ_REVERB, VZ_DELAY, VZ_OTT, VZ_COMP, VZ_NONE,
                                 VZ_CHORUS, VZ_PHASER, VZ_CRUSH, VZ_MASTER, VZ_NONE, VZ_NONE, VZ_NONE, VZ_NONE, VZ_CPU, VZ_NONE};
 typedef char vz_fits[sizeof VZ_OF == sizeof VIEWS / sizeof VIEWS[0] ? 1 : -1];
 static const char *const PAGE_SHORT[NPAGE] = {"PLAY", "BASS", "ENV", "FILT", "LFO", "FX", "PRE", "SYS"};
@@ -859,13 +859,13 @@ static const char *view_title(uint32_t vi, char *t, char *sub)
         p = sub;
         if (f >= NFXV) f = 0;
         if (f == 0u) p = str_cat(p, L_DRT[patch[DR_TYPE] & 3]);
-        if (f == 1u) p = str_cat(p, "OTT \xB7 3 BANDS");
-        if (f == 2u && patch[CP_PUMP]) { p = str_cat(p, "PUMP "); p = str_cat(p, L_PRATE[patch[CP_PRATE] & 3]); }
-        if (f == 4u) { p = str_cat(p, L_DLT[patch[DL_TYPE] & 3]); p = str_cat(p, " "); p = str_cat(p, L_DIV[patch[DL_TIME] & 15]); }
-        if (f == 5u) p = str_cat(p, L_RVT[patch[RV_TYPE] & 3]);
+        if (f == 3u) p = str_cat(p, "OTT \xB7 3 BANDS");
+        if (f == 4u && patch[CP_PUMP]) { p = str_cat(p, "PUMP "); p = str_cat(p, L_PRATE[patch[CP_PRATE] & 3]); }
+        if (f == 2u) { p = str_cat(p, L_DLT[patch[DL_TYPE] & 3]); p = str_cat(p, " "); p = str_cat(p, L_DIV[patch[DL_TIME] & 15]); }
+        if (f == 1u) p = str_cat(p, L_RVT[patch[RV_TYPE] & 3]);
         if (f == 9u) { p = str_cat(p, "MONO BASS "); p = str_cat(p, L_MONO[(uint32_t)patch[MB_MONO] % 7u]); }
         if (p != sub) p = str_cat(p, " \xB7 ");
-        str_cat(p, FX_ON[f] ? (patch[FX_ON[f]] ? "ON" : "OFF") : f == 1u ? (patch[OT_AMT] ? "ON" : "OFF") : "ALWAYS ON");
+        str_cat(p, FX_ON[f] ? (patch[FX_ON[f]] ? "ON" : "OFF") : f == 3u ? (patch[OT_AMT] ? "ON" : "OFF") : "ALWAYS ON");
         return FX_TITLE[f];
     }
 }
