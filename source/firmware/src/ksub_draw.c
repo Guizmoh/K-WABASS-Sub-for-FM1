@@ -775,7 +775,7 @@ static const char *view_title(uint32_t vi, char *t, char *sub)
     case LY_LFO: {
         uint32_t k = vi - PAGE_V0[PG_LFO];
         const int8_t *q = patch + k * LFO_2;
-        p = str_cat(t, k ? "MOTION " : "WOBBLE ");
+        p = str_cat(t, k ? "LFO 2 \xB7 " : "LFO 1 \xB7 ");   /* (1.0.38: the number big, WOBBLE / MOTION in the small header) */
         item_text(k ? I_L2RATE : I_L1RATE, p);
         p = str_cat(sub, L_SHAPE[q[L1_SHP]]);
         p = str_cat(p, " \xB7 ");
