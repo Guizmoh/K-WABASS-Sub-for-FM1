@@ -176,7 +176,8 @@ static uint16_t g_mix(uint16_t a, uint16_t b, uint32_t t)   /* a .. b, t = 0..25
     return (uint16_t)(ar << 11 | ag << 5 | ab);
 }
 static int32_t g_cx0, g_cy0, g_cx1 = 240, g_cy1 = 240;   /* the clip (RIBBON: a window's inside) */
-static void g_clip(int32_t x0, int32_t y0, int32_t x1, int32_t y1) { g_cx0 = x0; g_cy0 = y0; g_cx1 = x1; g_cy1 = y1; }
+static void g_clip(int32_t x0, int32_t y0, int32_t x1, int32_t y1)   /* (kept on the screen: a window sliding past its edge drew outside the frame) */
+{ g_cx0 = x0 < 0 ? 0 : x0; g_cy0 = y0; g_cx1 = x1 > 240 ? 240 : x1; g_cy1 = y1; }
 static void g_rect(int32_t x, int32_t y, int32_t w, int32_t h, uint16_t c)
 {
     int32_t x1 = x + w, y1 = y + h, i;

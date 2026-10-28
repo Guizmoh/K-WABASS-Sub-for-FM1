@@ -1867,7 +1867,7 @@ static const char *item_sname(uint32_t id)
 {
     uint32_t e;
     int k = osc_pk(id, &e);
-    if (k) return ENG_P[e][k - 1];
+    if (k) return k == 4 ? ENG_P4[e % NENG] : ENG_P[e % NENG][k - 1];   /* (P4: its own table; 1.0.34, ENG_P[e][3] ran past the last engine) */
     if (id == I_L1RATE || id == I_L2RATE) return "RATE";
     if (item_patch(id)) return PD[id].sname;
     return id == G_MIDICH ? "MIDI" : id == G_BPM ? "BPM" : id == G_CLOCK ? "CLOCK" : id == G_OCT ? "OCT" : id == G_THEME ? "THEME" : id == G_PAL ? "PALETTE" : id == G_FONT ? "FONT" : id == G_GRID ? "GRID" : id == G_BROWSE ? "BROWSE" : id == G_ACCEL ? "ACCEL" : id == G_C3COL ? "COLOURS" : id == G_UI ? "UI" : id == G_ASK ? "ASK" : id == G_ZOOM ? "LOUPE" : id == G_CON ? "CONTRAST" : id == G_NORM ? "LEVEL" : id == G_BRI ? "BRIGHT" : id == G_QLFO ? "QLFO" : id == G_ENG8 ? "ENGINES" : id == G_ASAVE ? "AUTOSAVE" : id == G_LANG ? "LANGUAGE" : id == G_RS_GO ? "RESAMP" : id == G_RS_LEN ? "LENGTH" : id == G_DEEP ? "DEEP" : id == G_MLEARN ? "LEARN" : id == G_MMAP ? "CC MAP" : id == I_ABMIX ? "A/B" : id == G_SQ_TYPE ? "TYPE" : id == G_SQ_PROB ? "PROB" : id == G_SQ_COND ? "COND" : id == G_SQ_PAT ? "PAT" : id == G_SQ_LEN || id == G_DK_LEN ? "STEPS" : id == G_SQ_GATE ? "NOTE LEN" : id == G_DK_LVL ? "LVL" : id == G_DK_DEC ? "DEC" : id == G_DK_TRK ? "INSTR" : id == G_DK_PROB ? "PROB" : id == G_DK_COND ? "COND" : id == G_DK_PAT ? "PAT" : id == G_DK_VOL ? "VOL" : id == G_AR_OCT ? "OCT" : item_name(id);

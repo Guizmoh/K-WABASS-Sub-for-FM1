@@ -1087,7 +1087,7 @@ static void glow_vis(uint32_t vz, int32_t x, int32_t y, int32_t w, int32_t h)
 static int big_vis(uint32_t vi) { return vi == V_DRUM || vi == V_SEQ || vi == V_SMP; }   /* (the views whose picture is what you play: a pattern, a sample) */
 static void th_glow(const view_t *v, uint32_t vi)
 {
-    char t[32], sub[48], n[8], fb[64], *p;
+    char t[32], sub[64], n[8], fb[64], *p;
     const char *ti = view_title(vi, t, sub), *ff = foot_fixed(vi);
     uint32_t vz = VZ_OF[vi], c = cursor[vi], i;
     if (g_vis(0, 36)) {
@@ -1147,7 +1147,7 @@ static void tech_win(int32_t x, int32_t y, int32_t w, int32_t h, int dir, uint16
 }
 static void th_tech(const view_t *v, uint32_t vi)
 {
-    char t[32], sub[48], b[24], nm[24], fb[64], *p;
+    char t[32], sub[64], b[24], nm[24], fb[64], *p;
     const char *ti = view_title(vi, t, sub), *ff = foot_fixed(vi);
     int32_t ph;
     uint32_t vz = VZ_OF[vi], c = cursor[vi], i;
@@ -1233,7 +1233,7 @@ foot:
 /* ---------------------------------------------------------------- STUDIO */
 static void th_studio(const view_t *v, uint32_t vi)
 {
-    char t[32], sub[48], s[40], fb[64], *p;
+    char t[32], sub[64], s[40], fb[64], *p;
     const char *ti = view_title(vi, t, sub), *ff = foot_fixed(vi);
     uint32_t vz = VZ_OF[vi], c = cursor[vi], i;
     if (g_vis(0, 28)) {                         /* status: the patch, its slot, the tempo, the load; the eight pages */
@@ -1299,7 +1299,7 @@ static void th_studio(const view_t *v, uint32_t vi)
 /* ---------------------------------------------------------------- PURE */
 static void th_pure(const view_t *v, uint32_t vi)
 {
-    char t[32], sub[48], s[40], *p;
+    char t[32], sub[64], s[40], *p;
     const char *ti = view_title(vi, t, sub);
     uint32_t vz = VZ_OF[vi], c = cursor[vi], i, nv = (uint32_t)(PAGE_V0[page + 1u] - PAGE_V0[page]);
     if (g_vis(0, 18)) {                         /* the section on a lime tab with a cut corner */
@@ -1409,7 +1409,7 @@ static void rb_name(uint32_t vi, char *b)       /* a view's short name, for the 
                                      "SEQ", "LFO 1", "LFO 2", "STEP", "MATRIX", "BANK A", "BANK B", "SAVE", "ARP", "SYSTEM"};
     const char *c = VIEWS[vi].cat;
     uint32_t i;
-    char t[32], sub[48];
+    char t[32], sub[64];
     if (str_eq(c, "FX RACK")) {                /* (the effects by their short names) */
         static const char *const FXL[] = {"SATURATION", "MULTIBAND", "COMPRESSOR", "BITCRUSH", "REVERB"}, *const FXS[] = {"SAT", "OTT", "COMP", "CRUSH", "VERB"};
         const char *ti = view_title(vi, t, sub);
@@ -1564,7 +1564,7 @@ static void th_ribbon(const view_t *v, uint32_t vi, int classic)
 {
     const int32_t wy = 26, wh = 206;
     int32_t ww = 190, wx = 25, k, off = 0, tall, sel_y, scroll = 0, cy0 = wy + 28, cy1 = wy + wh - 2;
-    char t[32], sub[48], b[24];
+    char t[32], sub[64], b[24];
     const char *ti = view_title(vi, t, sub);
     uint32_t nv = sizeof VIEWS / sizeof VIEWS[0], stack = !classic && (v->lay == LY_PLAY || v->lay == LY_LIST || v->lay == LY_BOX || v->lay == LY_LFO || v->lay == LY_STEP);
     if (classic) { wx = 2; ww = 236; }         /* RIBBON CLASSIC: the whole page, no neighbours, no sliding */
@@ -1630,7 +1630,7 @@ static void th_ribbon(const view_t *v, uint32_t vi, int classic)
 /* ---------------------------------------------------------------- RACK */
 static void th_rack(const view_t *v, uint32_t vi)
 {
-    char t[32], sub[48], fb[64];
+    char t[32], sub[64], fb[64];
     const char *ti = view_title(vi, t, sub), *ff = foot_fixed(vi);
     uint32_t vz = VZ_OF[vi], i;
     if (g_vis(0, 240)) {                        /* the rail: the eight pages */
@@ -1697,7 +1697,7 @@ static void draw_c3(void)
     const col3_t *c = &COL3[page];
     uint32_t act = c3_col(), k;
     int32_t pk = -1;
-    char t[48], sub[48], b[24], *p;
+    char t[48], sub[64], b[24], *p;
     if (vpop_ms) for (k = 0; k < 12u; k++) if (c->id[k >> 2][k & 3u] == vpop_id) pk = (int32_t)k;
     if (g_vis(0, 46)) {
         if (pk >= 0) {                          /* the setting turning: its column, its knob, its name, its value */
@@ -2410,7 +2410,7 @@ static void draw_all(void)
                                          "MASTER", "MASTER", "COMP", "PHASER", "PHASER", "PHASER", "MORPH", "MORPH", "MORPH"};
         uint8_t ls[ND];
         int src = dpop_id < NP && PD[dpop_id].list == L_SRC, mc = dpop_id == G_MC_DST;
-        int32_t n = 0, at = 0, i, cur = mc ? perf.mc_dst[(mc_pos >> 1) & 15u] : patch[dpop_id], y;
+        int32_t n = 0, at = 0, i, cur = mc ? perf.mc_dst[(mc_pos >> 1) & 15u] : item_get(dpop_id), y;   /* (item_get: LFO 3's destination is not in the patch) */
         char hd[24], pos[12], *p;
         if (src) for (i = 0; i < NSRC; i++) { if (i == cur) at = n; ls[n++] = (uint8_t)i; }
         else
