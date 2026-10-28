@@ -2241,7 +2241,7 @@ static void key_down(uint32_t n, uint32_t vel)
     if (sq_rec) {                               /* REC: the key goes to the step (stopped: the cursor's, then the next; playing: the one now) */
         uint32_t k = perf.cur % SQ_NPAT, c = sq_play ? sq_now_step() : sq_cur_step % SQ_MAX;
         uint8_t *f = sq_fp(k, c);
-        *sq_np(k, c) = (uint8_t)clampi((int32_t)n - 48 - 12 * OCT, 0, 48);   /* (the keys' C: C2) */
+        *sq_np(k, c) = (uint8_t)clampi((int32_t)n - 24, 0, 48);   /* (the note as heard: the step plays 24 + this; 1.0.44: it was n - 48 - 12 OCT, an octave under what was played at OCT -1) */
         if (sq_play) {
             *f = SF_ON;
             sqx.p[k].cond[c] &= 15u;
