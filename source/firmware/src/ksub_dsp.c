@@ -428,7 +428,7 @@ static void osc_core(osc_t *o, const oscp_t *q, int32_t *out, const int32_t *pm,
             l1 += (fc[1] * b1) >> 15; hp = x - l1 - ((qd * b1) >> 15); b1 += (fc[1] * hp) >> 15;
             l2 += (fc[2] * b2) >> 15; hp = x - l2 - ((qd * b2) >> 15); b2 += (fc[2] * hp) >> 15;
             y = (((b0 * qd) >> 15) + ((((b1 * qd) >> 15) * 22000) >> 15) + ((((b2 * qd) >> 15) * 13000) >> 15)) * 32;
-            y = mul15(y, mk) + (c >> 2) + ((sin32(sp) * sl) >> 15);   /* (BITE's narrower formants made up; the note itself under it, and TYPE's sub) */
+            y = mul15(y, mk) + (c >> 2) + (c >> 3) + ((sin32(sp) * sl) >> 15);   /* (BITE's narrower formants made up; the note itself under it, and TYPE's sub) */
             out[i] = sat15(y);
         }
         lp[0] = clampi(l0, -40000, 40000); lp[1] = clampi(l1, -40000, 40000); lp[2] = clampi(l2, -40000, 40000);
