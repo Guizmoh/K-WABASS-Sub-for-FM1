@@ -87,6 +87,7 @@ static uint32_t vknob(const view_t *v, uint32_t i) { return v->lay == LY_PRESET 
 static const uint8_t FX_ON[NFXV] = {DR_ON, RV_ON, DL_ON, 0, CP_ON, 0, CH_ON, PH_ON, CR_ON, 0};
 static const uint8_t PAGE_V0[NPAGE + 1] = {0, 2, 7, 10, 14, 19, 29, 33, 35};   /* each page's first view */
 #define V_EQ 24u
+#define ARP_VIEW 3u                             /* the ARP button's page: PRESET BANK A, B, SAVE, then ARPEGGIATOR (its view 3); the button opens it first */
 #define V_SMP 6u
 #define V_SEQ 12u                               /* SEQ BASS (the SEQ button's third view), DRUMS (its fourth), ARP (the ARP button's last) */
 #define V_DRUM 13u
@@ -2483,9 +2484,9 @@ static void on_button(uint32_t b)
     }
     for (i = 0; i < NPAGE; i++)
         if (PAGE_BTN[i] == b) {
-            if (win && win != 3u) { win = 0; vpop_ms = 0; page = (uint8_t)i; first_view(i); name_trim(); return; }   /* (a window open: back to that page) */
+            if (win && win != 3u) { win = 0; vpop_ms = 0; page = (uint8_t)i; first_view(i); if (i == PG_PRE) vcur[i] = ARP_VIEW; name_trim(); return; }   /* (a window open: back to that page) */
             if (page == i) view_next();
-            else { page = (uint8_t)i; first_view(i); }   /* (another page: always its first view) */
+            else { page = (uint8_t)i; first_view(i); if (i == PG_PRE) vcur[i] = ARP_VIEW; }   /* (another page: always its first view; the ARP button's: the ARPEGGIATOR, then PRESETS A, B; 1.0.45) */
             if (VIEWS[vidx()].lay == LY_SAVE) vcur[i]++;   /* (SAVE opens from SAVE only: on to the ARP) */
             name_trim();
             return;
