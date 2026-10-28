@@ -1,4 +1,5 @@
 <p align="center"><img src="../docs/img/promo-fr.png" alt="K-WASUB, synthé de basses modernes pour le M-VAVE FM-1"></p>
+<p align="center"><a href="https://guizmoh.github.io/K-WASUB_Firmware_for_FM1/">https://guizmoh.github.io/K-WASUB_Firmware_for_FM1/</a></p>
 
 # K-WASUB · FM1 modern Bass firmware
 
