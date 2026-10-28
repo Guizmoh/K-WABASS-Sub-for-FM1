@@ -2367,9 +2367,14 @@ static void preset_step(int32_t d)              /* bank A then the user's saved 
     uint32_t st = d < 0 ? n - 1u : 1u, cnt = (uint32_t)(d < 0 ? -d : d);
     int fo = set.browse && fav_any();          /* (FAVORITES: only those; a TAG: only those) */
     if (pre_tag && !pre_count(0) && !pre_count(1)) { toast("NO SOUND WITH THAT TAG"); return; }
-    while (cnt--)
-        do at = (at + st) % n; while ((at >= NFACTORY && !up_valid(at - NFACTORY)) || (fo && !fav_is(at >= NFACTORY, at >= NFACTORY ? at - NFACTORY : at))
-                                     || !pre_match(at >= NFACTORY, at >= NFACTORY ? at - NFACTORY : at));
+    while (cnt--) {
+        uint32_t tries = n, bk, k;              /* (one round at most: FAVORITES and a TAG may leave none; 1.0.35, it looped for ever) */
+        for (;;) {
+            at = (at + st) % n; bk = at >= NFACTORY; k = bk ? at - NFACTORY : at;
+            if ((!bk || up_valid(k)) && (!fo || fav_is(bk, k)) && pre_match(bk, k)) break;
+            if (!--tries) { toast("NO SOUND: FAVORITES + TAG"); return; }
+        }
+    }
     ask_load(at >= NFACTORY, at >= NFACTORY ? at - NFACTORY : at);
 }
 static void save_open(void)

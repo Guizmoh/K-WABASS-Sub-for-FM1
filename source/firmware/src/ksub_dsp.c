@@ -866,6 +866,16 @@ static int32_t fpv(uint32_t id, uint32_t d)     /* a parameter of the effects, m
     return clampi(patch[id] + (gmod[d] >> 8), PD[id].lo, PD[id].hi);
 }
 static inline int32_t pv(int32_t base, int32_t mod) { return clampi(base * 256 + mod, 0, 127 * 256); }   /* -> Q8 units */
+static int32_t cut_s = -1;                      /* CUTOFF as turned (and its lock), Q8, glided over ~15 ms: no steps heard (1.0.35) */
+static void cut_glide(void)                     /* (once per control block, before the voices) */
+{
+    int32_t t = LKB(PB_CUT, patch[F_CUT]) * 256, d, st;
+    if (cut_s < 0) { cut_s = t; return; }
+    d = t - cut_s;
+    st = (d * 3) >> 7;
+    if (!st && d) st = d > 0 ? 1 : -1;
+    cut_s += st;
+}
 static inline int32_t q8to15(int32_t q8) { return q8 + (q8 >> 7); }
 
 static const int8_t FT_MIX[5][5] = {{0, 0, 0, 0, 1}, {0, 0, 1, 0, 0}, {0, 2, -2, 0, 0}, {1, -4, 6, -4, 1}, {1, -2, 2, 0, 0}};
@@ -998,7 +1008,7 @@ static void voice_block(voice_t *v, int32_t *acc)
     }
 
     /* the filter */
-    cut = pv(LKB(PB_CUT, P[F_CUT]), m[D_CUT]);
+    cut = clampi((cut_s < 0 ? LKB(PB_CUT, P[F_CUT]) * 256 : cut_s) + m[D_CUT], 0, 127 * 256);
     if (v->age == vage) {                      /* (the newest voice: what the screen shows) */
         env_st_show[0] = v->ea.st; env_lv_show[0] = v->ea.lv >> 15;
         env_st_show[1] = v->ef.st; env_lv_show[1] = v->ef.lv >> 15;
@@ -1598,6 +1608,7 @@ static void voices_render(int32_t *dst, uint32_t n, uint32_t t0, uint32_t budget
         lfo_run(0, ks_beats);
         lfo_run(1, ks_beats);
         lfo_run(2, ks_beats);
+        cut_glide();
         step_run(ks_beats);
         sq_at = i;
         seq_clock(ks_beats);
@@ -1674,7 +1685,7 @@ static void fx_render(const int32_t *in, int32_t *out, uint32_t n)
     int32_t rv_fb = 22000 + fpv(RV_SIZE, D_RVSIZE) * 80, rv_d = fpv(RV_DAMP, D_RVDAMP) * 200, rv_mix = fpv(RV_MIX, D_RVMIX) * 258;
     int32_t vol = (mv * mv * 419) >> 10, boost = fpv(MS_SUB, D_SUBB) * 200, glue = fpv(MS_GLUE, D_GLUE);
     int32_t thr = 32767 - glue * 180, makeup = 4096 + glue * 24;
-    int32_t dj_f = 0, dj_q = 0, dj_mix = 0;
+    int32_t dj_f = 0, dj_q = 0, dj_mix = 0, dj_df = 0, dj_dm = 0;
     static const int32_t MB_A[7] = {0, 267, 356, 445, 534, 667, 889};   /* one pole at 60 .. 200 Hz, Q15 */
     int32_t mba = MB_A[(uint32_t)P[MB_MONO] % 7u], ot_amt = GP(D_OTAMT) * 258, ot_sum[3] = {0, 0, 0}, ot_gl, ot_gm, ot_gh;
     int32_t shelf = ks_deep == 2u ? 300 : ks_deep ? 150 : 0, ng = fx.ng ? fx.ng : 4096, lg = fx.lg ? fx.lg : 32768, nsum = 0;
@@ -1717,6 +1728,15 @@ static void fx_render(const int32_t *in, int32_t *out, uint32_t n)
         if (dj_f > 24000) dj_f = 24000;
         dj_q = 46000 - lfx_fres * 280;
         dj_mix = v * 4096 > 32767 ? 32767 : v * 4096;
+    }
+    {                                           /* (the DJ filter glided: a third of the way a block, ramped over it; 1.0.35) */
+        static int32_t f0 = -1, m0;
+        int32_t f1, m1;
+        if (f0 < 0 || !lfx_flt) { f0 = dj_f; m0 = lfx_flt ? dj_mix : 0; }
+        f1 = f0 + (dj_f - f0) / 3; m1 = m0 + (dj_mix - m0) / 3;
+        dj_df = (f1 - f0) / (int32_t)n; dj_dm = (m1 - m0) / (int32_t)n;
+        dj_f = f0; dj_mix = m0;
+        f0 = f1; m0 = m1;
     }
     for (i = 0; i < n; i++) {
         int32_t x = in[i] * 7 / 8, L, R, w;
@@ -1887,6 +1907,7 @@ static void fx_render(const int32_t *in, int32_t *out, uint32_t n)
             int32_t c[2] = {L, R};
             for (k = 0; k < 2u; k++) {
                 int32_t lo, hi, o;
+                if (!k) { dj_f += dj_df; dj_mix += dj_dm; }
                 lv.dj_l[k] += mul15(dj_f, lv.dj_b[k]);
                 hi = clip(c[k], 120000) - lv.dj_l[k] - mul15(dj_q, lv.dj_b[k]);
                 lv.dj_b[k] = clip(lv.dj_b[k] + mul15(dj_f, hi), 200000);

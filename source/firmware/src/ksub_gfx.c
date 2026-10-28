@@ -275,7 +275,7 @@ static void g_line(int32_t x0, int32_t y0, int32_t x1, int32_t y1, uint16_t c)  
     if (!n) { g_px(x0, y0, c); return; }
     if ((y0 < g_y0 - 1 && y1 < g_y0 - 1) || (y0 > g_y0 + (int32_t)BAND_H && y1 > g_y0 + (int32_t)BAND_H)) return;
     for (i = 0; i <= n; i++) {
-        int32_t x = x0 + dx * i / n, y8 = (y0 << 8) + (dy << 8) * i / n, fy = y8 & 255;
+        int32_t x = x0 + dx * i / n, y8 = y0 * 256 + dy * 256 * i / n, fy = y8 & 255;
         g_pxa(x, y8 >> 8, c, 256u - (uint32_t)fy);
         g_pxa(x, (y8 >> 8) + 1, c, (uint32_t)fy);
     }
