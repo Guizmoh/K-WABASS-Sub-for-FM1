@@ -562,13 +562,16 @@ typedef struct {
     int32_t lv;                                 /* Q30 */
 } env_t;
 static void env_gate(env_t *e, int on) { e->st = on ? 1u : (e->st ? 4u : 0u); }
-static int32_t env_run(env_t *e, uint32_t a, uint32_t d, int32_t s, uint32_t r)   /* s: Q30; returns Q15 */
+#define ANTICLICK ((1u << 30) / 4u)                /* the amp envelope's shortest attack: 4 control blocks of 16 samples, ~1.5 ms */
+static int32_t env_run(env_t *e, uint32_t a, uint32_t d, int32_t s, uint32_t r, uint32_t slow)   /* s: Q30; returns Q15; slow: the shortest attack step (0: none) */
 {
     switch (e->st) {
-    case 1:
-        e->lv += (int32_t)KS_ENV_ATK[a];
+    case 1: {
+        uint32_t st = KS_ENV_ATK[a];
+        e->lv += (int32_t)(st < slow ? slow : st);
         if (e->lv >= (1 << 30)) { e->lv = 1 << 30; e->st = 2; }
         break;
+    }
     case 2:
         e->lv = s + (int32_t)(((int64_t)(e->lv - s) * KS_ENV_DEC[d]) >> 24);
         if (e->lv - s < (1 << 16) && e->lv - s > -(1 << 16)) { e->lv = s; e->st = 3; }
@@ -707,7 +710,7 @@ static void voice_start(voice_t *v, uint32_t note, uint32_t vel, int legato)
         v->oa.ph[0] = v->ob.ph[0] = 0;
         v->oa.ph2 = v->ob.ph2 = 0;
         v->phs = 0;
-    } else if (patch[S_LOCK] && !patch[A_SEMI]) {   /* (SUB LOCK, A not reset: the sub takes A's phase, down its octaves) */
+    } else if (patch[S_LOCK] && !patch[A_SEMI] && (!v->on || !v->ea.lv)) {   /* (SUB LOCK, A not reset: the sub takes A's phase, down its octaves; only for a voice that was silent: a note over a note jumped the sub's phase, a click; 1.0.41) */
         int32_t sh = 2 - patch[S_OCT] + patch[A_OCT];
         if (sh >= 0 && sh < 8) v->phs = v->oa.ph[0] >> sh;
     }
@@ -889,9 +892,9 @@ static void voice_block(voice_t *v, int32_t *acc)
     uint32_t inc_sub, rsub, ft = (uint32_t)P[F_TYPE];
     int32_t amp_t, g_t, dg, da, gain;
 
-    fenv = env_run(&v->ef, (uint32_t)GP(D_FEA), (uint32_t)GP(D_FED), GP(D_FES) << 23, (uint32_t)GP(D_FER));   /* (GP: the LFOs can move them) */
-    menv = env_run(&v->em, (uint32_t)GP(D_MEA), (uint32_t)GP(D_MED), 0, (uint32_t)GP(D_MED));
-    amp = env_run(&v->ea, (uint32_t)GP(D_AEA), (uint32_t)GP(D_AED), GP(D_AES) << 23, (uint32_t)GP(D_AER));
+    fenv = env_run(&v->ef, (uint32_t)GP(D_FEA), (uint32_t)GP(D_FED), GP(D_FES) << 23, (uint32_t)GP(D_FER), 0u);   /* (GP: the LFOs can move them) */
+    menv = env_run(&v->em, (uint32_t)GP(D_MEA), (uint32_t)GP(D_MED), 0, (uint32_t)GP(D_MED), 0u);
+    amp = env_run(&v->ea, (uint32_t)GP(D_AEA), (uint32_t)GP(D_AED), GP(D_AES) << 23, (uint32_t)GP(D_AER), ANTICLICK);   /* (never faster than ~1.5 ms: a hard attack could click; 1.0.41) */
     if (!v->ea.st && !v->ea.lv) { v->on = 0; v->amp = 0; return; }
     if (GP(D_GLIDE) || v->slide)                /* (a SEQ slide without GLIDE: ~60 ms) */
         v->pitch = v->target + (int32_t)(((int64_t)(v->pitch - v->target) * KS_GLIDE_DEC[GP(D_GLIDE) ? GP(D_GLIDE) : 50]) >> 24);   /* (the time shown) */
@@ -1022,6 +1025,7 @@ static void voice_block(voice_t *v, int32_t *acc)
         const int8_t *c = FT_MIX[ft];
         int32_t k = res * 125, comp = ft <= FT_LP12 ? 4096 + (k >> 1) : 4096, x0 = cut >> 7;
         g_t = KS_CUT_G[x0] + (((KS_CUT_G[x0 + 1] - KS_CUT_G[x0]) * (cut & 127)) >> 7);
+        if (res > 56) { int32_t cap = 60493 - (res - 56) * 120; if (g_t > cap) g_t = cap; }   /* (the top of the cutoff with a high RESONANCE: the ladder rang at fs/2, a 22 kHz crackle at a note's filter-envelope peak; 1.0.41) */
         if (!v->g) v->g = g_t;
         dg = (g_t - v->g) / (int32_t)KS_CB;
         for (i = 0; i < (int32_t)KS_CB; i++) {

@@ -2,7 +2,7 @@
 
 [English](../SPECIFICATIONS.md) · **Français**
 
-Synthé de basses modernes pour le M-VAVE FM-1 (JieLi AC79, deux cœurs, sans FPU). Dernière mise à jour : **1.0.40 (BÊTA)**, testée dans l’émulateur et par des tests automatiques, pas encore sur tous les FM-1 (le détail des versions récentes est dans SPECIFICATIONS.md).
+Synthé de basses modernes pour le M-VAVE FM-1 (JieLi AC79, deux cœurs, sans FPU). Dernière mise à jour : **1.0.41 (BÊTA)**, testée dans l’émulateur et par des tests automatiques, pas encore sur tous les FM-1 (le détail des versions récentes est dans SPECIFICATIONS.md).
 Ce document dit où en est le projet : ce qui est fait, ce qui est à vérifier, ce qui reste, et des idées pour aller plus loin.
 
 ## 1. Vision
