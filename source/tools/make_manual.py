@@ -252,7 +252,7 @@ def build(L):
          f'<aside class="side"><input type="search" id="q" placeholder="{t(T("Search the manual…", "Chercher dans le manuel…"))}" aria-label="{t(T("Search", "Recherche"))}">'
          '<ul class="side-toc" id="toc">' + "".join(f'<li><a href="#{a}">{t(n)}</a></li>' for a, n in nav) + '</ul></aside>'
          '<main>']
-    o.append(f'<section class="hero"><h1>{t(T("The <em>K-WASUB</em> manual", "Le manuel de <em>K-WASUB</em>"))}</h1>'
+    o.append(f'<section class="hero"><h1>{t(T("The <em>K-WASUB</em> manual <small>(BETA)</small>", "Le manuel de <em>K-WASUB</em> <small>(BÊTA)</small>"))}</h1>'
              f'<p class="lead">{t(T("A modern bass synth for the M-VAVE FM-1. The 27 keys play, K1–K4 set what the screen shows (written at the bottom), the buttons open the pages. Short on purpose: what you see on the screen is not explained again.", "Un synthé de basses modernes pour le M-VAVE FM-1. Les 27 touches jouent, K1–K4 règlent ce que montre l’écran (écrit en bas), les boutons ouvrent les pages. Court exprès : ce qui se voit à l’écran n’est pas réexpliqué."))}</p>'
              f'<img src="{img}{"promo-fr" if fr else "promo"}.png" alt="K-WASUB"></section>')
     dbar = f'<div class="dbar"><span>{t(T("K-WASUB is free. If it helps your sounds, a coffee keeps it going.", "K-WASUB est gratuit. S’il t’aide pour tes sons, un café le fait avancer."))}</span><a href="{KOFI}" target="_blank" rel="noopener">{t(T("Donate on Ko-fi", "Faire un don sur Ko-fi"))}</a></div>'
@@ -273,7 +273,7 @@ def build(L):
     o.append(dbar)
     spec = "CAHIER-DES-CHARGES.md" if fr else "SPECIFICATIONS.md"
     o.append(f'<footer>{t(T("K-WASUB is free software (GPL-3.0), born from", "K-WASUB est un logiciel libre (GPL-3.0), né de"))} <a href="https://github.com/Guizmoh/Kawa-Tracker-Fm1">KAWA</a> (Omnipotard / Leo Kuroshita, Hügelton Instruments). '
-             f'{t(T("Version 1.0. Tell me what you see on your FM-1 (GitHub, Issues).", "Version 1.0. Dis-moi ce que tu vois sur ton FM-1 (GitHub, Issues)."))} <a href="index.html">← {t(T("Home", "Accueil"))}</a> · <a href="{spec}">{t(T("Specifications", "Cahier des charges"))}</a></footer>')
+             f'{t(T("BETA version 1.0.39. Tell me what you see on your FM-1 (GitHub, Issues).", "Version BÊTA 1.0.39. Dis-moi ce que tu vois sur ton FM-1 (GitHub, Issues)."))} <a href="index.html">← {t(T("Home", "Accueil"))}</a> · <a href="{spec}">{t(T("Specifications", "Cahier des charges"))}</a></footer>')
     o.append('</main></div>')
     o.append(f'<a class="fab" href="{KOFI}" target="_blank" rel="noopener">☕ {t(T("Support K-WASUB", "Soutenir K-WASUB"))}</a>')
     o.append('''<script>

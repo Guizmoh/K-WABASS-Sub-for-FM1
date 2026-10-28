@@ -2027,7 +2027,7 @@ static void item_text(uint32_t id, char *b)
             if (dual_on) { b = str_cat(b, " C1 "); b = fmt_u(b, ks_load[1], 0); b = str_cat(b, "%"); }
             if (ks_shed) { b = str_cat(b, " \xB7 -"); fmt_u(b, ks_shed, 0); }
             break;
-        case G_FW: str_cat(b, "K-WASUB " APP_VER); break;
+        case G_FW: str_cat(b, "K-WASUB " APP_VER " BETA"); break;
         case G_SQ_STEP: b = fmt_u(b, (uint32_t)v + 1u, 2); b = str_cat(b, "/"); fmt_u(b, sq_pat()->len, 2); break;
         case G_SQ_NOTE:
             if (!(*sq_fp(perf.cur, sq_cur_step) & SF_ON)) { str_cat(b, "REST"); break; }
