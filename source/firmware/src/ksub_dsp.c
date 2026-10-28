@@ -562,7 +562,7 @@ typedef struct {
     int32_t lv;                                 /* Q30 */
 } env_t;
 static void env_gate(env_t *e, int on) { e->st = on ? 1u : (e->st ? 4u : 0u); }
-#define ANTICLICK ((1u << 30) / 4u)                /* the amp envelope's shortest attack: 4 control blocks of 16 samples, ~1.5 ms */
+#define ANTICLICK ((1u << 30) / 6u)                /* the amp envelope's shortest attack: 6 control blocks of 16 samples, ~2.2 ms (the filter's: half) */
 static int32_t env_run(env_t *e, uint32_t a, uint32_t d, int32_t s, uint32_t r, uint32_t slow)   /* s: Q30; returns Q15; slow: the shortest attack step (0: none) */
 {
     switch (e->st) {
@@ -892,9 +892,9 @@ static void voice_block(voice_t *v, int32_t *acc)
     uint32_t inc_sub, rsub, ft = (uint32_t)P[F_TYPE];
     int32_t amp_t, g_t, dg, da, gain;
 
-    fenv = env_run(&v->ef, (uint32_t)GP(D_FEA), (uint32_t)GP(D_FED), GP(D_FES) << 23, (uint32_t)GP(D_FER), 0u);   /* (GP: the LFOs can move them) */
+    fenv = env_run(&v->ef, (uint32_t)GP(D_FEA), (uint32_t)GP(D_FED), GP(D_FES) << 23, (uint32_t)GP(D_FER), ANTICLICK / 2u);   /* (GP: the LFOs can move them) */
     menv = env_run(&v->em, (uint32_t)GP(D_MEA), (uint32_t)GP(D_MED), 0, (uint32_t)GP(D_MED), 0u);
-    amp = env_run(&v->ea, (uint32_t)GP(D_AEA), (uint32_t)GP(D_AED), GP(D_AES) << 23, (uint32_t)GP(D_AER), ANTICLICK);   /* (never faster than ~1.5 ms: a hard attack could click; 1.0.41) */
+    amp = env_run(&v->ea, (uint32_t)GP(D_AEA), (uint32_t)GP(D_AED), GP(D_AES) << 23, (uint32_t)GP(D_AER), ANTICLICK);   /* (never faster than ~2.2 ms: a hard attack clicked; 1.0.42) */
     if (!v->ea.st && !v->ea.lv) { v->on = 0; v->amp = 0; return; }
     if (GP(D_GLIDE) || v->slide)                /* (a SEQ slide without GLIDE: ~60 ms) */
         v->pitch = v->target + (int32_t)(((int64_t)(v->pitch - v->target) * KS_GLIDE_DEC[GP(D_GLIDE) ? GP(D_GLIDE) : 50]) >> 24);   /* (the time shown) */
