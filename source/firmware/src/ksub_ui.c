@@ -927,6 +927,7 @@ static void load_preset(uint32_t bank, uint32_t k)
     } else
         preset_factory(k, p, pname);
     memcpy(patch, p, NP_MAX);
+    if (!fx_flush) fx_flush = 1;                /* (the last sound's echoes and reverb do not play on under this one) */
     set.bank = (uint8_t)bank;
     set.idx = (uint8_t)k;
     set_dirty = 1;
@@ -2224,6 +2225,16 @@ static void notes_all_off(void)
     uint32_t n;
     for (n = 0; n < 128u; n++) if (latched[n] || phys[n]) { ev_push(EV_OFF, n, 0); latched[n] = phys[n] = 0; }
 }
+static void panic_all(void)                     /* PANIC (REC held, OCT- + OCT+, MIDI CC 123): every note, the FX PADS and FX LIVE, and the
+                                                 * delay, reverb, chorus and dub echo emptied (1.0.36: an old echo kept playing behind) */
+{
+    notes_all_off();
+    ev_push(EV_PANIC, 0, 0);
+    pad_release_all();
+    lfx_flt = 0; lfx_pump = 0; lfx_stut = 0; lfx_tape = 0;
+    fx_flush = 2;
+    toast("ALL NOTES OFF");
+}
 static void key_down(uint32_t n, uint32_t vel)
 {
     uint32_t i, any = 0;
@@ -2517,7 +2528,7 @@ static void on_button(uint32_t b)
     }
     case BTN_OCT_DOWN:
     case BTN_OCT_UP:
-        if ((fm1_in.buttons & 3u) == 3u) { notes_all_off(); ev_push(EV_PANIC, 0, 0); toast("ALL NOTES OFF"); break; }
+        if ((fm1_in.buttons & 3u) == 3u) { panic_all(); break; }
         if (dk_view()) {                        /* DRUMS: OCT- / OCT+ the page of 16 steps */
             uint32_t len = dk_len(), np = (len + 15u) / 16u, pg = dk_cur / 16u;
             char t[16], *p;
@@ -2922,8 +2933,8 @@ static void ui_input(void)
             toast(qa_lfo2() ? "LFO 2 ON THE KNOBS" : "LFO 1 ON THE KNOBS");
             continue;
         }
-        if ((set.ui || win == 3u) && b <= BTN_OCT_UP && (fm1_in.buttons & 3u) == 3u) {
-            notes_all_off(); ev_push(EV_PANIC, 0, 0); toast("ALL NOTES OFF");
+        if (b <= BTN_OCT_UP && (fm1_in.buttons & 3u) == 3u) {   /* OCT- + OCT+: PANIC, in CLASSIC too (1.0.36) */
+            panic_all();
             if (hb.b <= BTN_OCT_UP) hb.used = 1;
             continue;
         }
@@ -2944,7 +2955,7 @@ static void ui_input(void)
                 for (page = 0; page + 1u < NPAGE && PAGE_V0[page + 1u] <= j; page++) {}
                 vcur[page] = (uint8_t)(j - PAGE_V0[page]); win = 0; vpop_ms = 0; g_force = 1; hb.next = 0;
             }
-            else if (hb.b == BTN_REC) { notes_all_off(); ev_push(EV_PANIC, 0, 0); pad_release_all(); lfx_flt = 0; lfx_pump = 0; lfx_stut = 0; lfx_tape = 0; toast("ALL NOTES OFF"); hb.next = 0; }
+            else if (hb.b == BTN_REC) { panic_all(); hb.next = 0; }
             else if (hb.b == BTN_GLO) { item_set(G_UI, set.ui ? 0 : 1); set_dirty = 1; set_ms = fm1_ms; toast(set.ui ? "SHIFT MODE" : "CLASSIC MODE"); hb.next = 0; }
             else if (hb.b <= BTN_OCT_UP) { if (hb.b == BTN_OCT_DOWN) undo(); else redo(); hb.next = 0; }
             else { randomize((uint32_t)page_of_btn(hb.b)); hb.next = 0; }
@@ -3089,7 +3100,7 @@ static void midi_in(void)
             case 71: patch[F_RES] = (int8_t)d2; pdirty = 1; break;
             case 76: patch[L1_DIV] = (int8_t)(set.grid ? DIV_NEAR[d2 >> 3] : d2 >> 3); break;
             case 77: patch[L1_DEP] = (int8_t)(d2 - 64); break;
-            case 123: notes_all_off(); ev_push(EV_PANIC, 0, 0); break;
+            case 123: panic_all(); break;
             }
         }
     }

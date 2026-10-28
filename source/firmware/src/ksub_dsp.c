@@ -1673,15 +1673,32 @@ static int32_t pump_gain(uint32_t pos, uint32_t rate, int32_t depth)
 static const uint16_t RV_SC[4] = {150, 256, 205, 86};
 static const int16_t RV_FBA[4] = {-1800, 0, 1500, 4200}, RV_DA[4] = {-2000, 0, -7000, 3000};
 
+static volatile uint8_t fx_flush;               /* 1: the effects' memories emptied (a sound loaded), 2: and the drums' echo too (PANIC); 1.0.36 */
+static void fx_clear(uint32_t what)
+{
+    static uint8_t dl_was;
+    if (what) {
+        memset(dl_buf, 0, sizeof dl_buf); memset(rv_c, 0, sizeof rv_c); memset(rv_a, 0, sizeof rv_a); memset(ch_buf, 0, sizeof ch_buf);
+        memset(fx.dl_lp, 0, sizeof fx.dl_lp); memset(fx.dl_hp, 0, sizeof fx.dl_hp); memset(fx.rv_lp, 0, sizeof fx.rv_lp);
+        memset(fx.ph_x, 0, sizeof fx.ph_x); memset(fx.ph_y, 0, sizeof fx.ph_y); memset(fx.ph_last, 0, sizeof fx.ph_last);
+        lv.st_on = 0; lv.tp_on = 0; lv.tp_fade = 0;
+        if (what >= 2u) de.on = 0;              /* (dk_render empties it when it starts again) */
+        dl_was = patch[DL_ON] ? 1u : 0u;
+        return;
+    }
+    if (patch[DL_ON] && !dl_was) { memset(dl_buf, 0, sizeof dl_buf); memset(fx.dl_lp, 0, sizeof fx.dl_lp); memset(fx.dl_hp, 0, sizeof fx.dl_hp); }   /* (the delay switched on: not what it held when it went off) */
+    dl_was = patch[DL_ON] ? 1u : 0u;
+}
 static void fx_render(const int32_t *in, int32_t *out, uint32_t n)
 {
     const int8_t *P = patch;
     uint32_t i, k;
+    { uint32_t f = fx_flush; fx_flush = 0; fx_clear(f); }
     int32_t da = fpv(DR_AMT, D_DRAMT), cr = fpv(CR_RATE, D_CRRATE), chr = fpv(CH_RATE, D_CHRATE), mv = fpv(MS_VOL, D_VOL);
     int32_t dr_g = 256 + da * da * 3 / 4, dr_mix = fpv(DR_MIX, D_DRMIX) * 258, cr_mix = fpv(CR_MIX, D_CRMIX) * 258;
     int32_t bits = 16 - ((fpv(CR_BITS, D_CRBITS) * 14) >> 7), hold = 1 + ((cr * 31) >> 7);
     int32_t ch_rate = 4870 + chr * chr * 30, ch_dep = fpv(CH_DEP, D_CHDEP) * 2, ch_mix = fpv(CH_MIX, D_CHMIX) * 258;
-    int32_t dl_fb = fpv(DL_FB, D_DLFB) * 250, dl_lpk = 3000 + fpv(DL_TONE, D_DLTONE) * 233, dl_mix = fpv(DL_MIX, D_DLMIX) * 258, dl_t;
+    int32_t dl_fb = fpv(DL_FB, D_DLFB) * 250, dl_fbd, dl_lpk = 3000 + fpv(DL_TONE, D_DLTONE) * 233, dl_mix = fpv(DL_MIX, D_DLMIX) * 258, dl_t;
     int32_t rv_fb = 22000 + fpv(RV_SIZE, D_RVSIZE) * 80, rv_d = fpv(RV_DAMP, D_RVDAMP) * 200, rv_mix = fpv(RV_MIX, D_RVMIX) * 258;
     int32_t vol = (mv * mv * 419) >> 10, boost = fpv(MS_SUB, D_SUBB) * 200, glue = fpv(MS_GLUE, D_GLUE);
     int32_t thr = 32767 - glue * 180, makeup = 4096 + glue * 24;
@@ -1838,6 +1855,8 @@ static void fx_render(const int32_t *in, int32_t *out, uint32_t n)
         if (P[DL_ON]) {                         /* the delay: PING-PONG, TAPE (wow, saturated, darker), DIGITAL, DUB */
             int32_t o[2], t = fx.dl_t, lpk = dlt == 2u ? 32767 : dlt == 3u ? dl_lpk * 2 / 3 : dlt == 1u ? dl_lpk * 3 / 4 : dl_lpk;
             int ping = dlt == 0u || dlt == 3u;
+            dl_fbd = dlt == 1u ? dl_fb * 4 / 5 : dlt == 2u ? (dl_fb > 30000 ? 30000 : dl_fb) : dlt == 3u ? (dl_fb + (dl_fb >> 3) > 31500 ? 31500 : dl_fb + (dl_fb >> 3)) : dl_fb;
+            /* (the loop's gain kept under 1 on every type: TAPE's saturation adds a quarter, DUB an eighth; 1.0.36, they rang on for ever) */
             fx.dl_t += (dl_t - fx.dl_t) >> 11;
             if (dlt == 1u) {                    /* TAPE: wow, about 0.4 Hz, a little flutter on top */
                 fx.dl_wow += 39000u;
@@ -1850,8 +1869,7 @@ static void fx_render(const int32_t *in, int32_t *out, uint32_t n)
                 o[k] = a + (((b - a) * (t & 255)) >> 8);
             }
             for (k = 0; k < 2u; k++) {
-                int32_t fbk = mul15(o[ping ? k ^ 1u : k], dl_fb), ink = ping ? (k == 0u ? (x >> 1) : 0) : (x >> 1), w2;
-                if (dlt == 3u) fbk += fbk >> 3;
+                int32_t fbk = mul15(o[ping ? k ^ 1u : k], dl_fbd), ink = ping ? (k == 0u ? (x >> 1) : 0) : (x >> 1), w2;
                 fx.dl_lp[k] += mul15(fbk - fx.dl_lp[k], lpk);
                 fx.dl_hp[k] += (fx.dl_lp[k] - fx.dl_hp[k]) >> (dlt == 2u ? 12 : dlt == 3u ? 6 : 7);
                 w2 = ink + fx.dl_lp[k] - fx.dl_hp[k];
