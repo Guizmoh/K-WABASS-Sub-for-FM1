@@ -76,11 +76,20 @@ button.primary { background: var(--lime); color: #11160a; border-color: var(--li
 .key.on.w { background: var(--lime); } .key.on.b { background: #7a9a20; }
 .key span { position: absolute; bottom: 6px; left: 0; right: 0; text-align: center; font-size: 10px; color: #56605e; }
 .help { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 18px; }
-.help section { background: var(--body); border: 1px solid var(--edge); border-radius: 12px; padding: 14px 16px; min-width: 0; }
-.help h2 { font: 700 14px/1.2 var(--f-disp); letter-spacing: .08em; margin: 0 0 8px; color: var(--lime); }
-.help ul { margin: 0; padding-left: 18px; color: var(--mute); }
+.help details { background: var(--body); border: 1px solid var(--edge); border-radius: 12px; min-width: 0; overflow: hidden; }
+.help summary { cursor: pointer; list-style: none; padding: 14px 16px; font: 700 14px/1.2 var(--f-disp); letter-spacing: .08em; color: var(--lime); display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.help summary::-webkit-details-marker { display: none; }
+.help summary::after { content: "+"; font: 600 18px/1 var(--f-mono); color: var(--mute); }
+.help details[open] summary { border-bottom: 1px solid var(--edge); }
+.help details[open] summary::after { content: "−"; }
+.help ul { margin: 0; padding: 0 16px 14px 34px; color: var(--mute); }
 .help li { margin: 3px 0; } .help kbd { font: 600 11px var(--f-mono); color: var(--ink); background: var(--body-hi);
   border: 1px solid var(--edge); border-radius: 4px; padding: 0 4px; }
+.site-nav { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px; padding: 6px 0 12px; border-bottom: 1px solid var(--edge); }
+.site-nav a { color: var(--mute); text-decoration: none; font: 500 13px/1.4 var(--f-disp); }
+.site-nav a:hover, .site-nav .brand { color: var(--lime); }
+.site-nav .brand { font-weight: 700; font-size: 17px; letter-spacing: .02em; margin-right: auto; }
+.site-nav .brand span { color: var(--ink); }
 @media (max-width: 760px) {
   .top { grid-template-columns: 1fr; }
   .screen { margin: 0 auto; }
@@ -93,6 +102,13 @@ button.primary { background: var(--lime); color: #11160a; border-color: var(--li
 <body>
 
 <div class="wrap">
+  <nav class="site-nav" aria-label="K-WASUB site navigation">
+    <a class="brand" href="../index.html">K-WA<span>SUB</span></a>
+    <a href="../#try">Try it</a><a href="../#install">Install</a>
+    <a href="../manual.html">Manual</a><a href="../data.html">Data</a>
+    <a href="../#news">What's new</a><a href="../#don">Support</a>
+    <a href="https://github.com/Guizmoh/K-WASUB_Firmware_for_FM1">GitHub</a>
+  </nav>
   <header>
     <div>
       <h1>K-WA<span>SUB</span></h1>
@@ -122,17 +138,17 @@ button.primary { background: var(--lime); color: #11160a; border-color: var(--li
   </div>
 
   <div class="help">
-    <section>
-      <h2><span lang="en">PAGES</span><span lang="fr">PAGES</span></h2>
+    <details>
+      <summary><span class="help-title"><span lang="en">PAGES</span><span lang="fr">PAGES</span></span></summary>
       <ul>
         <li><span lang="en"><b>HOME</b> 01 PLAY &middot; <b>EDIT</b> 02 BASS &middot; <b>ENV</b> 03 ENVELOPE &middot; <b>SEQ</b> 04 FILTER &middot; <b>LFO</b> 05 &middot; <b>FX</b> 06 &middot; <b>ARP</b> 07 PRESETS &middot; <b>GLO</b> 08 SYSTEM</span><span lang="fr"><b>HOME</b> 01 PLAY &middot; <b>EDIT</b> 02 BASS &middot; <b>ENV</b> 03 ENVELOPE &middot; <b>SEQ</b> 04 FILTER &middot; <b>LFO</b> 05 &middot; <b>FX</b> 06 &middot; <b>ARP</b> 07 PRESETS &middot; <b>GLO</b> 08 SYSTEM</span></li>
         <li><span lang="en">A page button opens the <b>first view</b> of its page; press it again for the next view (the dots at the top right show the views)</span><span lang="fr">Un bouton de page ouvre la <b>première vue</b> de sa page ; appuyer encore : vue suivante (les points en haut à droite montrent les vues)</span></li>
         <li><span lang="en"><b>SELECT</b> chooses the row, <b>ALGO</b> changes its value, <b>K1–K4</b> do what the bottom of the screen says</span><span lang="fr"><b>SELECT</b> choisit la ligne, <b>ALGO</b> change sa valeur, <b>K1–K4</b> font ce que dit le bas de l'écran</span></li>
         <li><span lang="en"><b>PRESETS</b> changes the sound at once, on HOME and on the PRESETS page (<b>ARP</b>)</span><span lang="fr"><b>PRESETS</b> change le son tout de suite, sur HOME et sur la page PRESETS (<b>ARP</b>)</span></li>
       </ul>
-    </section>
-    <section>
-      <h2><span lang="en">PLAYING LIVE</span><span lang="fr">JOUER EN LIVE</span></h2>
+    </details>
+    <details>
+      <summary><span class="help-title"><span lang="en">PLAYING LIVE</span><span lang="fr">JOUER EN LIVE</span></span></summary>
       <ul>
         <li><span lang="en"><b>SEL</b> opens: PERFORM (4 macros, morph, pads) &rarr; MORPH X/Y &rarr; FX LIVE &rarr; MACROS &rarr; MORPH A/B</span><span lang="fr"><b>SEL</b> ouvre : PERFORM (4 macros, morph, pads) &rarr; MORPH X/Y &rarr; FX LIVE &rarr; MACROS &rarr; MORPH A/B</span></li>
         <li><span lang="en">Hold <b>LFO</b> and turn a knob: LFO 2 goes on what that knob sets (LFO 1 or 2: SYSTEM)</span><span lang="fr"><b>LFO</b> maintenu + un potard : le LFO 2 va sur ce que règle le potard (LFO 1 ou 2 : SYSTEM)</span></li>
@@ -141,19 +157,225 @@ button.primary { background: var(--lime); color: #11160a; border-color: var(--li
         <li><span lang="en">Held buttons (mouse): <b>OCT-</b> 1 s = UNDO, <b>OCT+</b> = REDO, <b>SAVE</b> = UNDO / REDO window, <b>HOME</b> = PANIC, <b>GLO</b> = CLASSIC / SHIFT, <b>SEL</b> = A/B</span><span lang="fr">Boutons maintenus (souris) : <b>OCT-</b> 1 s = UNDO, <b>OCT+</b> = REDO, <b>SAVE</b> = fenêtre UNDO / REDO, <b>HOME</b> = PANIC, <b>GLO</b> = CLASSIC / SHIFT, <b>SEL</b> = A/B</span></li>
         <li><span lang="en"><b>OCT-</b> + <b>OCT+</b> together: everything off</span><span lang="fr"><b>OCT-</b> + <b>OCT+</b> ensemble : tout couper</span></li>
       </ul>
-    </section>
-    <section>
-      <h2><span lang="en">COMPUTER KEYBOARD</span><span lang="fr">CLAVIER DE L'ORDINATEUR</span></h2>
+    </details>
+    <details>
+      <summary><span class="help-title"><span lang="en">COMPUTER KEYBOARD</span><span lang="fr">CLAVIER DE L'ORDINATEUR</span></span></summary>
       <ul>
         <li><span lang="en">Notes: <kbd>Z</kbd><kbd>S</kbd><kbd>X</kbd>… and <kbd>Q</kbd><kbd>2</kbd><kbd>W</kbd>…</span><span lang="fr">Notes : <kbd>Z</kbd><kbd>S</kbd><kbd>X</kbd>… et <kbd>Q</kbd><kbd>2</kbd><kbd>W</kbd>…</span></li>
         <li><span lang="en"><kbd>↑</kbd><kbd>↓</kbd> row &middot; <kbd>←</kbd><kbd>→</kbd> value &middot; <kbd>PgUp</kbd><kbd>PgDn</kbd> preset</span><span lang="fr"><kbd>↑</kbd><kbd>↓</kbd> ligne &middot; <kbd>←</kbd><kbd>→</kbd> valeur &middot; <kbd>PgUp</kbd><kbd>PgDn</kbd> preset</span></li>
         <li><span lang="en"><kbd>Shift</kbd>+<kbd>1</kbd>…<kbd>8</kbd> pages &middot; <kbd>Tab</kbd> SEL &middot; <kbd>Space</kbd> SEQ PLAY/STOP &middot; <kbd>Enter</kbd> TAP (SEQ view: REC) &middot; <kbd>⌫</kbd> SAVE (held: undo) &middot; <kbd>-</kbd> / <kbd>=</kbd> OCT− / OCT+ (held, in SHIFT: the columns)</span><span lang="fr"><kbd>Shift</kbd>+<kbd>1</kbd>…<kbd>8</kbd> pages &middot; <kbd>Tab</kbd> SEL &middot; <kbd>Espace</kbd> SEQ PLAY/STOP &middot; <kbd>Entrée</kbd> TAP (vue SEQ : REC) &middot; <kbd>⌫</kbd> SAVE (maintenu : undo) &middot; <kbd>-</kbd> / <kbd>=</kbd> OCT− / OCT+ (maintenus, en SHIFT : les colonnes)</span></li>
         <li><span lang="en">Mouse wheel or drag on a knob</span><span lang="fr">Molette ou glisser sur un bouton rotatif</span></li>
       </ul>
-    </section>
+    </details>
   </div>
 </div>
 
+
+<template id="site-content-template"><style>
+
+:host{--bg:#0b0f10;--panel:#131a1c;--panel2:#1a2326;--rule:#2a3639;--ink:#f1f6f6;--mut:#9db0b2;--lime:#c8f03c;--cyan:#50d8d0;--vio:#aa8cfa;--or:#f08c3c;color-scheme:dark;
+--sans:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;--mono:ui-monospace,Menlo,Consolas,monospace}
+*{box-sizing:border-box}html{scroll-behavior:smooth}
+:host{display:block;margin-top:24px;background:var(--bg);color:var(--ink);font:1rem/1.6 var(--sans);background-image:radial-gradient(900px 420px at 50% -120px,#1c2a12,transparent 70%);background-repeat:no-repeat}
+a{color:var(--cyan)}a:hover{color:var(--lime)}
+main{max-width:1000px;margin:0 auto;padding:18px 16px 70px}
+nav.bar{display:flex;gap:6px 18px;flex-wrap:wrap;align-items:center;padding:6px 0 14px}nav.bar a{color:var(--mut);text-decoration:none;font-size:.92rem}nav.bar a:hover{color:var(--lime)}
+.logo{font:800 1.3rem var(--sans);letter-spacing:-.02em;color:var(--lime)!important}.logo b{color:var(--ink)}nav.bar .sp{flex:1}nav.bar .lang{color:var(--mut);font-size:.9rem}nav.bar .lang b{color:var(--lime)}
+.hero img{width:100%;display:block;border-radius:18px;border:1px solid var(--rule);box-shadow:0 22px 60px #000a}
+.betab{margin:0 0 .7rem;text-align:center;color:var(--mut);font-size:.9rem}.beta{display:inline-block;background:var(--lime);color:#10150a;font-weight:800;border-radius:8px;padding:2px 10px;letter-spacing:.04em}
+.src{margin:.5rem 0 0;font-size:.85rem;text-align:center}.src a{color:var(--mut);text-decoration:none;word-break:break-all}.src a:hover{color:var(--lime);text-decoration:underline}
+h1{font-size:clamp(1.6rem,4.6vw,2.4rem);line-height:1.15;margin:1.2rem 0 .4rem;letter-spacing:-.02em}h1 em{font-style:normal;color:var(--lime)}
+h2{font-size:1.5rem;margin:0 0 .5rem;letter-spacing:-.01em}.sec{margin-top:52px}
+.lead{color:var(--mut);font-size:1.12rem;max-width:46rem;margin:.2rem 0}
+.cta{display:flex;flex-wrap:wrap;gap:12px;margin:18px 0 6px}
+.btn{display:inline-flex;align-items:center;gap:8px;border-radius:12px;padding:12px 20px;font:700 1rem var(--sans);text-decoration:none;border:2px solid var(--lime);color:var(--lime);background:transparent;cursor:pointer}
+.btn.p{background:var(--lime);color:#10150a}.btn:hover{filter:brightness(1.12);color:inherit}.btn.p:hover{color:#10150a}
+.btn.d{border-color:var(--or);color:var(--or)}.btn.d.p{background:var(--or);color:#1b0e02}
+.btn[aria-disabled=true]{opacity:.55;pointer-events:none}
+.cards{display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));margin-top:14px}
+.card{background:var(--panel);border:1px solid var(--rule);border-radius:16px;padding:16px 18px}
+.card h3{margin:0 0 .3rem;font-size:1.05rem;color:var(--lime)}.card p{margin:.3rem 0;color:#cfdadb;font-size:.96rem}
+.n{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--lime);color:#10150a;font-weight:800;margin-right:8px}
+.shots{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));margin-top:14px}
+.shots figure{margin:0}.shots img{width:100%;aspect-ratio:1;border-radius:10px;border:1px solid var(--rule);display:block;background:#000}
+.shots figcaption{font-size:.8rem;color:var(--mut);text-align:center;margin-top:4px}
+.emu{margin-top:14px;background:var(--panel);border:1px solid var(--rule);border-radius:18px;overflow:hidden}
+.tabs{display:flex;gap:6px;padding:10px 12px;border-bottom:1px solid var(--rule);flex-wrap:wrap;align-items:center}
+.tabs button{font:600 .9rem var(--sans);background:var(--panel2);color:var(--ink);border:1px solid var(--rule);border-radius:9px;padding:6px 12px;cursor:pointer}
+.tabs button[aria-pressed=true]{background:var(--lime);color:#10150a;border-color:var(--lime)}.tabs span{color:var(--mut);font-size:.85rem;margin-left:auto}
+.frame{position:relative;height:min(86vh,820px);background:#06090a}.frame iframe{width:100%;height:100%;border:0;display:none}
+.frame .go{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:20px}
+table{width:100%;border-collapse:collapse;background:var(--panel);border-radius:12px;overflow:hidden;font-size:.95rem;margin-top:12px}th,td{padding:9px 12px;border-bottom:1px solid var(--rule);text-align:left;vertical-align:top}th{background:var(--panel2);color:var(--lime);font-size:.8rem;text-transform:uppercase;letter-spacing:.06em}tr:last-child td{border:0}
+code{font-family:var(--mono);font-size:.9em;background:var(--panel2);border:1px solid var(--rule);border-radius:6px;padding:0 .35em;white-space:nowrap}
+.donate{border-color:#7a4a18;background:linear-gradient(180deg,#241a0e,#151a1c);text-align:center;padding:26px 20px}
+.donate p{max-width:38rem;margin:.4rem auto}
+details{background:var(--panel);border:1px solid var(--rule);border-radius:12px;padding:10px 16px;margin:8px 0}summary{cursor:pointer;font-weight:700}
+footer{margin-top:50px;border-top:1px solid var(--rule);padding-top:18px;color:var(--mut);font-size:.9rem}
+
+.fab{position:fixed;right:14px;bottom:14px;z-index:20;display:inline-flex;align-items:center;gap:8px;background:#f08c3c;color:#1b0e02;font:800 .95rem system-ui,sans-serif;text-decoration:none;border-radius:999px;padding:11px 18px;box-shadow:0 8px 26px #000a,0 0 0 2px #1b0e02}
+.fab:hover{filter:brightness(1.1);color:#1b0e02}
+.dbar{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;justify-content:center;background:var(--panel);border:1px solid var(--rule);border-radius:14px;padding:12px 16px;margin:14px 0;color:var(--mut);font-size:.98rem;text-align:center}
+.dbar a{background:var(--lime);color:#10150a;font-weight:800;text-decoration:none;border-radius:10px;padding:8px 16px}
+.news{list-style:none;padding:0;margin:12px 0 0;display:grid;gap:6px}.news li{display:grid;grid-template-columns:62px 1fr;gap:4px 12px;align-items:start;padding:8px 12px;background:var(--panel);border:1px solid var(--rule);border-radius:10px;font-size:.92rem;line-height:1.45}.news .v{font:700 .85rem var(--mono);color:var(--lime);padding-top:1px}.news ul{margin:0;padding-left:16px}.news ul li{display:list-item;padding:0;border:0;background:none;font-size:inherit}.news.old li{padding:5px 12px;font-size:.86rem;color:var(--mut)}.news.old .v{color:var(--mut)}details.olds{margin-top:8px}details.olds summary{cursor:pointer;color:var(--cyan);font-size:.92rem;padding:6px 2px}@media(max-width:520px){.news li{grid-template-columns:1fr}}
+
+</style><main>
+
+
+<div class="dbar"><span>K-WASUB is free. If it helps your sounds, a coffee keeps it going.</span><a href="https://ko-fi.com/omnipotard" target="_blank" rel="noopener">Donate on Ko-fi</a></div><section class="hero"><p class="betab"><span class="beta">BETA 1.0.46</span> · a work in progress: tell me what you see on your FM-1</p><img src="../docs/img/promo.png" alt="K-WASUB, a modern bass synth for the FM-1: wobble, X/Y morph, FX PADS, EQ, SHIFT mode">
+<p class="src"><a href="https://guizmoh.github.io/K-WASUB_Firmware_for_FM1/">https://guizmoh.github.io/K-WASUB_Firmware_for_FM1/</a></p>
+<h1>Turn your FM-1 into a modern <em>bass synth</em></h1>
+<p class="lead">K-WASUB is a free firmware for the M-VAVE FM-1. It is made to build and play <b>DnB, dub, dubstep and techno basses</b>: growling reeses, deep subs, 808s, and above all a <b>wobble you shape live</b> with the knobs and the keys.</p>
+<div class="cta"><a class="btn p" href="../#try">▶ Try it in the browser</a><a class="btn" href="#install">⬇ Install on the FM-1</a><a class="btn" href="../manual.html">📖 Read the manual</a></div></section>
+
+
+<section class="sec"><h2>What is it for?</h2>
+<div class="cards">
+<div class="card"><h3>Play a living bass</h3><p>The 27 keys play the bass, <b>K1–K4</b> set the four settings that matter on each page. Hold LFO and turn a knob: LFO 2 is wired to whatever that knob sets (with OCT−: LFO 1, with OCT+: <b>LFO 3</b>, the global one). <b>Three LFOs</b>, almost every setting a destination, the EQ included.</p></div>
+<div class="card"><h3>Effects on the keys</h3><p><b>FX PADS</b>: white keys set the wobble speed (4, 8, 16, 24, 32, 48), black keys play stutters, tape stop, DJ filter, saturation, phaser…</p></div>
+<div class="card"><h3>A real bass sound</h3><p>2 oscillators with 9 engines (ANALOG, 808, CS, wavetable, 4-operator FM with 8 algorithms, GROWL (FM into vowel formants), ADDITIVE (16 partials, drawbars), phase dist, hard sync), each with a FOLD (CS: a RING) after it, a sub locked on A, a sample layer and <b>resample</b>, 7 filters, <b>multiband OTT</b>, mono bass, compressor with pump, 4-band EQ, limiter and automatic level.</p></div>
+<div class="card"><h3>Morph between sounds</h3><p><b>MORPH X/Y</b>: four sounds in the corners of a square, a dot that blends them (an LFO can walk it). <b>MORPH A/B</b>: a fade on the beat.</p></div>
+<div class="card"><h3>Sequencers with parameter locks</h3><p><b>SEQ BASS</b> and a <b>DRUMS</b> sequencer (808, 909, dub techno, acoustic): up to 64 steps, chance and trig conditions on every step, and <b>parameter locks</b>: hold a step and turn a knob to give that step its own tune, decay, tone, level, ratchet (2–4 hits) or dub echo; on the bass, its own cutoff, resonance, filter envelope, drive, wobble rate, shape or sample start. <b>Automation</b>: hold REC while it plays and turn any knob, it is recorded step by step; hold REC alone to erase it.</p></div>
+<div class="card"><h3>In sync</h3><p>MIDI clock in and out, and a <b>sync out</b> for Pocket Operators and Volcas (a pulse every eighth on the left output). Live REC of the bass and the drums, OCT− / OCT+ to turn the pages of 16 steps.</p></div>
+<div class="card"><h3>Simple or fast</h3><p><b>CLASSIC</b> mode (lists) or <b>SHIFT</b> mode (3 columns, OCT− and OCT+ as Shift keys). 8 themes (CLASSIC GLOW, TECH and RIBBON with gradients), 13 palettes + their RAD gradient versions, 4 brightness levels.</p></div>
+<div class="card"><h3>Safe and open</h3><p>Free, open source (GPL-3.0), can be reinstalled or removed over USB, with a rescue mode. If the FM-1 stops, the screen tells you why.</p></div></div></section>
+
+
+
+<section class="sec" id="install"><h2>Install on the FM-1</h2>
+<div class="cards">
+<div class="card"><h3><span class="n">1</span>Plug in</h3><p>The FM-1 over USB to the computer, with a <b>data</b> cable (not a charge-only one). Close any other MIDI software.</p></div>
+<div class="card"><h3><span class="n">2</span>Open the installer</h3><p>In <b>Chrome</b> or <b>Edge</b>: <a href="../installer.html"><b>installer.html</b></a>. Click “Install K-WASUB” and confirm. Unplug nothing until it is done.</p></div>
+<div class="card"><h3><span class="n">3</span>Play</h3><p>After the restart, the start screen shows. Press any button. The manual covers the first 3 minutes.</p></div></div>
+<div class="cta"><a class="btn p" href="../installer.html">⬇ Open the installer</a><a class="btn" href="../install/">All files (.fwsc)</a></div>
+<p style="color:var(--mut);font-size:.92rem">Without Chrome or Edge: <code>INSTALL-Windows.bat</code>, <code>INSTALL-Mac.command</code> or <code>INSTALL-Linux.sh</code> (Python 3). You can go back to KAWA or to the stock firmware at any time; holding <code>OCT−</code> at power-on opens the USB rescue mode.</p></section>
+
+<section class="sec"><h2>A quick look</h2><div class="shots">
+<figure><img src="../docs/img/p-home.png" alt=""><figcaption>HOME</figcaption></figure><figure><img src="../docs/img/g-lfo.png" alt=""><figcaption>Wobble</figcaption></figure>
+<figure><img src="../docs/img/t-purered.png" alt=""><figcaption>PURE</figcaption></figure><figure><img src="../docs/img/t-magma.png" alt=""><figcaption>RACK</figcaption></figure>
+<figure><img src="../docs/img/k-presets.png" alt=""><figcaption>Presets</figcaption></figure><figure><img src="../docs/img/t-ribbon-ice.png" alt=""><figcaption>RIBBON</figcaption></figure>
+<figure><img src="../docs/img/rbc-env.png" alt=""><figcaption>RIBBON CLASSIC</figcaption></figure><figure><img src="../docs/img/t-glow-sky.png" alt=""><figcaption>SKY</figcaption></figure>
+<figure><img src="../docs/img/t-tech-cyber.png" alt=""><figcaption>TECH</figcaption></figure><figure><img src="../docs/img/t-blaze.png" alt=""><figcaption>BLAZE</figcaption></figure>
+<figure><img src="../docs/img/t-rad-pink.png" alt=""><figcaption>PINK RAD</figcaption></figure><figure><img src="../docs/img/t-rad-red.png" alt=""><figcaption>RED RAD</figcaption></figure></div>
+<p style="margin-top:12px"><a href="../manual.html">See every screen in the manual →</a></p></section>
+
+<section class="sec" id="news"><h2>Latest updates</h2>
+<!-- news: newest first; the first four in full -->
+<ol class="news">
+<li><span class="v">1.0.46</span><ul><li><b>MIDI page</b>: two new read-only rows, LAST NOTE / CC (the last channel message in, in hex: B0 4D 7F = CC 77 at 127) and LAST START / STOP (FA, FB, FC), to see what a sequencer sends, for instance when it stops</li></ul></li>
+<li><span class="v">1.0.46</span><ul><li><b>ARP button</b>: it opens the ARPEGGIATOR first; pressing it again goes through the presets (BANK A, BANK B) and back to the ARPEGGIATOR</li></ul></li>
+<li><span class="v">1.0.46</span><ul><li><b>SEQ BASS recording</b>: a note recorded on a step now plays at the pitch you played it (it came back an octave lower at the default octave: the octave was left out of the recording); the note shown on the step is the one heard</li><li>patterns recorded before keep their notes</li></ul></li>
+<li><span class="v">1.0.46</span><ul><li><b>Presets checked one by one</b> (4 notes each, level, evenness, clipping): ACID FM ZAP (cutoff 30 → 48: the high notes were nearly silent), DUB STAB and DUBTECH PULSE (cutoff raised), VOWEL WOBBLE and REESE DRAWBAR (too loud, volume down), CLEAN PICK (too quiet, up), HOLLOW GROWL; GROWL has a little more of the note itself under the vowels, so its low notes carry</li></ul></li>
+</ol>
+<details class="olds"><summary>Older versions (92)</summary>
+<ol class="news old">
+<li><span class="v">1.0.46</span><div><b>ACID SQUELCH</b> audible: CUTOFF up to 765 Hz (it was 76 Hz, the sub-bass notes were filtered away), a soft attack on its envelopes · <b>Softer attack click</b> on every sound: the amplitude envelope's shortest attack is ~2.2 ms (was ~0.5 ms), the filter envelope's ~1.1 ms</div></li>
+<li><span class="v">1.0.46</span><div><b>Crackles when notes overlap</b> (MONO and POLY): a new note over a held one made the SUB LOCK jump the sub's phase (a click on almost every sound with the sub on, up to half the level); now only a note starting from silence takes A's phase · resonant filter at the very top of the cutoff could ring at fs/2 (a 22 kHz crackle on acid sounds): its top is limited when RESONANCE is high · the amp envelope's attack is never faster than 1.5 ms (a hard attack could tick)</div></li>
+<li><span class="v">1.0.46</span><div><b>Start screen</b>: BETA on the left, the version number on the right, both a little darker</div></li>
+<li><span class="v">1.0.46</span><div><b>BETA</b>: K-WASUB is marked as a beta again, everywhere: the start screen (BETA on the left, V1.0.46 on the right), SYSTEM › FIRMWARE, the home page (badge and FAQ), the manual, the README in three languages, the specifications and the picture · LFO pages: LFO 1 / LFO 2 in the big title</div></li>
+<li><span class="v">1.0.46</span><div><b>LFO pages</b>: the big title now says LFO 1 or LFO 2 (with the rate), WOBBLE and MOTION stay in the small header</div></li>
+<li><span class="v">1.0.37</span><div><b>FX page</b>: SATURATION, then REVERB, then DELAY come first (then MULTIBAND, COMPRESSOR, EQ, CHORUS, PHASER, CRUSH, MASTER); in each effect the first row (K1) is its ON / OFF</div></li>
+<li><span class="v">1.0.36</span><div><b>PANIC</b>: OCT− + OCT+ works any time, playing too, in CLASSIC as in SHIFT (it only did in SHIFT, and REC held only when stopped); it also empties the delay, reverb and dub echo · <b>Delays that rang on for ever</b>: TAPE, DIGITAL and DUB with a high FEEDBACK (or one pushed by an LFO, a macro, MORPH) fed themselves and kept playing behind every sound; the loop now always fades · loading a sound empties the last one's echoes and reverb, and a delay switched back on starts empty</div></li>
+<li><span class="v">1.0.35</span><div><b>CUTOFF glides</b>: turned while it plays, the filter moves smoothly (~15 ms) instead of in steps; the envelopes and LFOs stay as sharp as before; the FX LIVE DJ filter glides too · <b>Freeze fixed</b>: PRESETS with FAVORITES and a TAG that no favourite has froze the FM-1 (it searched for ever); now it says NO SOUND: FAVORITES + TAG · tested with ~450,000 random presses, turns, keys and MIDI messages under memory checkers: nothing else found</div></li>
+<li><span class="v">1.0.34</span><div><b>Crash fixed</b>: EDIT, choosing ADDITIVE (the engine after GROWL) crashed the FM-1 every time (its 4th setting's short name was read past the end of a table); three more memory slips found and fixed with the same tools (the MIDI page's subtitle one character too long, the destination list reading LFO 3's from the patch, a RIBBON window sliding past the screen's edge) · the crash screen stays 30 s (was 8 s), each number labelled VEC / PC / RET</div></li>
+<li><span class="v">1.0.33</span><div><b>Crackles with drums and bass</b>: GROWL and ADDITIVE about twice lighter (GROWL's formants in 32-bit, ADDITIVE 16 partials); the load governor now thins the sound at the first late block (and waits 10 s before giving it back); a block cut short fades out instead of clicking</div></li>
+<li><span class="v">1.0.32</span><div><b>DRUMS</b>: the kick much louder in every kit; <b>KICK DRIVE</b> (OFF, 1..7), <b>SNARE SNAPPY</b> (OFF, 1..7), <b>DUB ECHO</b> ON / OFF; ACOUSTIC's snare, hats and cymbal drier · <b>Library patterns follow the length</b>: one entry per pattern, 32 steps the riff and its fill, 64 twice as long, 16 the riff alone; change LENGTH and the preset follows; new patterns start at 32 steps · <b>96 factory sounds</b>: 16 more on the newer engines (VOWEL WOBBLE, HOLLOW GROWL, SUB GROWL DNB, METAL YOY, TALKBOX BASS, REESE DRAWBAR, HOLLOW ORGAN, FLUTE SUB, CHURCH BASS, PERC ORGAN, FM KNOCK, FM ORGAN BASS, NEURO STACK, 808 GROWL, 808 FOLDED, CS VOX)</div></li>
+<li><span class="v">1.0.31</span><div><b>80 factory sounds</b>: 16 more, one per kind of modern bass: ROLL GROWL, TECH ROLL FM, CS ROLLER (rolling), CLEAN PICK, GLASS BASS, DX BASS (clean), BOUNCE SQUARE, BOUNCY FM (bouncy), DEEP SUB 30, SUB DRAWBAR (deep sub), SNARL GROWL, TALK GROWL, SCREECH RIP, FM STACK, GOSPEL ORGAN, 808 SLIDE; your favourites and MORPH sounds follow · SEQ BASS library: DNB ROLLER, BOUNCE, OFF BOUNCE, SUB PULSE · GROWL holds its level when BITE narrows the formants; TEAROUT re-voiced · the additive engine's title: ADD DRAWBAR</div></li>
+<li><span class="v">1.0.30</span><div><b>TECHNO ROLL</b> in the SEQ BASS library (after TECHNO OFF): the kick's step left free, three 16ths after it, the off-beat pushed, an octave at the end of the bar; in 16, 32 and 64 steps · <b>TECHNO ROLLER</b>, a new sound (CS engine: a saw, a little detune, a LP24 that snaps shut, drive, a touch of room), made for it; it takes FM 808's place, the 808 engine does that better now</div></li>
+<li><span class="v">1.0.29</span><div><b>GROWL</b>, a new engine for neuro and dubstep: an FM pair driven into three vowel formants; GROWL the FM, VOWEL glides U O A E I (an LFO on it: the yoy), BITE the resonance and the drive; TYPE: CLASSIC, HOLLOW, SUB GROWL, SNARL, METAL, TALK, SCREECH, RIP; the screen draws the formants · <b>ADDITIVE</b>, a new engine: 24 partials like drawbars, from the 16' sub up; TILT, HARMONICS, ODD/EVEN; REGISTER: SAW, JAZZ 888, SUB 880, FULL, GOSPEL, HOLLOW, FLUTE, CHURCH; the screen shows the bars · NEURO GROWL and TEAROUT now on GROWL, HOUSE ORGAN on ADDITIVE · 13 KB of flash back: identical font sizes stored once</div></li>
+<li><span class="v">1.0.28</span><div><b>FM, 4 operators</b> like the FM-1's own: the 4th row is now <b>ALGO</b>, 8 ways to wire them (2>1 the classic pair, 4>3>2>1, 34>2>1, 3>2>1<4, 4>3>1<2, 2>1 4>3, 4>123, 1+2+3+4 drawbars), one per click, drawn on the screen; RATIO sets operators 2, 3 and 4; FEEDBACK on the top one · <b>The EQ belongs to the song</b>: NEW SONG puts it back flat · <b>SAVE K4</b>: left NEW PRESET, right NEW SONG</div></li>
+<li><span class="v">1.0.27</span><div>New engine <b>808 / KICK</b>: a sine falling from PUNCH (up to 4 octaves above) to the note over DROP (5 to 300 ms), DRIVE (a soft clip up to 8 times), and a 4th row CLICK (a 3 ms bite); the drop starts again at every attack, the sine from zero (the same punch each time) · 808 DROP, TRAP 808, 808 BOOMER and 808 DIST now play it (instead of ANALOG and the mod envelope on the pitch)</div></li>
+<li><span class="v">1.0.26</span><div><b>6 engines</b> on both oscillators, no more ESSENTIAL / ALL: ANALOG, CS, WAVETABLE, FM, <b>PHASE DIST</b> and <b>HARD SYNC</b>; WAVEFOLDER and VOCAL are gone (a sound saved with WAVEFOLDER plays ANALOG with its FOLD up, VOCAL plays FM) · each oscillator has a 4th setting, <b>FOLD</b>: the wave folded back past full level, 1 to 6 times, after any engine (on CS: <b>RING</b>, channel I times channel II); an LFO can move it (A FOLD, B FOLD)</div></li>
+<li><span class="v">1.0.25</span><div><b>OSC C · SAMPLE</b>: the waveform a little lower, three rows under it, and the row chosen always shown lit (a short list of rows could hide it)</div></li>
+<li><span class="v">1.0.24</span><div>New engine <b>CS</b>, in the place of SUPER / REESE (one of the 4 ESSENTIAL): a CS-80 voice's two channels, after twochannels' CS-1. WAVE: saw, both, pulse (narrowing at the top); DETUNE: channel II apart, up to 35 cents (the beating); MOTION: each channel's own PWM, then the voice cards' drift and a breath of noise · the 8 presets that used SUPER now play CS · 4 new presets: CS BRASS BASS, CS SQUELCH, CS XMAS BASS, CS DRIFT PAD (your user slots' favourites and MORPH sounds follow the new numbering)</div></li>
+<li><span class="v">1.0.23</span><div><b>KNOB ACCEL</b> is <b>FAST</b> by default (new installs, and once on a machine that updates; change it in SYSTEM)</div></li>
+<li><span class="v">1.0.22</span><div><b>WAVETABLE</b>: the TABLE setting changes one table per click (BASIC, HARMONIC, GROWL, VOCAL, FM, PWM, DIGITAL, SYNC) instead of one every 16 clicks</div></li>
+<li><span class="v">1.0.21</span><div>The FM-1 now reports the identity <b>FM-1_1990</b> (it was FM-1_980), for every 1.x version from now on; nothing else changes</div></li>
+<li><span class="v">1.0.20</span><div>The very first start's <b>look</b> question: the four looks as four little pictures on one page, 2 x 2, each in its own colours (CLASSIC, STUDIO, PURE, RIBBON CLASSIC); OCT− / OCT+ or a knob moves the frame, SEL takes it</div></li>
+<li><span class="v">1.0.19</span><div><b>TECH</b>: the pages with four settings (HOME, ENV, FX…) get a smaller picture and the four as big 2 x 2 tiles · new theme <b>CLASSIC</b>: CLASSIC GLOW's layout and colours, without the gradients · the <b>very first start</b> asks for a look: CLASSIC, STUDIO, PURE or RIBBON CLASSIC (each one shown as you go through them)</div></li>
+<li><span class="v">1.0.18</span><div><b>EQ</b>: a narrow <b>NOTCH</b> (or any narrow band) no longer whistles or rumbles: the filter keeps what its rounding drops and feeds it back, and its coefficients are worked out exactly (the low notches were off: a sub rumble that clipped). Moving the notch is clean too</div></li>
+<li><span class="v">1.0.17</span><div><b>LFO 3</b>: a third LFO, global (it stays when you change sound), the LFO page's last view: RATE / DIVISION, DEPTH, SHAPE, DEST, SYNC. Hold LFO + OCT+ and turn a knob to send it there; it is a source in the matrix too · README, manual and promo picture: 3 LFOs</div></li>
+<li><span class="v">1.0.16</span><div><b>LFO assign</b> (LFO held + a knob) now works in the <b>EQ</b> window (each band's FREQ and GAIN, swept smoothly between the steps), in FX PADS and in MORPH · 37 new destinations for the LFOs, the matrix and the macros: the EQ, the three envelopes, GLIDE, DRIFT, KEY TRACK, FILTER VELOCITY, STEP depth, OSC C (level, tune, speed, start, end), the compressor (attack, release, pump), OTT (amount, low, high), phaser feedback, delay time · a knob that cannot be assigned says so</div></li>
+<li><span class="v">1.0.15</span><div><b>NEW SONG</b>: start a piece from zero in one gesture. On the SAVE screen, K4 to the left twice (to the right: NEW PRESET); or SYSTEM › NEW SONG, ALGO twice. The INIT sound, every drum and SEQ BASS pattern, the parameter locks and the automation are emptied; saved patches, macros, EQ and settings stay</div></li>
+<li><span class="v">1.0.14</span><div><b>SAVE</b>: one row per knob, its name written in a column in the middle (SLOT K1, PLACE K2, LETTER K3, STYLE ALGO, NEW PRESET K4); the slot's current name sits on the SLOT row</div></li>
+<li><span class="v">1.0.13</span><div><b>SAVE</b>: a 4th row, <b>NEW PRESET</b>: turn K4 twice and the patch becomes the INIT sound with an empty name, ready to be typed (SAVE held + OCT− brings the old sound back); the style moves to ALGO · Manual: which pages the PRESETS knob changes, and what HOLD (PLAY held) and PANIC (REC held, or OCT− + OCT+) do</div></li>
+<li><span class="v">1.0.12</span><div><b>SEQ BASS</b>: a <b>SEQUENCE</b> ON / OFF at the very top of the list; OFF, the bass sequence stays silent while the drums run, and the keys play the bass live (no transposing of the sequence, the arpeggiator works). It is saved with the drums</div></li>
+<li><span class="v">1.0.11</span><div><b>DRUMS</b>: the white keys of the FM-1 stay lit where the chosen instrument hits on the page shown (kick, snare, hats…), a landmark you can see on the keyboard; it follows the instrument you choose and OCT− / OCT+</div></li>
+<li><span class="v">1.0.10</span><div><b>SAVE</b>: the black keys of the drawn keyboard have no outline any more, so their letters read better</div></li>
+<li><span class="v">1.0.9</span><div><b>SAVE</b>: the letter keyboard is drawn on the screen, as the keys are laid out (black A to K on top, white L to Z and a space at the foot); the keys you press light up</div></li>
+<li><span class="v">1.0.8</span><div><b>DRUMS</b>: shaded spheres (no gleam) with a thick black outline, all in the theme's accent colour; the track chosen has a bigger sphere · Promo picture: the DRUMS tile is now the full-screen STUDIO GOLD view</div></li>
+<li><span class="v">1.0.7</span><div><b>Naming a sound</b>: on the SAVE screen the keys are a letter keyboard — black A B C · D E · F G H · I J · K, white L to Z then a space; each key writes its letter and moves on (K2 the place, K3 digits and signs)</div></li>
+<li><span class="v">1.0.6</span><div><b>DRUMS</b>: plain round dots with a black outline again, and their colours follow the palette: two neighbouring hues of its accent, alternating (green and yellow, violet and pink, red and orange…) · Promo picture: the DRUMS tile in RIBBON CLASSIC (labelled DRUMS · RIBBON GOLD)</div></li>
+<li><span class="v">1.0.5</span><div><b>DRUMS in 3D</b>: every step is a lit sphere (light from the top left, a shadowed rim, a gleam), a soft glow under the steps that play, bigger with a lighter shade on an accent; empty steps are small sockets; new colours (coral, mint, rose, gold, amber, azure, violet, ice) · Manual and promo pictures redone</div></li>
+<li><span class="v">1.0.4</span><div><b>DRUMS, a modern look</b>: every step is a round dot, an accent has a halo, an empty step a small dim dot (bigger on the beat), a hollow dot marks a chance or a condition, a white spark a parameter lock, a light column the step playing; the track chosen has a bigger dot and a tint · Manual and promo pictures redone</div></li>
+<li><span class="v">1.0.3</span><div>New defaults, on the FM-1 and in the emulator: theme <b>CLASSIC GLOW</b>, palette <b>FLUO GREEN</b>, font <b>TEKTUR</b>, <b>LOUPE</b> on · An FM-1 or an emulator that already has settings gets them once at this update; SYSTEM changes any of them as before</div></li>
+<li><span class="v">1.0.2</span><div>DRUMS: <b>OCT− held + a black key 1–8</b> mutes that instrument (or brings it back) without choosing it; the muted tracks go grey</div></li>
+<li><span class="v">1.0.1</span><div><b>9 new presets</b>: 808 BOOMER, 808 DIST, 808 KNOCK, ACID SQUELCH, ACID SQUARE, ACID FM ZAP, PURE SUB, WARM TRI SUB, FM SUB GROWL · Every factory sound now uses the four ESSENTIAL engines (ANALOG, CS, WAVE, FM): CONCRETE, YOI TALKER, NEURO GROWL, PHASE HORN, SYNC RIPPER, TEAROUT, NEURO STAB, MINIMAL CLICK and YOI RIDDIM rebuilt; their levels evened out · The update screen on the FM-1 shows text and a bar instead of the picture, which did not show during installs</div></li>
+<li><span class="v">1.0</span><div><b>Version 1.0</b>: K-WASUB is out of beta, with the drum sequencer (4 kits, conditions), parameter locks, automation, PO / Volca sync, OSC C samples and a bassline and rhythm library · The start screen shows V1.0 · Package identity FM-1_980 (the installer and the update work as before)</div></li>
+<li><span class="v">0.9.59</span><div><b>Automation</b>: while it plays, hold <b>REC</b> and turn the knobs you want (any sound setting, any page): recorded step by step on SEQ BASS, played back every round, the sound's own values back at STOP · <b>Erase</b>: hold REC again without touching anything, the steps it passes are cleared (ERASING AUTOMATION…, then AUTOMATION ERASED) · A violet line marks the automated steps; REC held while stopped is still PANIC</div></li>
+<li><span class="v">0.9.58</span><div>The <b>PRESETS knob</b> now turns the views on EDIT, ENV, SEQ, LFO, FX and GLO (both ways, round), and goes from one SEL window to the next; on HOME and PRESETS it still changes the sound</div></li>
+<li><span class="v">0.9.57</span><div><b>Parameter locks</b> on the drums: hold a step (white key) and turn K1–K4 for its own LEVEL, TUNE, DECAY, TONE, ALGO for a RATCHET (2–4 hits), SELECT for its dub ECHO; a white corner marks it · <b>Parameter locks</b> on SEQ BASS: rows P-LOCK and LOCK VALUE (CUTOFF, RESO, FILT ENV, DRIVE, WOB RATE, A SHAPE, SAMPLE START), a cyan corner marks it · REC while it plays stays on in every view and records the knobs as locks · Backups from 0.9.53–0.9.56 still restore</div></li>
+<li><span class="v">0.9.56</span><div><b>Sync out</b> for Pocket Operators and Volcas (SYSTEM › MIDI › SYNC OUT): a pulse every eighth on the left, the sound in mono on the right · <b>USB audio</b>: a larger buffer, so recording the FM-1 into a computer no longer clicks when the sound is heavy · <b>OUTFIT</b> font and <b>LOUPE</b> by default · DRUMS, SEQ BASS and OSC C show their pattern or sample big in every theme; BLACK / WHITE draws the drums in shades of white · The manual has a SEQ BASS and DRUMS chapter</div></li>
+<li><span class="v">0.9.55</span><div><b>OSC C: 12 new samples</b>: attacks PICK, MALLET, CHIFF, HAMMER, ZAP, SLAP, CLICK, SCRATCH and textures SHIMMER, DARK PAD, BUBBLES, MACHINE · <b>START / END</b> (K3 / K4) cut the sample's beginning and end, shown on its picture · <b>SPEED</b> now also faster (up to 400 %, turn left), the pitch kept · <b>DIR</b>: FORWARD, REVERSE or PING-PONG · MIDI LEARN maps kept (moved to the new ids)</div></li>
+<li><span class="v">0.9.54</span><div><b>DRUMS: two new kits</b> (KIT): <b>DUB TECHNO</b> (deep soft kick, noisy hats, a minor chord stab on PERC, its own dark dub echo on snare, clap, toms, chord and open hat) and <b>ACOUSTIC</b> (beater kick, snare wires, toms with an overtone, conga, brighter hats, ride) · 4 new rhythm presets: DUB TECHNO, ROCK, FUNK, JAZZ RIDE (fills on the toms with ACOUSTIC) · Hats and cymbals of every kit much louder (they were barely audible)</div></li>
+<li><span class="v">0.9.53</span><div><b>DRUMS</b> (SEQ, 4th view): 808 / 909 kits, 8 coloured tracks; black keys = instrument, white keys = steps, OCT−/OCT+ = page; chance and conditions per step; 14 rhythm presets (techno, dub, dnb…) in 16 / 32 / 64 steps · <b>SEQ BASS</b>: a NOTE LEN per step (up to 64 steps or HOLD), 30 presets (continuous, drone…) in 16 / 32 / 64 steps · <b>REC live</b> while playing, bass and drums · Knobs on FAST / ULTRA: still single steps when turned slowly</div></li>
+<li><span class="v">0.9.52</span><div><b>AUDIO CORES removed</b>: K-WASUB now runs on one core only (the second core caused crashes for some); SYSTEM no longer offers the choice</div></li>
+<li><span class="v">0.9.51</span><div>The update screen now shows the start-screen picture with a rounded loading bar in place of the patch name and "press any button"</div></li>
+<li><span class="v">0.9.50</span><div>The start screen shows <b>BETA 0.9</b> small, bottom right</div></li>
+<li><span class="v">0.9.49</span><div><b>OSC C</b> (SAMPLE): the level goes twice as loud, the sample is heard over the rest</div></li>
+<li><span class="v">0.9.48</span><div><b>AUDIO CORES</b>: two cores no longer fall back to one for good after a power off or when core 1 is too slow once; SYSTEM and the start screen say why core 1 is not running</div></li>
+<li><span class="v">0.9.47</span><div><b>SEQ BASS</b>: patterns of up to <b>64 steps</b> (LENGTH 32, 64), a <b>PROBABILITY</b> (%) and a <b>TRIG CONDITION</b> on every step: 1/2, 2/2, 1/4…4/4, START, NOT START, IF BEFORE, IF AFTER</div></li>
+<li><span class="v">0.9.46</span><div><b>LANGUAGE</b> (SYSTEM, English by default): English, Français or Español translate the view titles at the top of every screen · a Spanish README (<code>es/README.md</code>)</div></li>
+<li><span class="v">0.9.45</span><div><b>FX PADS</b>: <b>QUANTIZE</b> on ALGO (OFF, 1 BAR, 1/2, 1/4, 1/8, 1/16, 1/24, 1/32, 1/64): a key waits for the next division, the wobble changes land on time · the knobs: K1 CUTOFF, K2 RESONANCE, K3 FILTER TYPE, K4 MORPH A/B</div></li>
+<li><span class="v">0.9.44</span><div><b>A/B MIX</b> as a destination (LFO, matrix, quick assign) · LFO held: <b>LFO 2</b> on the knobs; with <b>OCT−</b> held too, in either order: <b>LFO 1</b> (by default on the cutoff) · <b>HOME</b> held: <b>A + B</b>, the two oscillators together · <b>REC</b> held: <b>PANIC</b></div></li>
+<li><span class="v">0.9.43</span><div><b>EMBER</b> lighter; EMBER and <b>ICE NEON</b> (RIBBON's own) now keep their lighter navy grounds (DEEP BLACK no longer turns them black)</div></li>
+<li><span class="v">0.9.42</span><div>Palettes retouched: <b>ICE NEON</b> lighter · <b>SYNTHWAVE</b> a light pink from the bottom · <b>FLUO</b> a yellow glow at the top · <b>PINK</b> synthwave (fluo pink edges, darker pale pink inside, blue around) · <b>SKY</b> a blue-grey, navy second blue · RAD: ICE NEON (cyan into a pale dark blue-green), SYNTHWAVE (lighter top, darker bottom), BLACK / WHITE (dark top, lighter bottom), INVERTED (the gradient outside, plain light grey boxes, black text)</div></li>
+<li><span class="v">0.9.41</span><div><b>KNOB ACCEL</b>: OFF, ON, FAST and now <b>ULTRA</b>: a knob turned for more than a second goes faster and faster (up to 4 times FAST)</div></li>
+<li><span class="v">0.9.40</span><div><b>RIBBON</b> and <b>RIBBON CLASSIC</b>: a see-through band at the bottom says what the knobs do, then the buttons (4 s on each new view; always on PRESETS and SAVE: how to load, how to save)</div></li>
+<li><span class="v">0.9.39</span><div><b>RIBBON CLASSIC</b>: the window on the whole page, no arrows at the sides, no sliding · <b>RACK</b>: the left rail rounded, a notch between two pages</div></li>
+<li><span class="v">0.9.38</span><div><b>SKY RAD</b> turned over: an off-white touched with blue at the top, the blue at the bottom · <b>RACK</b> rounder: the page chosen and the rows</div></li>
+<li><span class="v">0.9.37</span><div>Every session starts at <b>octave −1</b></div></li>
+<li><span class="v">0.9.36</span><div><b>MONO</b> and <b>HYPER</b> fonts in capitals only (units read HZ, MS, DB with them) · 13 KB more room: about 99 KB free</div></li>
+<li><span class="v">0.9.35</span><div>More room: the fonts and the start picture packed (75 KB freed), nothing changes on the screen</div></li>
+<li><span class="v">0.9.34</span><div>New theme <b>RIBBON</b>: the views side by side, each a tall window full of pictures that scrolls down · <b>RIBBON CLASSIC</b>: the same look with the classic rows · <b>5 new fonts</b> (OUTFIT, INSTRUMENT, TEKTUR, JETBRAINS, BIG SHOULDERS)</div></li>
+<li><span class="v">0.9.33</span><div>The start screen stays locked until a button or key is pressed · <b>AUTOSAVE</b> (on): the sound being made is kept every minute and comes back at the next start</div></li>
+<li><span class="v">0.9.32</span><div><b>Sleep</b>: 2 minutes untouched, the screen goes dim until the next touch · turning <b>FONT</b> shows the fonts above and below, each in itself</div></li>
+<li><span class="v">0.9.31</span><div>New palettes for every theme: <b>SKY</b> (light, office-like: square windows in relief with shadows, shades of blue, the readable HYPER font) and <b>BLAZE</b> (black, greys, fluo orange, white text) · <b>LOUPE</b> on by default · FLUO GREEN RAD (CLASSIC GLOW) and SYNTHWAVE RAD recoloured, with a yellow / yellow-to-red oscillator line</div></li>
+<li><span class="v">0.9.30</span><div>Quick assign: hold <b>LFO</b>, then hold <b>OCT−</b> too: the knobs put <b>LFO 1</b> on (LFO alone: LFO 2)</div></li>
+<li><span class="v">0.9.29</span><div><b>EQ</b> redone: one band at a time (SELECT), each knob one job written on screen (K1 FREQ, K2 GAIN, K3 Q, K4 SHAPE); the curve shows where the band acts, its width and its gain</div></li>
+<li><span class="v">0.9.28</span><div><a href="../data.html"><b>Data</b></a> page complete: backup / restore of your sounds, <b>WAV export</b> of a RESAMPLE recording, and <b>send a sample</b> of yours (WAV, MP3…) to OSC C</div></li>
+<li><span class="v">0.9.27</span><div><a href="../data.html"><b>Data</b></a> page: <b>export as WAV</b> the portion of sound recorded with RESAMPLE</div></li>
+<li><span class="v">0.9.26</span><div>New <a href="../data.html"><b>Data</b></a> page: <b>backup</b> your sound design (32 user slots, SEQ, ARP, macros, CC map, EQ, MORPH) to a .kwsub file and restore it later, over USB (Chrome / Edge)</div></li>
+<li><span class="v">0.9.25</span><div>The <b>CONTRAST</b> setting is gone: the screen is always on <b>MAX (DEEP BLACK)</b>, the only look that shows right on the FM-1</div></li>
+<li><span class="v">0.9.24</span><div><b>Screen fix</b>: BRIGHTNESS no longer sends commands to the panel (they ate the letters and hid the grey cards on the FM-1) · MAX shows the colours as drawn · the text always keeps a minimum gap from its background (grey and white palettes)</div></li>
+<li><span class="v">0.9.23</span><div><b>CLASSIC GLOW</b> replaces CLASSIC (5 themes) · default look STUDIO + RED · new <b>RAD</b> gradient palettes at the end of the list, for every theme · smaller battery icon · TECH: a much smaller picture, rows under the tiles</div></li>
+<li><span class="v">0.9.22</span><div>No more K-WASUB title on the pages (room for the picture and the help) · <b>battery</b> icon (5 segments) top right, the percentage in SYSTEM · smaller page dots</div></li>
+<li><span class="v">0.9.21</span><div>Only one firmware, everywhere (the B leftovers are gone) · voice mode and glide are the last rows of the oscillator list in every theme, STUDIO included</div></li>
+<li><span class="v">0.9.20</span><div>New <b>start screen</b>: the K-WASUB picture · the voice mode (MONO / LEGATO / POLY) and the glide at the bottom of each oscillator view</div></li>
+<li><span class="v">0.9.19</span><div><b>One firmware</b>: <code>SYSTEM › ENGINES</code> picks ESSENTIAL (4 engines, the default) or ALL (8). The separate version B is gone.</div></li>
+<li><span class="v">0.9.18</span><div>Default look: <b>STUDIO</b> theme with the <b>GOLD</b> palette (new installs and resets) · <b>INVERTED</b>: black text · <b>PALETTE</b> now sits right under THEME in the options</div></li>
+<li><span class="v">0.9.17</span><div>The <b>CLASSIC or SHIFT question</b> is back at the very first start (and once after updating): choose the classic lists or the SHIFT mode with OCT− / OCT+. Also: hold LFO + a knob assigns LFO 2 (or LFO 1, in the options); GLIDE under THEME in the options.</div></li>
+<li><span class="v">0.9.14</span><div><b>Versions swapped</b>: A is now the 4-engine version (efficient engines for modern basses), B the 8-engine one (deeper sound design: pads, synth and FX). Download links and names follow.</div></li>
+<li><span class="v">0.9.13</span><div>New <b>TECH</b> theme: the picture (oscillator, envelope, filter…) fills almost the whole page, four tiles, gradients running in different directions (VOLT and CYBER palettes) · GLOW becomes <b>CLASSIC GLOW</b> · <b>BRIGHTNESS</b> ECO / NORMAL / BRIGHT / <b>MAX</b></div></li>
+<li><span class="v">0.9.12</span><div><b>GLOW</b> theme: simple, gradients, fluo green (FLUO GREEN and TOXIC palettes) · new <b>PINK</b> and <b>GOLD</b> palettes for every theme</div></li>
+<li><span class="v">0.9.11</span><div><b>PERFORM</b> (4 named macros, morph, pads on one screen) · <b>MULTIBAND / OTT</b> · <b>MONO BASS</b> and <b>SUB LOCK</b> · <b>RESAMPLE</b> into OSC C · preset <b>tags</b> (sub, reese, growl…) · MORPH X/Y: the same sound in the 4 corners (as is, cutoff ¼ res ¾, wobble 1/8, wobble 1/16) · presets load without a question · each page opens on its first view · pages ordered by importance · K1–K4 hints everywhere · CLASSIC/SHIFT asked on the first start only · <b>FLUO</b> palette</div></li>
+<li><span class="v">0.9.10</span><div><b>FX PADS</b> · long presses everywhere (OCT− UNDO, OCT+ REDO, HOME PANIC, GLO CLASSIC/SHIFT) · EQ in the FX page · deeper bass, limiter, auto level · start screen with the FM-1 seen from the front · the software is called K-WASUB</div></li>
+<li><span class="v">0.9.9-9 → -7</span><div>MORPH X/Y (with gradient) and A/B · CONTRAST HIGH/MAX · LAST STOP (why it stopped) · audio budget for the effects (stability)</div></li>
+</ol></details>
+<p><a href="../SPECIFICATIONS.md">Specifications: what is done, what is left, ideas →</a> · <a href="https://github.com/Guizmoh/K-WASUB_Firmware_for_FM1/commits/main">Full history</a></p></section>
+
+<section class="sec" id="don"><div class="card donate"><h2>Support K-WASUB</h2>
+<p>K-WASUB is free and will stay free. If it helps your sounds, you can chip in for the time and the test hardware (FM-1, cables…). Thank you!</p>
+<p><a id="donate" class="btn d p" href="#don" aria-disabled="true">☕ Make a donation</a></p><p id="dnote" style="color:var(--mut);font-size:.88rem">The donation link is coming soon.</p></div></section>
+
+<section class="sec"><h2>FAQ</h2>
+<details><summary>Do I lose the stock firmware?</summary><p>No. You can reinstall the stock firmware (M-UPGRADE) whenever you like.</p></details>
+<details><summary>No sound on the FM-1?</summary><p>In SYSTEM, look at <code>AUDIO CORES</code> (try SINGLE) and the MASTER volume. If the FM-1 switched off, read <code>LAST STOP</code> at start-up and note what it says.</p></details>
+<details><summary>Which engines?</summary><p>Nine, on both oscillators: <b>ANALOG</b>, <b>808</b> (a sine falling from PUNCH over DROP, DRIVE, CLICK), <b>CS</b> (a CS-80 voice's two channels), <b>WAVETABLE</b>, <b>FM</b> (4 operators, 8 algorithms), <b>GROWL</b> (FM into vowel formants: the yoy), <b>ADDITIVE</b> (16 partials, drawbar registers), <b>PHASE DIST</b> and <b>HARD SYNC</b>. Each has a 4th setting: <b>FOLD</b> (the wave folded back, west coast style), on CS <b>RING</b>, on 808 <b>CLICK</b>, on FM <b>ALGO</b>, on GROWL <b>TYPE</b>, on ADDITIVE <b>REGISTER</b>.</p></details>
+<details><summary>Is it finished?</summary><p>No: K-WASUB is a <b>BETA</b> (version 1.0.46). It is tested in the emulator and by automatic tests at every release, but not on every FM-1 yet, so something may still misbehave. All feedback is welcome: please let me know about any bugs you find or features you would like to see. I am open to every suggestion. You can always reinstall the stock firmware (M-UPGRADE) or KAWA.</p></details></section>
+
+<footer>K-WASUB · GPL-3.0 · born from <a href="https://github.com/Guizmoh/Kawa-Tracker-Fm1">KAWA</a> (Omnipotard / Leo Kuroshita, Hügelton Instruments), whose FM-1 platform it reuses. Not affiliated with M-VAVE. <a href="https://github.com/Guizmoh/K-WASUB_Firmware_for_FM1">Source code</a> · <a href="../LICENSE">License</a></footer>
+
+</main></template>
 <script>
 "use strict";
 const FR = /[?&]lang=fr/.test(location.search), T = (en, fr) => (FR ? fr : en);
@@ -429,5 +651,20 @@ $("midi").addEventListener("click", async () => {
 
 startIdle();
 </script>
-</body>
+<script>
+(() => {
+  const host = document.createElement('div');
+  host.className = 'site-content';
+  host.setAttribute('aria-label', 'K-WASUB website content');
+  const template = document.getElementById('site-content-template');
+  const shadow = host.attachShadow({ mode: 'open' });
+  shadow.append(template.content.cloneNode(true));
+  const donate = shadow.getElementById('donate');
+  const note = shadow.getElementById('dnote');
+  if (donate) { donate.href = 'https://ko-fi.com/omnipotard'; donate.target = '_blank'; donate.rel = 'noopener'; donate.removeAttribute('aria-disabled'); }
+  if (note) note.hidden = true;
+  template.replaceWith(host);
+  document.querySelector('.wrap').append(host);
+})();
+</script></body>
 </html>
