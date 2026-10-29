@@ -33,6 +33,7 @@ enum { I_L1RATE = 140, I_L2RATE, I_ABMIX, G_MIDICH, G_BPM, G_CLOCK, G_OCT, G_COR
        G_NEWSONG,                                                                    /* SYSTEM: NEW SONG (the sound, every pattern, the locks and the automation back to empty) */
        G_L3_RATE, G_L3_DEP, G_L3_SHP, G_L3_DST, G_L3_SYNC,                           /* LFO 3 (in the settings: whatever the patch) */
        G_DK_KSAT, G_DK_SNAP, G_DK_ECHO,                                              /* DRUMS: KICK DRIVE, SNAPPY, DUB ECHO (1.0.32, in dk.pad) */
+       G_MIDIMON, G_MIDIRT,                                                          /* MIDI: the last message that came in, and the last system one (1.0.46) */
        I_NONE = 255 };
 
 typedef struct {
@@ -79,7 +80,7 @@ static const view_t VIEWS[] = {
     {LY_LIST, "ARPEGGIATOR", 5, {G_AR_ON, G_AR_MODE, G_AR_RATE, G_AR_OCT, G_AR_GATE}, "ARP"},
     {LY_SYS, "GLOBAL SETUP", 24, {G_BPM, V_MODE, G_UI, G_THEME, G_PAL, V_GLIDE, G_QLFO, G_BRI, G_ASAVE, G_LANG, G_DEEP, G_NORM, G_ACCEL, G_GRID, V_BEND, V_VEL,
                                   G_FONT, G_ZOOM, G_C3COL, G_BROWSE, G_ASK, G_NEWSONG, G_CPU, G_RST}, "SYSTEM"},
-    {LY_SYS, "MIDI", 8, {G_MLEARN, G_MMAP, G_MIDICH, G_CLOCK, G_MSTART, G_MPROG, G_MCLK, G_SYNC}, "SYSTEM"},
+    {LY_SYS, "MIDI", 10, {G_MLEARN, G_MMAP, G_MIDICH, G_CLOCK, G_MSTART, G_MPROG, G_MCLK, G_SYNC, G_MIDIMON, G_MIDIRT}, "SYSTEM"},
 };
 /* what K1..K4 turn: the first four rows (the preset lists and SAVE have their own) */
 static uint32_t vknob(const view_t *v, uint32_t i) { return v->lay == LY_PRESET || v->lay == LY_SAVE || i >= v->n ? I_NONE : v->it[i]; }
@@ -112,7 +113,7 @@ static struct {                                 /* the user slots' settings past
     uint8_t magic, sum;
     int8_t p[NUSER][NP_MAX - NP_STORE];
 } uext;
-typedef char ids_fit[G_DK_ECHO < I_NONE ? 1 : -1];
+typedef char ids_fit[G_MIDIRT < I_NONE ? 1 : -1];
 typedef char np_fits[NP <= I_L1RATE && NP <= NP_MAX ? 1 : -1];   /* (the patch's ids under the others') */
 #define CC_MAGIC 0x44u                          /* (0x43: before 0.9.55, the ids past the patch 4 lower) */
 #define WK_AT 0xC00u                            /* (the 2nd sector, after the slots' rest: the sound being made, AUTOSAVE) */
@@ -563,6 +564,7 @@ static void rst_read(void)
     }
 #endif
 }
+static uint8_t mm_st, mm_d1, mm_d2, mm_n, mm_rt, mm_rn;   /* the last channel message in, and the last system one but the clock (the MIDI page shows them) */
 static uint8_t ml_state, ml_id;                 /* MIDI LEARN: 1 waits for a setting, 2 for a CC; the setting */
 static uint32_t cc_count(void) { uint32_t k, n = 0; if (perf.cc_magic == CC_MAGIC) for (k = 0; k < 16u; k++) n += perf.cc_num[k] != 0xFFu; return n; }
 static uint8_t first_run;                       /* no settings yet: the very first start (it asks CLASSIC or SHIFT, once) */
@@ -1807,6 +1809,8 @@ static const char *item_name(uint32_t id)
     case G_MCLK: return "CLOCK OUT";
     case I_ABMIX: return "A / B MIX";
     case G_FW: return "FIRMWARE";
+    case G_MIDIMON: return "LAST NOTE / CC";
+    case G_MIDIRT: return "LAST START / STOP";
     case G_SQ_STEP: return "STEP";
     case G_SQ_NOTE: return "NOTE";
     case G_SQ_TYPE: return "STEP TYPE";
@@ -2029,6 +2033,15 @@ static void item_text(uint32_t id, char *b)
             if (ks_shed) { b = str_cat(b, " \xB7 -"); fmt_u(b, ks_shed, 0); }
             break;
         case G_FW: str_cat(b, "K-WASUB " APP_VER " BETA"); break;
+        case G_MIDIMON: case G_MIDIRT: {        /* the last channel message in (status, data 1, data 2, in hex), and the last system one (FA start, FB continue, FC stop...): what a sequencer sends when it stops */
+            static const char HX[] = "0123456789ABCDEF";
+            uint8_t s0 = id == G_MIDIMON ? mm_st : mm_rt;
+            if (!(id == G_MIDIMON ? mm_n : mm_rn)) { str_cat(b, "NONE YET"); break; }
+            *b++ = HX[s0 >> 4]; *b++ = HX[s0 & 15u];
+            if (id == G_MIDIMON) { *b++ = ' '; *b++ = HX[mm_d1 >> 4]; *b++ = HX[mm_d1 & 15u]; *b++ = ' '; *b++ = HX[mm_d2 >> 4]; *b++ = HX[mm_d2 & 15u]; }
+            *b = 0;
+            break;
+        }
         case G_SQ_STEP: b = fmt_u(b, (uint32_t)v + 1u, 2); b = str_cat(b, "/"); fmt_u(b, sq_pat()->len, 2); break;
         case G_SQ_NOTE:
             if (!(*sq_fp(perf.cur, sq_cur_step) & SF_ON)) { str_cat(b, "REST"); break; }
@@ -2297,7 +2310,7 @@ static void edit_item(uint32_t id, int32_t d)
 {
     int32_t lo, hi, v = item_get(id), step = 1;
     uint32_t k;
-    if (id == I_NONE || id == G_CPU || id == G_FW || id == G_RST) return;
+    if (id == I_NONE || id == G_CPU || id == G_FW || id == G_MIDIMON || id == G_MIDIRT || id == G_RST) return;
     if (ml_state == 1u && id != G_MLEARN && id != G_MMAP) { ml_id = (uint8_t)id; ml_state = 2; toast("LEARN: SEND A CC"); }
     if (sq_rec && sq_play && !dk_view()) {      /* REC while it plays: a SEQ BASS setting turned is locked on the step now (the sound keeps its own) */
         uint32_t w, rid = rate_like(id);
@@ -3068,6 +3081,8 @@ static void midi_in(void)
     uint8_t st, d1, d2;
     while (midi_get(&st, &d1, &d2)) {
         uint32_t ty = st & 0xF0u, ch = (st & 15u) + 1u;
+        if (st >= 0xF0u) { if (st != 0xF8) { mm_rt = st; mm_rn = 1; } }
+        else { mm_st = st; mm_d1 = d1; mm_d2 = d2; mm_n = 1; }
         if (st == 0xF8) {                       /* the clock: its tempo, and the beat it is on */
             uint32_t t = fm1_ticks();
             if (set.clock && clk_last) {
