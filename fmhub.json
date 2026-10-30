@@ -1,5 +1,8 @@
 {
   "what": "K-WA SUB is a powerful bass synthesizer for the M-VAVE FM-1, featuring 9 synthesis engines with 2 engines playable simultaneously and morphing capabilities. A dedicated sample layer adds attack and texture, while 3 freely assignable MIDI-learnable LFOs, quantized live effects and extensive sound design tools unlock endless possibilities for modern bass creation, from deep subs and reese basses to neuro, wobble and experimental sounds.",
-  "kinds": ["synth"],
-  "play": "https://guizmoh.github.io/K-WASUB_Firmware_for_FM1/emulator/index.html"
+  "kinds": [
+    "synth"
+  ],
+  "play": "https://guizmoh.github.io/K-WASUB_Firmware_for_FM1/emulator/index.html",
+  "editor": "https://guizmoh.github.io/K-WASUB_Firmware_for_FM1/data.html"
 }
